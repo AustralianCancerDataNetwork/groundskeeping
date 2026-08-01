@@ -46,7 +46,7 @@ class TelemetrySnapshot:
     metrics: tuple[MetricValue, ...]
 
     @classmethod
-    def empty(cls, source_id: str, *, capabilities: frozenset[str] = frozenset()) -> "TelemetrySnapshot":
+    def empty(cls, source_id: str, *, capabilities: frozenset[str] = frozenset()) -> TelemetrySnapshot:
         return cls(
             source_id=source_id,
             sampled_at=datetime.now(UTC),

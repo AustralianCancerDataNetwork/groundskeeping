@@ -1,53 +1,69 @@
 # groundskeeping
 
-`groundskeeping` is a reusable Textual application shell for operator tools that need
-the same kind of everyday care: environment checks, configuration, queues, telemetry,
-tuning, and long-running work.
+`groundskeeping` is a reusable Textual shell for operator tools that help people care for a working environment: setup checks, configuration, queues, telemetry, tuning, and long-running operations.
 
-The package owns the mechanics that are generic. Consumer applications own the domain.
-That boundary is the main idea.
+The package provides the shared operating frame. A consumer application provides the domain. Keep that distinction close and most design decisions become simpler.
 
-## Mental model
+## The Shape Of An App
 
-A `groundskeeping` app is composed from one explicit `OperatorAppSpec`.
+A `groundskeeping` app starts with one `OperatorAppSpec`.
 
-The spec declares:
+The spec names the app, orders the pages, registers the actions, and supplies the policies that decide whether work may run. It is the composition root: everything application-specific should arrive there from the consumer, not through global lookup inside the shared package.
 
-- the visible application title;
-- the ordered page routes;
-- a factory for each consumer-owned page;
-- available actions;
-- operation and job policies; and
-- the result presenter that turns runner output into a workbench view.
+Pages are owned by the consumer and are ordinary Textual widgets. The shell mounts them once, activates and deactivates them as the operator moves between tabs, and preserves page-local state. A page receives a narrow `PageContext`; it does not receive the whole app.
 
-Pages are Textual widgets supplied by the consumer. The shell mounts them once, switches
-which page is active, and preserves page-local state while the operator moves around.
-Pages do not reach into the app or into each other. They receive a narrow `PageContext`
-with a shared surface, navigation, notifications, and binding refresh.
+The default page surface is the workbench:
 
-The workbench is the default shared surface: catalogue on the left, rows and detail on the
-right. Pages render generic view models such as `CatalogueItem`, `TableView`, `TreeView`,
-`EmptyView`, and `KeyValueView`. Domain objects should be converted before they reach the
-shared shell.
+- catalogue on the left;
+- rows or tree content on the upper right; and
+- selected detail on the lower right.
 
-Actions are descriptions plus runners. The package provides the common contract for
-fields, parsing, redaction, progress, cancellation, job gating, and outcomes. Consumers
-provide the actual verbs, effects, preflight checks, confirmation policy, and durable
-safety rules.
+Pages render package-owned view models such as `CatalogueItem`, `TableView`, `TreeView`, `EmptyView`, `TextView`, and `KeyValueView`. Domain objects should be translated before they reach the workbench. That keeps the shared shell reusable and keeps consumer language in the consumer.
 
-Telemetry has two layers:
+## Setup Pages
 
-- `groundskeeping.telemetry` contains source contracts, snapshots, sampling, and provider
-  implementations with no Textual imports.
-- `groundskeeping.widgets.telemetry` renders normalized snapshots in Textual widgets.
+A setup page should answer a concrete operator question: "can this environment do the work I am about to ask of it?"
 
-Configuration follows the same split. `groundskeeping.configurator` can inspect and
-describe `oa-configurator` stack concepts without writing files itself. Editable
-configuration flows should produce drafts, redacted diffs, and apply intents; persistence
-belongs to the public `oa-configurator` mutation API and the consuming application’s
-operation policy.
+The page should normally live in the consumer package and use consumer services to inspect the environment. `groundskeeping` supplies the rendering and action contracts; it should not know what "ready" means for Groundworkers, CAVA, or any future application.
 
-## Ownership boundary
+A good setup page usually has:
+
+- a catalogue of setup areas, such as config, database, runtime, model server, paths, or credentials;
+- a landing `TreeView` summarising overall readiness;
+- a `TableView` for repeated checks where scanning matters;
+- `KeyValueView` detail for the selected check;
+- one or two safe verification actions; and
+- an operation policy that describes effects in the consumer's own vocabulary.
+
+Start read-only. Verification actions are a good first step because they exercise the shell, action contracts, progress reporting, and failure presentation without taking ownership of durable setup changes too early.
+
+## Actions And Jobs
+
+Actions are declarations plus runners.
+
+An `ActionSpec` describes the operator-facing command: label, summary, fields, resources, effects, cancellation mode, and runner. `FieldSpec` parses and redacts input before it reaches the runner. The runner receives an `ActionContext` with progress and cancellation, so long-running work can report what it is doing without importing widgets.
+
+A shell job is work launched by this TUI process. It is not a durable processing queue. Use `JobManager` and `JobPolicy` to gate in-process work and show progress; keep queue state, retries, leases, and durable records inside the consumer.
+
+## Configuration
+
+`groundskeeping.configurator` understands the public shape of `oa-configurator` stack configuration well enough to inspect and present it safely. It can build snapshots, section views, drafts, redacted diffs, and apply intents.
+
+It does not write TOML. Persistence belongs to the public `oa-configurator` mutation API and to the consumer's operation policy. That separation protects comments, secrets, external edits, and tenant-specific safety rules.
+
+Consumer applications can add `ConfigResourceAdapter` implementations for resource types that need better labels, choices, validation, verification, or post-apply effects.
+
+## Telemetry
+
+Telemetry has a headless core and Textual widgets layered above it.
+
+`groundskeeping.telemetry` contains source protocols, availability, normalized metrics, snapshots, and sampling runtime. It must remain free of Textual imports so collectors can be tested and reused outside a running app.
+
+`groundskeeping.widgets.telemetry` renders snapshots. Widgets should bind to metric keys and capabilities, not concrete provider classes. A GPU card, for example, should care about accelerator utilisation and memory metrics; it should not need to know whether the source is NVIDIA, Apple Silicon, or something added later.
+
+Consumers own domain telemetry: queue depth, pipeline progress, database state, workload throughput, and tuning interpretation.
+
+## Ownership Boundary
 
 `groundskeeping` owns:
 
@@ -73,36 +89,28 @@ Consumers own:
 - operation safety policy; and
 - application branding and help text.
 
-## Code style
+## Commenting Style
 
-The code is written for people who will adapt it under pressure.
+Write comments for the next person adapting the tool.
 
-Comments should explain why a boundary exists, what operator-facing behaviour depends on
-it, and which tempting changes would move domain logic into the shared package. Good
-comments are especially valuable around Textual lifecycle methods, event routing, worker
-handoffs, cancellation, secret redaction, and extension points.
+Good comments explain why a boundary exists, what operator-facing behaviour depends on it, and where domain logic should stay. They are especially useful around Textual lifecycle methods, event routing, worker handoffs, cancellation, secret redaction, and extension points.
 
-Prefer comments that preserve design intent over comments that narrate syntax. For
-example, explain why row events return to the active page through the workbench surface;
-do not explain that a loop iterates over rows.
+Prefer comments that preserve intent over comments that narrate syntax. Explain why row events return to the active page through the workbench surface. Do not explain that a loop iterates over rows.
 
-## Demo
+If a future maintainer is likely to wonder "why is this shaped this way?", leave them a small signpost.
 
-Run the demo app in an environment with dependencies installed:
+## Running The Demo
 
 ```bash
 uv run groundskeeping
 ```
 
-The demo composes three pages: overview, configuration, and telemetry. It also registers a
-small action so the action registry and app spec can be exercised without a consumer
-application.
+The demo composes overview, configuration, and telemetry pages. It also registers a small action so the app spec and action registry can be exercised without a consumer application.
 
-## Tests
+## Running Tests
 
 ```bash
 uv run --extra dev pytest -q
 ```
 
-The tests cover route validation, action and job contracts, configurator redaction,
-telemetry import boundaries, and the absence of consumer imports.
+The tests cover route validation, app startup, action and job contracts, configurator redaction, telemetry import boundaries, and consumer dependency boundaries.

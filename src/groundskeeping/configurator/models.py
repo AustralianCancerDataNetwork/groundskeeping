@@ -38,7 +38,7 @@ class ConfigSectionView:
 
     target: ConfigTarget
     fields: Mapping[str, object] = field(default_factory=dict)
-    children: tuple["ConfigSectionView", ...] = ()
+    children: tuple[ConfigSectionView, ...] = ()
     notes: tuple[str, ...] = ()
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import ClassVar
 
@@ -26,6 +26,7 @@ from groundskeeping.contracts.jobs import (
     SingleForegroundJobPolicy,
 )
 from groundskeeping.contracts.pages import (
+    NotifySeverity,
     OperatorPage,
     PageContext,
     PageRegistration,
@@ -76,7 +77,7 @@ class _WorkbenchSurface(PageSurfacePort):
         self._lease_by_page: dict[str, SurfaceLease] = {}
         self._generation = 0
 
-    def show_catalogue(self, page_key: str, items: tuple[CatalogueItem, ...]) -> None:
+    def show_catalogue(self, page_key: str, items: Sequence[CatalogueItem]) -> None:
         self._workbench.populate_catalogue(items)
         self._lease(page_key, "catalogue")
 
@@ -96,7 +97,7 @@ class _WorkbenchSurface(PageSurfacePort):
 
 
 class _AppPageContext(PageContext):
-    def __init__(self, app: "OperatorApp", surface: PageSurfacePort) -> None:
+    def __init__(self, app: OperatorApp, surface: PageSurfacePort) -> None:
         self._app = app
         self._surface = surface
 
@@ -110,7 +111,7 @@ class _AppPageContext(PageContext):
     def request_navigation(self, page_key: str) -> None:
         self._app.show_page(page_key)
 
-    def notify(self, message: str, *, severity: str = "information") -> None:
+    def notify(self, message: str, *, severity: NotifySeverity = "information") -> None:
         self._app.notify(message, severity=severity)
 
 

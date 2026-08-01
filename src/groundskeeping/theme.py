@@ -9,7 +9,6 @@ from textual.theme import Theme
 
 from groundskeeping.contracts.views import SemanticStatus
 
-
 GROUNDSKEEPING_THEME = Theme(
     name="groundskeeping",
     dark=True,

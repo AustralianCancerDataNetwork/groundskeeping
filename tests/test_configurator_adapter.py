@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from groundskeeping.configurator import ConfigDraft, ConfigTarget, OAConfiguratorAdapter, RedactedValue
+from groundskeeping.configurator import (
+    ConfigDraft,
+    ConfigTarget,
+    OAConfiguratorAdapter,
+    RedactedValue,
+)
 
 
 @dataclass

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import TypeAlias
 
 
 class SemanticStatus(StrEnum):
@@ -28,7 +27,7 @@ class CatalogueItem:
     kind: str
     ref: object | None = None
     status: SemanticStatus = SemanticStatus.INFO
-    children: tuple["CatalogueItem", ...] = ()
+    children: tuple[CatalogueItem, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -58,7 +57,7 @@ class TreeNode:
     label: str
     status: SemanticStatus = SemanticStatus.INFO
     fields: Mapping[str, object] = field(default_factory=dict)
-    children: tuple["TreeNode", ...] = ()
+    children: tuple[TreeNode, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -108,5 +107,5 @@ class KeyValueView:
     title: str = "Detail"
 
 
-DetailView: TypeAlias = TextView | KeyValueView
-SurfaceView: TypeAlias = TableView | TreeView | EmptyView | LoadingView
+type DetailView = TextView | KeyValueView
+type SurfaceView = TableView | TreeView | EmptyView | LoadingView

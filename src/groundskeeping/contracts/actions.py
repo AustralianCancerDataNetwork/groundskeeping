@@ -7,7 +7,7 @@ run with progress/cancellation context, and render a generic outcome.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
@@ -108,7 +108,12 @@ class FieldSpec:
         if self.kind in {FieldKind.TEXT, FieldKind.SECRET, FieldKind.MULTILINE}:
             return str(value)
         if self.kind is FieldKind.INTEGER:
-            parsed = int(value)
+            if not isinstance(value, str | int | float | Decimal):
+                raise ValueError(f"{self.label} must be a whole number.")
+            try:
+                parsed = int(value)
+            except ValueError as exc:
+                raise ValueError(f"{self.label} must be a whole number.") from exc
             self._check_bounds(parsed)
             return parsed
         if self.kind is FieldKind.DECIMAL:
@@ -168,6 +173,12 @@ class ActionOutcome:
 
 @dataclass(frozen=True)
 class ActionContext:
+    """Everything a runner may touch while the action is in flight.
+
+    Deliberately narrow: a runner reports progress and checks for cancellation through this
+    object, so long-running domain work never needs to import a widget or reach the app.
+    """
+
     progress: ProgressSink
     cancellation: CancellationToken
     action_id: str
@@ -203,6 +214,13 @@ Preflight = Callable[[Mapping[str, object]], Sequence[ValidationIssue]]
 
 @dataclass(frozen=True)
 class ActionSpec:
+    """Declaration of one operator-facing command and the runner that performs it.
+
+    The spec carries everything the shell needs to present, gate, and execute the command
+    without knowing what it does: fields to parse, resources and effects for the operation
+    policy to reason about, and the cancellation mode the runner honours.
+    """
+
     key: str
     page_key: str
     label: str
@@ -314,7 +332,7 @@ class ActionRegistry:
     def for_page(self, page_key: str) -> tuple[ActionSpec, ...]:
         return tuple(action for action in self._actions if action.page_key == page_key)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[ActionSpec]:
         return iter(self._actions)
 
 

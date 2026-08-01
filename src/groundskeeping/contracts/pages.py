@@ -4,13 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
-from typing import Protocol, overload
+from typing import Literal, Protocol, overload
 
 from groundskeeping.contracts.views import (
     CatalogueItem,
     DetailView,
     SurfaceView,
 )
+
+type NotifySeverity = Literal["information", "warning", "error"]
+"""Toast severities the shell forwards to Textual's notification system."""
 
 
 @dataclass(frozen=True)
@@ -78,7 +81,7 @@ class PageContext(Protocol):
 
     def request_navigation(self, page_key: str) -> None: ...
 
-    def notify(self, message: str, *, severity: str = "information") -> None: ...
+    def notify(self, message: str, *, severity: NotifySeverity = "information") -> None: ...
 
 
 class OperatorPage(Protocol):

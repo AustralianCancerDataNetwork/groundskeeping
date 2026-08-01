@@ -1,0 +1,3 @@
+# Views
+
+::: groundskeeping.contracts.views
