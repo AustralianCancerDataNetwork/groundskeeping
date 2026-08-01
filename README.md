@@ -8,7 +8,7 @@ The package provides the shared operating frame. A consumer application provides
 
 A `groundskeeping` app starts with one `OperatorAppSpec`.
 
-The spec names the app, orders the pages, registers the actions, and supplies the policies that decide whether work may run. It is the composition root: everything application-specific should arrive there from the consumer, not through global lookup inside the shared package.
+The spec names the app, orders the pages, registers the actions, and supplies the policies that decide whether work may run. It is the composition root: application-specific services, presenters, policies, and pages should arrive there from the consumer, not through global lookup inside the shared package.
 
 Pages are owned by the consumer and are ordinary Textual widgets. The shell mounts them once, activates and deactivates them as the operator moves between tabs, and preserves page-local state. A page receives a narrow `PageContext`; it does not receive the whole app.
 
@@ -24,7 +24,7 @@ Pages render package-owned view models such as `CatalogueItem`, `TableView`, `Tr
 
 A setup page should answer a concrete operator question: "can this environment do the work I am about to ask of it?"
 
-The page should normally live in the consumer package and use consumer services to inspect the environment. `groundskeeping` supplies the rendering and action contracts; it should not know what "ready" means for Groundworkers, CAVA, or any future application.
+The page should normally live in the consumer package and use consumer services to inspect the environment. `groundskeeping` supplies rendering and action contracts; it should not know what "ready" means for a particular application.
 
 A good setup page usually has:
 
@@ -49,7 +49,7 @@ A shell job is work launched by this TUI process. It is not a durable processing
 
 `groundskeeping.configurator` understands the public shape of `oa-configurator` stack configuration well enough to inspect and present it safely. It can build snapshots, section views, drafts, redacted diffs, and apply intents.
 
-It does not write TOML. Persistence belongs to the public `oa-configurator` mutation API and to the consumer's operation policy. That separation protects comments, secrets, external edits, and tenant-specific safety rules.
+It does not write TOML. Persistence belongs to the public `oa-configurator` mutation API and to the consumer's operation policy. That separation protects comments, secrets, external edits, and environment-specific safety rules.
 
 Consumer applications can add `ConfigResourceAdapter` implementations for resource types that need better labels, choices, validation, verification, or post-apply effects.
 
@@ -59,9 +59,9 @@ Telemetry has a headless core and Textual widgets layered above it.
 
 `groundskeeping.telemetry` contains source protocols, availability, normalized metrics, snapshots, and sampling runtime. It must remain free of Textual imports so collectors can be tested and reused outside a running app.
 
-`groundskeeping.widgets.telemetry` renders snapshots. Widgets should bind to metric keys and capabilities, not concrete provider classes. A GPU card, for example, should care about accelerator utilisation and memory metrics; it should not need to know whether the source is NVIDIA, Apple Silicon, or something added later.
+`groundskeeping.widgets.telemetry` renders snapshots. Widgets should bind to metric keys and capabilities, not concrete provider classes. An accelerator card, for example, should care about utilisation and memory metrics; it should not need to know which collector produced them.
 
-Consumers own domain telemetry: queue depth, pipeline progress, database state, workload throughput, and tuning interpretation.
+Consumers own domain telemetry: queue depth, pipeline progress, database state, workload throughput, tuning interpretation, and any other application-specific signal.
 
 ## Ownership Boundary
 

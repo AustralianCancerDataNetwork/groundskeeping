@@ -39,20 +39,21 @@ class Workbench(Widget):
         self._loading_view: LoadingView | None = None
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="catalogue-panel", classes="section"):
-            yield Tree("Catalogue", id="catalogue")
-        with Vertical(id="workbench-right"):
-            with Vertical(id="result-panel", classes="section"):
-                with Horizontal(id="result-header"):
-                    yield Static("", id="result-status")
-                    yield Static("Select a catalogue item to inspect it.", id="result-summary")
-                yield DataTable(id="result-table")
-                yield Tree("Result details", id="result-tree")
-                yield EmptyState("", id="result-empty")
-                yield LoadingState("", id="result-loading")
-            with Vertical(id="context-panel", classes="section"):
-                yield TextArea(id="context")
-                yield DataTable(id="context-table")
+        with Horizontal(id="workbench-main"):
+            with Vertical(id="catalogue-panel", classes="section"):
+                yield Tree("Catalogue", id="catalogue")
+            with Vertical(id="workbench-right"):
+                with Vertical(id="result-panel", classes="section"):
+                    with Horizontal(id="result-header"):
+                        yield Static("", id="result-status")
+                        yield Static("Select a catalogue item to inspect it.", id="result-summary")
+                    yield DataTable(id="result-table")
+                    yield Tree("Result details", id="result-tree")
+                    yield EmptyState("", id="result-empty")
+                    yield LoadingState("", id="result-loading")
+                with Vertical(id="context-panel", classes="section"):
+                    yield TextArea(id="context")
+                    yield DataTable(id="context-table")
 
     def on_mount(self) -> None:
         self.query_one("#catalogue-panel").border_title = "Catalogue"
