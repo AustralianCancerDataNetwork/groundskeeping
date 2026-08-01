@@ -1,0 +1,79 @@
+site_name: groundskeeping
+site_description: Reusable Textual operator shell, workbench, configuration browser, and telemetry primitives.
+site_url: https://AustralianCancerDataNetwork.github.io/groundskeeping/
+repo_url: https://github.com/AustralianCancerDataNetwork/groundskeeping
+repo_name: groundskeeping
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: light-blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - footnotes
+  - tables
+  - attr_list
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - src
+          options:
+            show_source: false
+            docstring_style: google
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: true
+            # Many contracts are plain frozen dataclasses whose field names carry the
+            # meaning. Render them anyway so the API reference is a complete surface.
+            show_if_no_docstring: true
+
+nav:
+  - Home: index.md
+  - Getting Started: quickstart.md
+  - Ownership Boundary: ownership.md
+  - User Guide:
+      - Pages and the Workbench: pages.md
+      - Actions and Jobs: actions.md
+      - Configuration: configuration.md
+      - Telemetry: telemetry.md
+  - API Reference:
+      - Application: api/app.md
+      - Page Contracts: api/pages.md
+      - Views: api/views.md
+      - Actions: api/actions.md
+      - Jobs: api/jobs.md
+      - Configurator: api/configurator.md
+      - Telemetry: api/telemetry.md
+      - Widgets: api/widgets.md
+  - Contributing: contributing.md

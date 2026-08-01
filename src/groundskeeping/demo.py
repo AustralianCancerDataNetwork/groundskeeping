@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from textual.widget import Widget
@@ -11,6 +12,7 @@ from groundskeeping.configurator import OAConfiguratorAdapter
 from groundskeeping.contracts import (
     ActionContext,
     ActionOutcome,
+    ActionRegistry,
     ActionSpec,
     CatalogueItem,
     EmptyView,
@@ -208,7 +210,7 @@ def build_demo_spec() -> OperatorAppSpec:
     def telemetry_factory(context: PageContext) -> OperatorPage:
         return TelemetryPage()
 
-    def demo_runner(params: dict[str, object], context: ActionContext) -> ActionOutcome:
+    def demo_runner(params: Mapping[str, object], context: ActionContext) -> ActionOutcome:
         context.emit("demo", completed=1, total=1, message="demo action executed")
         return ActionOutcome(
             status=SemanticStatus.OK,
@@ -221,23 +223,25 @@ def build_demo_spec() -> OperatorAppSpec:
         title="Groundskeeping Demo",
         subtitle="standalone reusable shell",
         default_page=OVERVIEW_ROUTE.key,
-        actions=(
-            ActionSpec(
-                key="overview.echo",
-                page_key=OVERVIEW_ROUTE.key,
-                label="Echo message",
-                summary="Small executable action used by the demo contract tests.",
-                runner=demo_runner,
-                fields=(
-                    FieldSpec(
-                        key="message",
-                        label="Message",
-                        kind=FieldKind.TEXT,
-                        default="groundskeeping",
+        actions=ActionRegistry(
+            (
+                ActionSpec(
+                    key="overview.echo",
+                    page_key=OVERVIEW_ROUTE.key,
+                    label="Echo message",
+                    summary="Small executable action used by the demo contract tests.",
+                    runner=demo_runner,
+                    fields=(
+                        FieldSpec(
+                            key="message",
+                            label="Message",
+                            kind=FieldKind.TEXT,
+                            default="groundskeeping",
+                        ),
                     ),
+                    execution=ExecutionKind.QUICK,
                 ),
-                execution=ExecutionKind.QUICK,
-            ),
+            )
         ),
         pages=(
             PageRegistration(route=OVERVIEW_ROUTE, factory=overview_factory),

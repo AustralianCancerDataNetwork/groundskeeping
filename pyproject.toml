@@ -1,6 +1,6 @@
 [project]
 name = "groundskeeping"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Reusable Textual operator shell, workbench, configuration browser, and telemetry primitives."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -15,14 +15,31 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=9.0",
+    "ruff>=0.4",
+    "ty>=0.0.59",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.1",
+    "mkdocstrings-python>=2.0.1",
 ]
 
 [project.scripts]
 groundskeeping = "groundskeeping.demo:main"
 groundskeeping-demo = "groundskeeping.demo:main"
 
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+raw-options = { tag_regex = '^v?(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$' }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/groundskeeping"]
+
 [tool.uv]
 package = true
+cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
 
 [tool.ruff]
 target-version = "py312"
@@ -32,18 +49,3 @@ target-version = "py312"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
-
-[tool.setuptools]
-package-dir = { "" = "src" }
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-groundskeeping = [
-    "themes/*.tcss",
-]
-
-[build-system]
-requires = ["setuptools>=69", "wheel"]
-build-backend = "setuptools.build_meta"

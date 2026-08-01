@@ -5,13 +5,11 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import is_dataclass
 from pathlib import Path
-from typing import Any
 
 from groundskeeping.configurator.models import (
     ConfigDiff,
     ConfigDiffEntry,
     ConfigDraft,
-    ConfigResourceAdapter,
     ConfigSectionView,
     ConfigTarget,
     ConfiguratorSnapshot,
@@ -159,12 +157,12 @@ class OAConfiguratorAdapter:
     def _object_mapping(self, value: object) -> Mapping[str, object]:
         mapping = self._as_mapping(value)
         if mapping:
-            return mapping
+            return {str(key): item for key, item in mapping.items()}
         model_dump = getattr(value, "model_dump", None)
         if callable(model_dump):
             dumped = model_dump()
             if isinstance(dumped, Mapping):
-                return dumped
+                return {str(key): item for key, item in dumped.items()}
         if is_dataclass(value):
             return {
                 key: getattr(value, key)
@@ -179,7 +177,10 @@ class OAConfiguratorAdapter:
         return {"value": value}
 
     def _as_mapping(self, value: object) -> Mapping[object, object]:
-        return value if isinstance(value, Mapping) else {}
+        if isinstance(value, Mapping):
+            items: dict[object, object] = {key: item for key, item in value.items()}
+            return items
+        return {}
 
     def _looks_scalar(self, value: object) -> bool:
         return value is None or isinstance(value, str | int | float | bool | RedactedValue)

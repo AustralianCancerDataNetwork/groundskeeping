@@ -142,11 +142,11 @@ class BlockDecision:
     reason: str | None = None
 
     @classmethod
-    def allow(cls) -> "BlockDecision":
+    def allow(cls) -> BlockDecision:
         return cls(True)
 
     @classmethod
-    def block(cls, reason: str) -> "BlockDecision":
+    def block(cls, reason: str) -> BlockDecision:
         return cls(False, reason)
 
 
