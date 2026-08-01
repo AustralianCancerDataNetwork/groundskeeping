@@ -1,0 +1,5869 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reusable Textual operator shell, workbench, configuration browser, and telemetry primitives.">
+      
+      
+      
+        <link rel="canonical" href="https://AustralianCancerDataNetwork.github.io/groundskeeping/api/actions/">
+      
+      
+        <link rel="prev" href="../views/">
+      
+      
+        <link rel="next" href="../jobs/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Actions - groundskeeping</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#actions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="groundskeeping" class="md-header__button md-logo" aria-label="groundskeeping" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            groundskeeping
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Actions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="light-blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/AustralianCancerDataNetwork/groundskeeping" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    groundskeeping
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="groundskeeping" class="md-nav__button md-logo" aria-label="groundskeeping" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    groundskeeping
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/AustralianCancerDataNetwork/groundskeeping" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    groundskeeping
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ownership/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ownership Boundary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pages and the Workbench
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../actions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions and Jobs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../telemetry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telemetry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Page Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../views/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        actions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Preflight" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preflight
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Validator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validator
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionContext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ActionContext
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ActionContext">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionContext.action_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        action_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionContext.cancellation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cancellation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionContext.progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        progress
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionContext.emit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        emit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ActionOutcome
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ActionOutcome">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome.detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        detail
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome.refresh_pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        refresh_pages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome.status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome.summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome.view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        view
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRegistry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ActionRegistry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ActionRegistry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRegistry.__iter__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __iter__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRegistry.for_page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        for_page
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRegistry.get" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRunner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ActionRunner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ActionRunner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRunner.__call__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __call__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ActionSpec
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ActionSpec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.cancellation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cancellation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.command_hint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        command_hint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.effect_refs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        effect_refs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.long_running" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        long_running
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.needs_params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        needs_params
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.page_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        page_key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.preflight" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        preflight
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.resource_refs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        resource_refs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.runner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        runner
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.parse_params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        parse_params
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AllowAllOperationPolicy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AllowAllOperationPolicy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy.blocked_reason" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        blocked_reason
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy.confirmation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        confirmation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy.describe_effects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        describe_effects
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ChoiceOption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ChoiceOption
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ChoiceOption">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ChoiceOption.description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        description
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ChoiceOption.label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ChoiceOption.value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Confirmation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confirmation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Confirmation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Confirmation.confirm_label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        confirm_label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Confirmation.dangerous" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dangerous
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Confirmation.message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        message
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Confirmation.title" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        title
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.DefaultResultPresenter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DefaultResultPresenter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DefaultResultPresenter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.DefaultResultPresenter.present" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        present
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ExecutionKind" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExecutionKind
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ExecutionKind">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ExecutionKind.BACKGROUND" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BACKGROUND
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ExecutionKind.LONG_RUNNING" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LONG_RUNNING
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ExecutionKind.QUICK" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FieldKind
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FieldKind">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.BOOLEAN" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BOOLEAN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.CHOICE" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CHOICE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.DECIMAL" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DECIMAL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.EXISTING_PATH" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EXISTING_PATH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.INTEGER" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        INTEGER
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.MULTILINE" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MULTILINE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.OUTPUT_PATH" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OUTPUT_PATH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.SECRET" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SECRET
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.TEXT" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TEXT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FieldSpec
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FieldSpec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.choices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        choices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        default
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        help
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.kind" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        kind
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.masks_value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        masks_value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.maximum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        maximum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.minimum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        minimum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        required
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.sensitive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sensitive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.validator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        validator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.parse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        parse
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.OperationPolicy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OperationPolicy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OperationPolicy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.OperationPolicy.blocked_reason" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        blocked_reason
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.OperationPolicy.confirmation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        confirmation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.OperationPolicy.describe_effects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        describe_effects
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ParsedField" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ParsedField
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ParsedField">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ParsedField.key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ParsedField.redacted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        redacted
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ParsedField.value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ResultPresenter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResultPresenter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ResultPresenter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ResultPresenter.present" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        present
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ValidationIssue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ValidationIssue
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ValidationIssue">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ValidationIssue.field_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        field_key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ValidationIssue.message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        message
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ValidationIssue.status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        status
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.run_action_sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_action_sync
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Jobs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configurator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configurator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../telemetry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telemetry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../widgets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Widgets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        actions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Preflight" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preflight
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Validator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validator
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionContext" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ActionContext
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ActionContext">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionContext.action_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        action_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionContext.cancellation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cancellation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionContext.progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        progress
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionContext.emit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        emit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ActionOutcome
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ActionOutcome">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome.detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        detail
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome.refresh_pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        refresh_pages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome.status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome.summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionOutcome.view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        view
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRegistry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ActionRegistry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ActionRegistry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRegistry.__iter__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __iter__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRegistry.for_page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        for_page
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRegistry.get" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRunner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ActionRunner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ActionRunner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionRunner.__call__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __call__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ActionSpec
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ActionSpec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.cancellation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cancellation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.command_hint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        command_hint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.effect_refs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        effect_refs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.long_running" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        long_running
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.needs_params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        needs_params
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.page_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        page_key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.preflight" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        preflight
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.resource_refs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        resource_refs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.runner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        runner
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ActionSpec.parse_params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        parse_params
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AllowAllOperationPolicy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AllowAllOperationPolicy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy.blocked_reason" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        blocked_reason
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy.confirmation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        confirmation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy.describe_effects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        describe_effects
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ChoiceOption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ChoiceOption
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ChoiceOption">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ChoiceOption.description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        description
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ChoiceOption.label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ChoiceOption.value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Confirmation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confirmation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Confirmation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Confirmation.confirm_label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        confirm_label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Confirmation.dangerous" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dangerous
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Confirmation.message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        message
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.Confirmation.title" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        title
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.DefaultResultPresenter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DefaultResultPresenter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DefaultResultPresenter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.DefaultResultPresenter.present" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        present
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ExecutionKind" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExecutionKind
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ExecutionKind">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ExecutionKind.BACKGROUND" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BACKGROUND
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ExecutionKind.LONG_RUNNING" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LONG_RUNNING
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ExecutionKind.QUICK" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QUICK
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FieldKind
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FieldKind">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.BOOLEAN" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BOOLEAN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.CHOICE" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CHOICE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.DECIMAL" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DECIMAL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.EXISTING_PATH" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EXISTING_PATH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.INTEGER" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        INTEGER
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.MULTILINE" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MULTILINE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.OUTPUT_PATH" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OUTPUT_PATH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.SECRET" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SECRET
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldKind.TEXT" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TEXT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FieldSpec
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FieldSpec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.choices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        choices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        default
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        help
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.kind" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        kind
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.label" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        label
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.masks_value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        masks_value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.maximum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        maximum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.minimum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        minimum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        required
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.sensitive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sensitive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.validator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        validator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.parse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        parse
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.OperationPolicy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OperationPolicy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OperationPolicy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.OperationPolicy.blocked_reason" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        blocked_reason
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.OperationPolicy.confirmation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        confirmation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.OperationPolicy.describe_effects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        describe_effects
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ParsedField" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ParsedField
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ParsedField">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ParsedField.key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ParsedField.redacted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        redacted
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ParsedField.value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        value
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ResultPresenter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResultPresenter
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ResultPresenter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ResultPresenter.present" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        present
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ValidationIssue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ValidationIssue
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ValidationIssue">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ValidationIssue.field_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        field_key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ValidationIssue.message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        message
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.ValidationIssue.status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        status
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.run_action_sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_action_sync
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../app/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    API Reference
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">&para;</a></h1>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="groundskeeping.contracts.actions"></a>
+    <div class="doc doc-contents first">
+
+        <p>Generic action, field, and result contracts.</p>
+<p>Consumers own the verbs and the effects. Groundskeeping owns the repeatable operator
+sequence around those verbs: describe fields, parse input, ask policy whether to proceed,
+run with progress/cancellation context, and render a generic outcome.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="groundskeeping.contracts.actions.Preflight" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">Preflight</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.Preflight" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">Preflight</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span>
+    <span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ValidationIssue</span><span class="p">]</span>
+<span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="groundskeeping.contracts.actions.Validator" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">Validator</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.Validator" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">Validator</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">object</span><span class="p">],</span> <span class="n">ValidationIssue</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.ActionContext" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ActionContext</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionContext" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ActionContext</span><span class="p">(</span>
+    <span class="n">progress</span><span class="p">:</span> <span class="n">ProgressSink</span><span class="p">,</span>
+    <span class="n">cancellation</span><span class="p">:</span> <span class="n">CancellationToken</span><span class="p">,</span>
+    <span class="n">action_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Everything a runner may touch while the action is in flight.</p>
+<p>Deliberately narrow: a runner reports progress and checks for cancellation through this
+object, so long-running domain work never needs to import a widget or reach the app.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionContext.action_id" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">action_id</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionContext.action_id" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">action_id</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionContext.cancellation" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">cancellation</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionContext.cancellation" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">cancellation</span><span class="p">:</span> <span class="n">CancellationToken</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionContext.progress" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">progress</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionContext.progress" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">progress</span><span class="p">:</span> <span class="n">ProgressSink</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.ActionContext.emit" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">emit</span>
+
+
+<a href="#groundskeeping.contracts.actions.ActionContext.emit" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">emit</span><span class="p">(</span>
+    <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">phase</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">completed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">total</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.ActionOutcome" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ActionOutcome</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionOutcome" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ActionOutcome</span><span class="p">(</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">SemanticStatus</span><span class="p">,</span>
+    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">view</span><span class="p">:</span> <span class="n">SurfaceView</span><span class="p">,</span>
+    <span class="n">detail</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">refresh_pages</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionOutcome.detail" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">detail</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionOutcome.detail" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">detail</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionOutcome.refresh_pages" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">refresh_pages</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionOutcome.refresh_pages" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">refresh_pages</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionOutcome.status" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">status</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionOutcome.status" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">status</span><span class="p">:</span> <span class="n">SemanticStatus</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionOutcome.summary" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">summary</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionOutcome.summary" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">summary</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionOutcome.view" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">view</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionOutcome.view" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">view</span><span class="p">:</span> <span class="n">SurfaceView</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.ActionRegistry" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ActionRegistry</span>
+
+
+<a href="#groundskeeping.contracts.actions.ActionRegistry" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ActionRegistry</span><span class="p">(</span>
+    <span class="n">actions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ActionSpec</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">page_keys</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Exact-key lookup for actions with startup validation.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.ActionRegistry.__iter__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__iter__</span>
+
+
+<a href="#groundskeeping.contracts.actions.ActionRegistry.__iter__" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__iter__</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">ActionSpec</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.ActionRegistry.for_page" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">for_page</span>
+
+
+<a href="#groundskeeping.contracts.actions.ActionRegistry.for_page" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">for_page</span><span class="p">(</span><span class="n">page_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ActionSpec</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.ActionRegistry.get" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">get</span>
+
+
+<a href="#groundskeeping.contracts.actions.ActionRegistry.get" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">get</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ActionSpec</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.ActionRunner" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ActionRunner</span>
+
+
+<a href="#groundskeeping.contracts.actions.ActionRunner" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.Protocol">Protocol</span></code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.ActionRunner.__call__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__call__</span>
+
+
+<a href="#groundskeeping.contracts.actions.ActionRunner.__call__" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__call__</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="n">context</span><span class="p">:</span> <span class="n">ActionContext</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.ActionSpec" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ActionSpec</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ActionSpec</span><span class="p">(</span>
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">page_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">runner</span><span class="p">:</span> <span class="n">ActionRunner</span><span class="p">,</span>
+    <span class="n">command_hint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fields</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">FieldSpec</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionKind</span> <span class="o">=</span> <span class="n">ExecutionKind</span><span class="o">.</span><span class="n">QUICK</span><span class="p">,</span>
+    <span class="n">cancellation</span><span class="p">:</span> <span class="n">CancellationMode</span> <span class="o">=</span> <span class="n">CancellationMode</span><span class="o">.</span><span class="n">UNSUPPORTED</span><span class="p">,</span>
+    <span class="n">effect_refs</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
+    <span class="n">resource_refs</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(),</span>
+    <span class="n">preflight</span><span class="p">:</span> <span class="n">Preflight</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Declaration of one operator-facing command and the runner that performs it.</p>
+<p>The spec carries everything the shell needs to present, gate, and execute the command
+without knowing what it does: fields to parse, resources and effects for the operation
+policy to reason about, and the cancellation mode the runner honours.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.cancellation" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">cancellation</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.cancellation" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">cancellation</span><span class="p">:</span> <span class="n">CancellationMode</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">CancellationMode</span><span class="o">.</span><span class="n">UNSUPPORTED</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.command_hint" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">command_hint</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.command_hint" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">command_hint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.effect_refs" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">effect_refs</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.effect_refs" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">effect_refs</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.execution" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">execution</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.execution" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionKind</span> <span class="o">=</span> <span class="n">ExecutionKind</span><span class="o">.</span><span class="n">QUICK</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.fields" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">fields</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.fields" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">fields</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">FieldSpec</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.key" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">key</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.key" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.label" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">label</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.label" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.long_running" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">long_running</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.long_running" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">long_running</span><span class="p">:</span> <span class="nb">bool</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.needs_params" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">needs_params</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.needs_params" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">needs_params</span><span class="p">:</span> <span class="nb">bool</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.page_key" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">page_key</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.page_key" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">page_key</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.preflight" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">preflight</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.preflight" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">preflight</span><span class="p">:</span> <span class="n">Preflight</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.resource_refs" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">resource_refs</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.resource_refs" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">resource_refs</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.runner" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">runner</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.runner" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">runner</span><span class="p">:</span> <span class="n">ActionRunner</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.summary" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">summary</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.summary" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">summary</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.ActionSpec.parse_params" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">parse_params</span>
+
+
+<a href="#groundskeeping.contracts.actions.ActionSpec.parse_params" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">parse_params</span><span class="p">(</span>
+    <span class="n">raw</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.AllowAllOperationPolicy" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">AllowAllOperationPolicy</span>
+
+
+<a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Default policy for demos and tests; production consumers should be explicit.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.AllowAllOperationPolicy.blocked_reason" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">blocked_reason</span>
+
+
+<a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy.blocked_reason" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">blocked_reason</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">ActionSpec</span><span class="p">,</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+    <span class="n">active_jobs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.AllowAllOperationPolicy.confirmation" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">confirmation</span>
+
+
+<a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy.confirmation" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">confirmation</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">ActionSpec</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Confirmation</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.AllowAllOperationPolicy.describe_effects" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">describe_effects</span>
+
+
+<a href="#groundskeeping.contracts.actions.AllowAllOperationPolicy.describe_effects" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">describe_effects</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">ActionSpec</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.ChoiceOption" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ChoiceOption</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ChoiceOption" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ChoiceOption</span><span class="p">(</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ChoiceOption.description" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">description</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ChoiceOption.description" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ChoiceOption.label" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">label</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ChoiceOption.label" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ChoiceOption.value" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">value</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ChoiceOption.value" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">value</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.Confirmation" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">Confirmation</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.Confirmation" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Confirmation</span><span class="p">(</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">confirm_label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Run&quot;</span><span class="p">,</span>
+    <span class="n">dangerous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.Confirmation.confirm_label" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">confirm_label</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.Confirmation.confirm_label" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">confirm_label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Run&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.Confirmation.dangerous" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">dangerous</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.Confirmation.dangerous" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">dangerous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.Confirmation.message" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">message</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.Confirmation.message" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">message</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.Confirmation.title" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">title</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.Confirmation.title" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.DefaultResultPresenter" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">DefaultResultPresenter</span>
+
+
+<a href="#groundskeeping.contracts.actions.DefaultResultPresenter" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Present plain runner results without imposing a consumer report schema.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.DefaultResultPresenter.present" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">present</span>
+
+
+<a href="#groundskeeping.contracts.actions.DefaultResultPresenter.present" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">present</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">ActionSpec</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="nb">object</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ActionOutcome</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.ExecutionKind" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ExecutionKind</span>
+
+
+<a href="#groundskeeping.contracts.actions.ExecutionKind" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="enum.StrEnum">StrEnum</span></code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ExecutionKind.BACKGROUND" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">BACKGROUND</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ExecutionKind.BACKGROUND" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">BACKGROUND</span> <span class="o">=</span> <span class="s1">&#39;background&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ExecutionKind.LONG_RUNNING" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">LONG_RUNNING</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ExecutionKind.LONG_RUNNING" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">LONG_RUNNING</span> <span class="o">=</span> <span class="s1">&#39;long_running&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ExecutionKind.QUICK" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">QUICK</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ExecutionKind.QUICK" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">QUICK</span> <span class="o">=</span> <span class="s1">&#39;quick&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.FieldKind" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">FieldKind</span>
+
+
+<a href="#groundskeeping.contracts.actions.FieldKind" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="enum.StrEnum">StrEnum</span></code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldKind.BOOLEAN" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">BOOLEAN</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldKind.BOOLEAN" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">BOOLEAN</span> <span class="o">=</span> <span class="s1">&#39;boolean&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldKind.CHOICE" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">CHOICE</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldKind.CHOICE" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">CHOICE</span> <span class="o">=</span> <span class="s1">&#39;choice&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldKind.DECIMAL" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">DECIMAL</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldKind.DECIMAL" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">DECIMAL</span> <span class="o">=</span> <span class="s1">&#39;decimal&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldKind.EXISTING_PATH" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">EXISTING_PATH</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldKind.EXISTING_PATH" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">EXISTING_PATH</span> <span class="o">=</span> <span class="s1">&#39;existing_path&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldKind.INTEGER" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">INTEGER</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldKind.INTEGER" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">INTEGER</span> <span class="o">=</span> <span class="s1">&#39;integer&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldKind.MULTILINE" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">MULTILINE</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldKind.MULTILINE" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">MULTILINE</span> <span class="o">=</span> <span class="s1">&#39;multiline&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldKind.OUTPUT_PATH" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">OUTPUT_PATH</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldKind.OUTPUT_PATH" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">OUTPUT_PATH</span> <span class="o">=</span> <span class="s1">&#39;output_path&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldKind.SECRET" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">SECRET</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldKind.SECRET" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">SECRET</span> <span class="o">=</span> <span class="s1">&#39;secret&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldKind.TEXT" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">TEXT</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldKind.TEXT" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">TEXT</span> <span class="o">=</span> <span class="s1">&#39;text&#39;</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.FieldSpec" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">FieldSpec</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">FieldSpec</span><span class="p">(</span>
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">FieldKind</span> <span class="o">=</span> <span class="n">FieldKind</span><span class="o">.</span><span class="n">TEXT</span><span class="p">,</span>
+    <span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">default</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">help</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">choices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChoiceOption</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">minimum</span><span class="p">:</span> <span class="n">Decimal</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">maximum</span><span class="p">:</span> <span class="n">Decimal</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sensitive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">validator</span><span class="p">:</span> <span class="n">Validator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Declarative input field used by forms and headless tests.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.choices" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">choices</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.choices" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">choices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChoiceOption</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.default" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">default</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.default" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">default</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.help" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">help</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.help" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">help</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.key" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">key</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.key" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.kind" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">kind</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.kind" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">kind</span><span class="p">:</span> <span class="n">FieldKind</span> <span class="o">=</span> <span class="n">FieldKind</span><span class="o">.</span><span class="n">TEXT</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.label" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">label</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.label" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.masks_value" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">masks_value</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.masks_value" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">masks_value</span><span class="p">:</span> <span class="nb">bool</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.maximum" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">maximum</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.maximum" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">maximum</span><span class="p">:</span> <span class="n">Decimal</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.minimum" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">minimum</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.minimum" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">minimum</span><span class="p">:</span> <span class="n">Decimal</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.required" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">required</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.required" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.sensitive" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">sensitive</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.sensitive" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">sensitive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.validator" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">validator</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.validator" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">validator</span><span class="p">:</span> <span class="n">Validator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.parse" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">parse</span>
+
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.parse" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">parse</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParsedField</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Parse one field value and return both real and presentation-safe values.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.OperationPolicy" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">OperationPolicy</span>
+
+
+<a href="#groundskeeping.contracts.actions.OperationPolicy" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.Protocol">Protocol</span></code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.OperationPolicy.blocked_reason" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">blocked_reason</span>
+
+
+<a href="#groundskeeping.contracts.actions.OperationPolicy.blocked_reason" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">blocked_reason</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">ActionSpec</span><span class="p">,</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+    <span class="n">active_jobs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.OperationPolicy.confirmation" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">confirmation</span>
+
+
+<a href="#groundskeeping.contracts.actions.OperationPolicy.confirmation" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">confirmation</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">ActionSpec</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Confirmation</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.OperationPolicy.describe_effects" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">describe_effects</span>
+
+
+<a href="#groundskeeping.contracts.actions.OperationPolicy.describe_effects" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">describe_effects</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">ActionSpec</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.ParsedField" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ParsedField</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ParsedField" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ParsedField</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">redacted</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ParsedField.key" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">key</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ParsedField.key" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ParsedField.redacted" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">redacted</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ParsedField.redacted" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">redacted</span><span class="p">:</span> <span class="nb">object</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ParsedField.value" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">value</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ParsedField.value" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">value</span><span class="p">:</span> <span class="nb">object</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.ResultPresenter" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ResultPresenter</span>
+
+
+<a href="#groundskeeping.contracts.actions.ResultPresenter" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.Protocol">Protocol</span></code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.actions.ResultPresenter.present" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">present</span>
+
+
+<a href="#groundskeeping.contracts.actions.ResultPresenter.present" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">present</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">ActionSpec</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="nb">object</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ActionOutcome</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.actions.ValidationIssue" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ValidationIssue</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ValidationIssue" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">ValidationIssue</span><span class="p">(</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">field_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">SemanticStatus</span> <span class="o">=</span> <span class="n">SemanticStatus</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ValidationIssue.field_key" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">field_key</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ValidationIssue.field_key" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">field_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ValidationIssue.message" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">message</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ValidationIssue.message" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">message</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.ValidationIssue.status" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">status</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.ValidationIssue.status" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">status</span><span class="p">:</span> <span class="n">SemanticStatus</span> <span class="o">=</span> <span class="n">SemanticStatus</span><span class="o">.</span><span class="n">ERROR</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="groundskeeping.contracts.actions.run_action_sync" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">run_action_sync</span>
+
+
+<a href="#groundskeeping.contracts.actions.run_action_sync" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">run_action_sync</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">ActionSpec</span><span class="p">,</span>
+    <span class="n">raw_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cancellation</span><span class="p">:</span> <span class="n">CancellationToken</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">presenter</span><span class="p">:</span> <span class="n">ResultPresenter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">action_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ActionOutcome</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Run an action synchronously for tests, demos, and simple quick actions.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.path", "navigation.top", "content.code.copy", "content.code.annotate", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
