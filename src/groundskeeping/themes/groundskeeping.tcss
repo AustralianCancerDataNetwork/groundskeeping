@@ -1,0 +1,148 @@
+Screen {
+    layout: vertical;
+    background: $background;
+}
+
+* {
+    scrollbar-size-vertical: 1;
+    scrollbar-size-horizontal: 1;
+    scrollbar-background: $surface-darken-1;
+    scrollbar-color: $primary 50%;
+}
+
+#body {
+    height: 1fr;
+}
+
+#page-tabs {
+    height: 1;
+    background: $surface;
+}
+
+#page-tabs Underline {
+    display: none;
+    height: 0;
+}
+
+#workspace {
+    height: 1fr;
+    padding: 0 1;
+}
+
+#workspace-title {
+    height: 1;
+}
+
+.operator-page {
+    display: none;
+}
+
+.operator-page.-active {
+    display: block;
+}
+
+.section {
+    border: round $accent 40%;
+    border-title-align: left;
+    border-title-color: $text-accent 50%;
+    border-subtitle-align: right;
+    border-subtitle-color: $text-muted;
+    padding: 0 1;
+}
+
+.section:focus-within {
+    border: round $accent;
+    border-title-color: $foreground;
+    border-title-style: bold;
+}
+
+#workbench {
+    height: 1fr;
+}
+
+#catalogue-panel {
+    width: 36;
+    max-width: 40%;
+}
+
+#workbench-right {
+    width: 1fr;
+}
+
+#result-panel {
+    height: 3fr;
+}
+
+#context-panel {
+    height: 2fr;
+}
+
+Tree, TextArea, DataTable {
+    height: 1fr;
+}
+
+#context {
+    border: none;
+    background: transparent;
+}
+
+#context:focus {
+    border: none;
+}
+
+#result-header {
+    height: 1;
+    margin-bottom: 1;
+}
+
+#result-status {
+    width: auto;
+    height: 1;
+    padding: 0 1;
+    margin-right: 1;
+    text-style: bold;
+    color: $text-muted;
+    background: $surface;
+}
+
+#result-status.-ok {
+    color: $text-success;
+    background: $success-muted;
+}
+
+#result-status.-warning {
+    color: $text-warning;
+    background: $warning-muted;
+}
+
+#result-status.-error {
+    color: $text-error;
+    background: $error-muted;
+}
+
+#result-summary {
+    width: 1fr;
+    height: 1;
+}
+
+#result-empty, #result-loading {
+    height: 1fr;
+    hatch: right $surface-lighten-1 18%;
+    color: $text-muted;
+    content-align: center middle;
+    text-align: center;
+    padding: 0 4;
+}
+
+DataTable:blur > .datatable--cursor {
+    background: transparent;
+}
+
+Tree:blur > .tree--cursor {
+    background: transparent;
+}
+
+DataTable > .datatable--header {
+    color: $text-accent;
+    background: $surface;
+}
