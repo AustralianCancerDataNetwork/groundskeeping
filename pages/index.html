@@ -1177,6 +1177,8 @@ startup rather than when an operator clicks a tab.</p>
 </table>
 <p>Row events return to the active page. The workbench renders generic models; the page decides
 what a highlighted row means.</p>
+<p>Detail panes can render <code>TextView</code>, <code>KeyValueView</code>, or <code>TableView</code>. Use a detail <code>TableView</code>
+when the selected item has its own repeated data, such as available LLM models for a provider.</p>
 <p>If <code>landing_view</code> raises, the shell catches the exception and renders an <code>EmptyView</code>
 explaining that the page could not be rendered. A page that cannot build its landing content
 degrades to a message instead of taking down the app.</p>
