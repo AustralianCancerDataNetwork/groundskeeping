@@ -1123,8 +1123,9 @@ not receive the whole app.</p>
 <code>CatalogueNavigation</code> when hierarchy is the point, such as a provider with nested models or an
 evaluation run with nested artefacts.</p>
 <p>Translate domain objects before they reach the workbench. The workbench understands
-<code>SectionItem</code>, <code>CatalogueItem</code>, <code>TableView</code>, <code>TreeView</code>, and friends; it does not need to know
-what a Groundworkers resource or <code>cava-nlp-shard</code> evaluation object is.</p>
+<code>SectionItem</code>, <code>CatalogueItem</code>, <code>TableView</code>, <code>SelectionTableView</code>, <code>TreeView</code>, and friends;
+it does not need to know what a Groundworkers resource or <code>cava-nlp-shard</code> evaluation object
+is.</p>
 <p>Use <code>OperatorAppSpec.workbench_labels</code> to rename shared pane chrome such as the result and
 detail panel labels. Page-owned titles still live on navigation and view contracts: for
 example, <code>SectionNavigation.title</code> names the left pane for a specific page, and
@@ -1181,6 +1182,11 @@ startup rather than when an operator clicks a tab.</p>
 </table>
 <p>Row events return to the active page. The workbench renders generic models; the page decides
 what a highlighted row means.</p>
+<p>Use <code>SelectionTableView</code> when rows are controls, not just data. It renders a
+Groundskeeping-owned selection list with stable row keys, disabled row handling, and
+selection modes for single, multiple, or all-vs-specific selection. Pages that need the full
+selected-key state can implement the optional <code>SelectionAwareOperatorPage.selection_changed</code>
+hook; older pages still receive <code>row_selected</code> for compatibility.</p>
 <p>Detail panes can render <code>TextView</code>, <code>KeyValueView</code>, or <code>TableView</code>. Use a detail <code>TableView</code>
 when the selected item has its own repeated data, such as available LLM models for a provider.</p>
 <p>If <code>landing_view</code> raises, the shell catches the exception and renders an <code>EmptyView</code>

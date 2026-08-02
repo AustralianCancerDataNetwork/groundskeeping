@@ -1160,6 +1160,9 @@ issues.</p>
 <p><code>FieldSpec</code> supports text, integer, decimal, boolean, choice, existing path, output path,
 secret, and multiline fields. It also carries presentation metadata such as placeholder text,
 help text, disabled/read-only state, and secret behaviour.</p>
+<p>Choice fields render as Textual <code>Select</code> controls. Keyboard and mouse selection both populate
+the submitted field value, and long option lists open as scrollable menus while focus stays
+with the active control.</p>
 <h2 id="secrets-and-revisions">Secrets and revisions<a class="headerlink" href="#secrets-and-revisions" title="Permanent link">&para;</a></h2>
 <p>Real candidate values belong in the controller. Snapshots should carry only values needed to
 render the current step, and secret fields should be omitted or represented with redacted

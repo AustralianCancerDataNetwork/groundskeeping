@@ -1106,6 +1106,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.pages.SelectionAwareOperatorPage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SelectionAwareOperatorPage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SelectionAwareOperatorPage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.pages.SelectionAwareOperatorPage.selection_changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        selection_changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1781,6 +1809,34 @@
     <span class="md-ellipsis">
       
         show_view
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.pages.SelectionAwareOperatorPage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SelectionAwareOperatorPage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SelectionAwareOperatorPage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.pages.SelectionAwareOperatorPage.selection_changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        selection_changed
       
     </span>
   </a>
@@ -2726,6 +2782,76 @@
 
 <a href="#groundskeeping.contracts.pages.PageSurfacePort.show_view" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">show_view</span><span class="p">(</span><span class="n">page_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">view</span><span class="p">:</span> <span class="n">SurfaceView</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="groundskeeping.contracts.pages.SelectionAwareOperatorPage" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">SelectionAwareOperatorPage</span>
+
+
+<a href="#groundskeeping.contracts.pages.SelectionAwareOperatorPage" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.Protocol">Protocol</span></code></p>
+
+
+
+        <p>Optional hook for pages that consume workbench-owned selection tables.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.contracts.pages.SelectionAwareOperatorPage.selection_changed" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">selection_changed</span>
+
+
+<a href="#groundskeeping.contracts.pages.SelectionAwareOperatorPage.selection_changed" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">selection_changed</span><span class="p">(</span>
+    <span class="n">row_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">selected_keys</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">context</span><span class="p">:</span> <span class="n">PageContext</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
