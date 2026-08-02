@@ -14,10 +14,10 @@ uv add groundskeeping
 uv run groundskeeping
 ```
 
-The demo composes overview, configuration, and telemetry pages. It also registers a small
-action so the app spec and action registry can be exercised without a consumer application.
+The demo shows the shell without depending on Groundworkers or `cava-nlp-shard`. It includes
+overview, configuration, telemetry, an action button, and a small setup wizard.
 
-The demo source is the shortest complete example of the composition root; read
+The demo source is the shortest complete example of the app shape; read
 `src/groundskeeping/demo.py` alongside this guide.
 
 ## Build your first page
@@ -66,7 +66,7 @@ class SetupPage(Widget):
 
 Register it in an `OperatorAppSpec` and run the app. Start read-only: a page that only
 inspects is enough to exercise routing, the workbench, and failure presentation before you
-take ownership of durable changes.
+add durable changes.
 
 ## Run the tests
 
@@ -77,5 +77,6 @@ uv run ruff check .
 uv run ty check src/
 ```
 
-The tests cover route validation, app startup, action and job contracts, configurator
-redaction, telemetry import boundaries, and consumer dependency boundaries.
+The tests cover route validation, app startup, action and job contracts, wizard branching and
+redaction, configuration redaction, telemetry import boundaries, and application dependency
+boundaries.

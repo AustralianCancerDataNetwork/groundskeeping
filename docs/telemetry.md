@@ -1,6 +1,6 @@
 # Telemetry
 
-Telemetry has a headless core and Textual widgets layered above it.
+Telemetry has simple data contracts, a sampling runtime, and optional Textual widgets.
 
 ## The headless core
 
@@ -9,11 +9,11 @@ metrics, and snapshots. `groundskeeping.telemetry` contains the sampling runtime
 implementations. Both layers remain free of Textual imports so collectors can be tested and
 reused outside a running app.
 
-This boundary is enforced by tests, not just by convention: importing Textual anywhere under
-the telemetry runtime/provider layer fails the suite.
+The runtime/provider layer does not import Textual. That keeps telemetry usable in tests,
+workers, and small command-line checks.
 
-Sources are async. `TelemetryRuntime` fans out across every registered source, so a page
-probes availability once and then samples on a timer.
+Sources are async. `TelemetryRuntime` fans out across every registered source, so a page can
+probe availability once and then sample on a timer.
 
 ```python
 from groundskeeping.contracts import SourceAvailability, TelemetrySnapshot
@@ -32,17 +32,16 @@ normalized metrics keyed by strings such as `accelerator.utilisation` and
 
 ## Widgets
 
-`groundskeeping.widgets.telemetry` renders snapshots. Widgets should bind to metric keys and
+`groundskeeping.widgets.telemetry` renders snapshots. Bind widgets to metric keys and
 capabilities, not concrete provider classes.
 
-A GPU card, for example, should care about accelerator utilisation and memory metrics; it
-should not need to know whether the source is NVIDIA, Apple Silicon, or something added later.
-Adding a provider should not require touching a widget.
+A GPU card, for example, cares about accelerator utilisation and memory metrics. It should not
+need to know whether the source is NVIDIA, Apple Silicon, or something added later.
 
 ## Ownership
 
-The shell owns Textual-free infrastructure telemetry contracts and the reusable widgets that
+Groundskeeping owns the infrastructure telemetry contracts and the reusable widgets that
 render normalized models.
 
-Consumers own domain telemetry: queue depth, pipeline progress, database state, workload
+Applications own domain telemetry: queue depth, pipeline progress, database state, workload
 throughput, and tuning interpretation.

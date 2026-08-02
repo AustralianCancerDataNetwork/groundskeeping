@@ -1,24 +1,25 @@
 # Setup Wizards
 
-Groundskeeping 0.2 adds a reusable setup-wizard surface for configuration flows that need
-more guidance than a single action form.
+Use a setup wizard when a single action form would be too cramped: database setup, embedding
+provider configuration, choosing whether to reuse or create a resource, or reviewing a change
+before it is saved.
 
-The split is intentional:
+The split is small:
 
-- `groundskeeping.contracts.wizards` defines Textual-free wizard state, steps, review data,
+- `groundskeeping.contracts.wizards` defines headless wizard state, steps, review data,
   transitions, and results;
 - `groundskeeping.widgets.WizardScreen` renders one step at a time; and
-- the consumer owns the `WizardController`, including candidate state, validation, branching,
-  revision checks, and apply semantics.
+- the application owns the `WizardController`, including candidate state, validation,
+  branching, revision checks, and apply semantics.
 
-That keeps the shell reusable while still giving applications enough room to interact with
-real configuration systems such as `oa-configurator`.
+The controller owns the real candidate object. Groundskeeping only renders the current safe
+snapshot.
 
 ## Flow shape
 
 A controller returns a `WizardSnapshot` from `start()`, then receives submitted field values
 through `submit()`. Each transition returns the next render-safe snapshot plus any validation
-issues. The shell does not copy secrets into its own state.
+issues.
 
 ```python
 from groundskeeping.contracts import WizardController
@@ -53,7 +54,7 @@ def action_selected(self, action_key, context):
 
 ## Steps
 
-The initial contracts cover three step types:
+The contracts cover three step types:
 
 - `ChoiceStep` for branch decisions such as reuse/create;
 - `FormStep` for typed fields described with `FieldSpec`; and
@@ -71,7 +72,7 @@ display values.
 
 Apply methods should carry an opaque expected-revision token from the start of the wizard to
 the final mutation request. If the underlying config changed while the operator was editing,
-return `WizardResultStatus.CONFLICTED` and refresh the relevant page instead of overwriting.
+return `WizardResultStatus.CONFLICTED` instead of overwriting.
 
 ## Demo
 

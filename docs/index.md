@@ -1,11 +1,12 @@
 # groundskeeping
 
-`groundskeeping` is a reusable Textual shell for operator tools that help people care for a
-working environment: setup checks, configuration, queues, telemetry, tuning, and long-running
-operations.
+`groundskeeping` is a reusable Textual shell for operator tools: setup checks, configuration,
+queues, telemetry, tuning, and long-running operations.
 
-The package provides the shared operating frame. A consumer application provides the domain.
-Keep that distinction close and most design decisions become simpler.
+It provides the common TUI pieces; each application decides what those pieces mean. In
+Groundworkers, that means setup pages for database configuration, embeddings, and semantic
+projection. In `cava-nlp-shard`, it means pages for evaluation runs, runtime configuration,
+and model/backend health.
 
 ## Install
 
@@ -15,21 +16,22 @@ uv add groundskeeping
 
 ## What you get
 
-| Area | What the shell provides |
+| Area | What it is useful for |
 |---|---|
-| [Pages and the Workbench](pages.md) | Route validation, tab navigation, mounted-page state, and the three-pane workbench surface |
-| [Actions and Jobs](actions.md) | Field parsing and redaction, operation policy, progress and cancellation, in-process job gating |
-| [Configuration](configuration.md) | Read-only inspection of `oa-configurator` stack config, plus draft and redacted-diff models |
-| [Telemetry](telemetry.md) | Textual-free source protocols, normalized metrics, sampling runtime, and widgets that render them |
+| [Pages and the Workbench](pages.md) | Put application-owned pages into a consistent tabbed shell |
+| [Actions and Jobs](actions.md) | Add safe buttons for things like testing a connection or running a bounded check |
+| [Setup Wizards](wizards.md) | Guide an operator through multi-step setup without putting secrets in view state |
+| [Configuration](configuration.md) | Inspect `oa-configurator` stack config and prepare safe, redacted edits |
+| [Telemetry](telemetry.md) | Sample simple infrastructure metrics and render them in the TUI |
 
 ## The shape of an app
 
 A `groundskeeping` app starts with one
 [`OperatorAppSpec`][groundskeeping.app.OperatorAppSpec]. The spec names the app, orders the
-pages, registers the actions, and supplies the policies that decide whether work may run.
+pages, registers actions, and supplies the policies that decide whether work may run.
 
-It is the composition root: everything application-specific should arrive there from the
-consumer, not through global lookup inside the shared package.
+Application-specific services arrive through page factories. The shared package should not
+import Groundworkers, `cava-nlp-shard`, or any other application that happens to use it.
 
 ```python
 from groundskeeping.app import OperatorApp, OperatorAppSpec
@@ -52,4 +54,4 @@ OperatorApp(spec).run()
 ```
 
 See [Getting Started](quickstart.md) to run the bundled demo, and
-[Ownership Boundary](ownership.md) for what belongs in the shell versus your application.
+[What belongs where](ownership.md) for what belongs in the shell versus your application.

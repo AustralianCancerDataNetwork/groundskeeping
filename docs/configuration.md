@@ -1,15 +1,17 @@
 # Configuration
 
-`groundskeeping.configurator` understands the public shape of `oa-configurator` stack
-configuration well enough to inspect and present it safely. It can build snapshots, section
-views, drafts, redacted diffs, revision-aware apply intents, and wizard-controller entry
-points.
+`groundskeeping.configurator` presents `oa-configurator` stack configuration safely. It can
+build snapshots, section views, safe drafts, redacted diffs, revision-aware apply intents, and
+wizard-controller entry points.
+
+Groundworkers can use this to show database resources and launch a setup wizard. Another
+application might use the same pieces for model providers or local runtime paths.
 
 ## Inspection
 
 [`OAConfiguratorAdapter`][groundskeeping.configurator.adapter.OAConfiguratorAdapter] is
-deliberately structural: tests and demos can pass fakes, while real consumers pass
-`StackConfig` and `PackageConfigBase` instances from `oa-configurator`.
+structural: tests and demos can pass fakes, while real applications pass `StackConfig` and
+`PackageConfigBase` instances from `oa-configurator`.
 
 ```python
 from groundskeeping.configurator import OAConfiguratorAdapter
@@ -45,24 +47,24 @@ diff = adapter.diff(
 
 ## What it does not do
 
-It does not write TOML. Persistence belongs to the public `oa-configurator` mutation API and
-to the consumer's operation policy. That separation protects comments, secrets, external
-edits, and tenant-specific safety rules.
+It does not write TOML. Persistence belongs to `oa-configurator` and to the application using
+Groundskeeping. That separation protects comments, secrets, external edits, and local safety
+rules.
 
-Editable candidates still belong to consumer-owned controllers. `ConfigDraft` records the safe
-target and changed-field presence, not raw field values. `ConfigApplyIntent` carries the safe
-target, opaque apply token, expected revision, diff, and effects needed by a public mutation
-API.
+Editable candidates still belong to application-owned controllers. `ConfigDraft` records the
+safe target and changed-field presence, not raw field values. `ConfigApplyIntent` carries the
+safe target, opaque apply token, expected revision, diff, and effects needed by a public
+mutation API.
 
 ## Extending
 
-Consumer applications can add `ConfigResourceAdapter` implementations for resource types that
-need better labels, choices, validation, verification, or post-apply effects.
+Applications can add `ConfigResourceAdapter` implementations for resource types that need
+better labels, choices, validation, verification, or post-apply effects.
 
 `NativeConfigResourceAdapter` is the fallback for ordinary configuration sections. It is
 intentionally plain: it offers display fields and validates nothing beyond the model layer
 that `oa-configurator` will run during a real apply.
 
-Resource adapters can also expose a `WizardController` for setup flows. Groundskeeping can
-render the controller in a modal wizard, but the adapter remains responsible for validation,
-branching, stale-revision checks, and the final apply call.
+Resource adapters can also expose a `WizardController` for setup flows. Groundskeeping renders
+the controller in a modal wizard; the adapter remains responsible for validation, branching,
+stale-revision checks, and the final apply call.

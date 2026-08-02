@@ -1,9 +1,11 @@
 # Pages and the Workbench
 
-Pages are owned by the consumer and are ordinary Textual widgets. The shell mounts them once,
-activates and deactivates them as the operator moves between tabs, and preserves page-local
-state. A page receives a narrow [`PageContext`][groundskeeping.contracts.pages.PageContext];
-it does not receive the whole app.
+Pages are ordinary Textual widgets owned by the application using Groundskeeping. The shell
+mounts them once, activates and deactivates them as the operator moves between tabs, and
+preserves page-local state.
+
+A page receives a narrow [`PageContext`][groundskeeping.contracts.pages.PageContext]. It does
+not receive the whole app.
 
 ## The workbench surface
 
@@ -13,10 +15,13 @@ The default page surface is the workbench:
 - rows or tree content on the upper right; and
 - selected detail on the lower right.
 
-Pages return `SectionNavigation` for flat peer areas and `CatalogueNavigation` for genuinely
-hierarchical content. The workbench renders these as an option list and a tree respectively.
-Domain objects should be translated before they reach either navigation model or a surface
-view.
+Use `SectionNavigation` for peer areas such as Database, Embeddings, and Runtime. Use
+`CatalogueNavigation` when hierarchy is the point, such as a provider with nested models or an
+evaluation run with nested artefacts.
+
+Translate domain objects before they reach the workbench. The workbench understands
+`SectionItem`, `CatalogueItem`, `TableView`, `TreeView`, and friends; it does not need to know
+what a Groundworkers resource or `cava-nlp-shard` evaluation object is.
 
 ## Routing
 
@@ -41,9 +46,8 @@ startup rather than when an operator clicks a tab.
 | `row_highlighted` | A result-table row is highlighted |
 | `row_selected` | A result-table row is selected |
 
-Row events return to the active page through the workbench surface rather than being handled
-by the widget directly. That keeps the workbench generic: it renders normalized models and
-routes interaction back to whichever page owns the current content.
+Row events return to the active page. The workbench renders generic models; the page decides
+what a highlighted row means.
 
 If `landing_view` raises, the shell catches the exception and renders an `EmptyView`
 explaining that the page could not be rendered. A page that cannot build its landing content
@@ -51,12 +55,12 @@ degrades to a message instead of taking down the app.
 
 ## Setup pages
 
-A setup page should answer a concrete operator question: "can this environment do the work I
-am about to ask of it?"
+A setup page should answer a practical operator question: "is this environment ready for the
+work I am about to run?"
 
-The page should normally live in the consumer package and use consumer services to inspect the
-environment. `groundskeeping` supplies the rendering and action contracts; it does not know
-what "ready" means for any particular application.
+The page normally lives in the application using Groundskeeping. It can call whatever services
+that application already has for config, credentials, model providers, database checks, or
+runtime health.
 
 A good setup page usually has:
 
@@ -66,12 +70,11 @@ A good setup page usually has:
 - a `TableView` for repeated checks where scanning matters;
 - `KeyValueView` detail for the selected check;
 - one or two safe verification actions; and
-- an operation policy that describes effects in the consumer's own vocabulary.
+- an operation policy that describes effects in the application's own vocabulary.
 
-Start read-only. Verification actions are a good first step because they exercise the shell,
-action contracts, progress reporting, and failure presentation without taking ownership of
-durable setup changes too early.
+Start read-only. A **Test connection** or **Refresh status** button is often enough to prove
+the page shape before you add durable writes.
 
 When setup requires guided edits, expose a `ViewAction` from the current view and open a
-consumer-owned wizard with `PageContext.open_wizard`. The page still owns what the wizard
-means; Groundskeeping only renders the navigation, fields, review state, and final result.
+wizard with `PageContext.open_wizard`. The page still owns what the wizard means;
+Groundskeeping only renders the navigation, fields, review state, and final result.
