@@ -10,6 +10,7 @@ from groundskeeping.app import OperatorApp, OperatorAppSpec
 from groundskeeping.contracts import (
     MAX_VIEW_ACTIONS,
     EmptyView,
+    KeyValueView,
     NavigationItem,
     PageContext,
     PageRegistration,
@@ -18,6 +19,7 @@ from groundskeeping.contracts import (
     SurfaceView,
     TableRow,
     TableView,
+    TextView,
     ViewAction,
     WizardResult,
     WizardResultStatus,
@@ -235,6 +237,27 @@ def test_workbench_renders_table_view_in_detail_pane() -> None:
             assert len(table.ordered_columns) == 3
             assert app.query_one("#context-panel").border_title == "Model inventory"
             assert app.query_one("#context-panel").border_subtitle == "12 rows"
+
+            app._workbench.show_detail(TextView("Model notes", "Use qwen locally."))
+            await pilot.pause()
+
+            assert context.styles.display == "block"
+            assert table.styles.display == "none"
+            assert app.query_one("#context-panel").border_title == "Model notes"
+            assert app.query_one("#context-panel").border_subtitle == ""
+
+            app._workbench.show_detail(
+                KeyValueView(
+                    rows=(("Provider", "Ollama"),),
+                    title="Model facts",
+                )
+            )
+            await pilot.pause()
+
+            assert context.styles.display == "none"
+            assert table.styles.display == "block"
+            assert app.query_one("#context-panel").border_title == "Model facts"
+            assert app.query_one("#context-panel").border_subtitle == ""
             await pilot.press("q")
 
     asyncio.run(run())

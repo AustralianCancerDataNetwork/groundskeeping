@@ -284,13 +284,17 @@ class Workbench(Widget):
         self.query_one("#result-loading", LoadingState).hide_loading()
 
     def show_detail(self, detail: DetailView) -> None:
+        panel = self.query_one("#context-panel")
+        panel.border_subtitle = ""
         if isinstance(detail, TextView):
             self.query_one("#context-table", DataTable).styles.display = "none"
             context = self.query_one("#context", TextArea)
             context.styles.display = "block"
             context.load_text(detail.body)
+            panel.border_title = detail.title
             return
         if isinstance(detail, KeyValueView):
+            panel.border_title = detail.title
             self.show_context_table(detail.rows)
             return
         if isinstance(detail, TableView):

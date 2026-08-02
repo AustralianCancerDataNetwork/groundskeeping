@@ -102,6 +102,32 @@ class _DynamicChoiceWizard:
         return WizardResult(WizardResultStatus.CANCELLED, "Cancelled.")
 
 
+class _NoChoiceWizard(_DynamicChoiceWizard):
+    def __init__(self) -> None:
+        super().__init__()
+        self.step = FormStep(
+            key="model",
+            title="Model inventory",
+            fields=(
+                FieldSpec(
+                    key="model",
+                    label="Model",
+                    kind=FieldKind.CHOICE,
+                    choices=(),
+                ),
+            ),
+        )
+
+    def start(self) -> WizardSnapshot:
+        return WizardSnapshot(
+            spec=self.spec,
+            step=self.step,
+            step_index=0,
+            step_count=2,
+            values={"model": None},
+        )
+
+
 def test_wizard_definitions_require_unique_keys() -> None:
     field = FieldSpec("database", "Database")
 
@@ -263,6 +289,23 @@ def test_wizard_choice_field_renders_dynamic_options_inline() -> None:
             await pilot.pause()
 
             assert controller.submitted["model"] == "model-05"
+            await pilot.press("escape")
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_wizard_choice_field_handles_empty_required_choices() -> None:
+    async def run() -> None:
+        app = OperatorApp(build_demo_spec())
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            app.push_screen(WizardScreen(_NoChoiceWizard()))
+            await pilot.pause()
+
+            picker = app.screen.query_one("#wizard-field-0", OptionList)
+            assert picker.option_count == 1
+            assert picker.highlighted == 0
             await pilot.press("escape")
             await pilot.press("q")
 

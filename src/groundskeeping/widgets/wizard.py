@@ -187,7 +187,7 @@ class WizardScreen(ModalScreen[WizardResult]):
             if current is None and not field.required:
                 widget.highlighted = 0
             elif current in choice_ids:
-                widget.highlighted = choice_ids.index(str(current))
+                widget.highlighted = choice_ids.index(current)
             elif field.required and field.choices:
                 widget.highlighted = 0
             return widget
