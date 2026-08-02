@@ -2,66 +2,74 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/actions/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/configuration/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/contributing/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/ownership/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/pages/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/quickstart/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/telemetry/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
+    </url>
+    <url>
+         <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/wizards/</loc>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/api/actions/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/api/app/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/api/configurator/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/api/jobs/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/api/pages/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/api/telemetry/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/api/views/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
     </url>
     <url>
          <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/api/widgets/</loc>
-         <lastmod>2026-08-01</lastmod>
+         <lastmod>2026-08-02</lastmod>
+    </url>
+    <url>
+         <loc>https://AustralianCancerDataNetwork.github.io/groundskeeping/api/wizards/</loc>
+         <lastmod>2026-08-02</lastmod>
     </url>
 </urlset>

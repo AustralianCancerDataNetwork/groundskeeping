@@ -544,6 +544,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup Wizards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../configuration/" class="md-nav__link">
         
   
@@ -753,6 +781,34 @@
     
   
     Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wizards
   
 
     
@@ -1018,9 +1074,9 @@
 <h2 id="run-the-demo">Run the demo<a class="headerlink" href="#run-the-demo" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>groundskeeping
 </code></pre></div>
-<p>The demo composes overview, configuration, and telemetry pages. It also registers a small
-action so the app spec and action registry can be exercised without a consumer application.</p>
-<p>The demo source is the shortest complete example of the composition root; read
+<p>The demo shows the shell without depending on Groundworkers or <code>cava-nlp-shard</code>. It includes
+overview, configuration, telemetry, an action button, and a small setup wizard.</p>
+<p>The demo source is the shortest complete example of the app shape; read
 <code>src/groundskeeping/demo.py</code> alongside this guide.</p>
 <h2 id="build-your-first-page">Build your first page<a class="headerlink" href="#build-your-first-page" title="Permanent link">&para;</a></h2>
 <p>A page is an ordinary Textual widget that satisfies the
@@ -1029,10 +1085,12 @@ once, then activates and deactivates it as the operator moves between tabs.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">textual.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">groundskeeping.contracts</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">CatalogueItem</span><span class="p">,</span>
     <span class="n">EmptyView</span><span class="p">,</span>
+    <span class="n">NavigationItem</span><span class="p">,</span>
     <span class="n">PageContext</span><span class="p">,</span>
     <span class="n">PageRoute</span><span class="p">,</span>
+    <span class="n">SectionItem</span><span class="p">,</span>
+    <span class="n">SectionNavigation</span><span class="p">,</span>
     <span class="n">SurfaceView</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -1046,13 +1104,15 @@ once, then activates and deactivates it as the operator moves between tabs.</p>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">deactivate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">PageContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">build_catalogue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">PageContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">CatalogueItem</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">CatalogueItem</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Configuration&quot;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;area&quot;</span><span class="p">),)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_navigation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">PageContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SectionNavigation</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SectionNavigation</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="p">(</span><span class="n">SectionItem</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="s2">&quot;Configuration&quot;</span><span class="p">),))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">landing_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">PageContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SurfaceView</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">EmptyView</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Setup&quot;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Select an area from the catalogue.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">EmptyView</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Setup&quot;</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Select a setup section.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">catalogue_selected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">CatalogueItem</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">PageContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">navigation_selected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">NavigationItem</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">PageContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_selected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">PageContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">row_highlighted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">PageContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
 
@@ -1060,15 +1120,16 @@ once, then activates and deactivates it as the operator moves between tabs.</p>
 </code></pre></div>
 <p>Register it in an <code>OperatorAppSpec</code> and run the app. Start read-only: a page that only
 inspects is enough to exercise routing, the workbench, and failure presentation before you
-take ownership of durable changes.</p>
+add durable changes.</p>
 <h2 id="run-the-tests">Run the tests<a class="headerlink" href="#run-the-tests" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync<span class="w"> </span>--all-extras<span class="w"> </span>--dev
 uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>-q
 uv<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>.
 uv<span class="w"> </span>run<span class="w"> </span>ty<span class="w"> </span>check<span class="w"> </span>src/
 </code></pre></div>
-<p>The tests cover route validation, app startup, action and job contracts, configurator
-redaction, telemetry import boundaries, and consumer dependency boundaries.</p>
+<p>The tests cover route validation, app startup, action and job contracts, wizard branching and
+redaction, configuration redaction, telemetry import boundaries, and application dependency
+boundaries.</p>
 
 
 

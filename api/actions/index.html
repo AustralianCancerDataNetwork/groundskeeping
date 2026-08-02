@@ -16,7 +16,7 @@
         <link rel="prev" href="../views/">
       
       
-        <link rel="next" href="../jobs/">
+        <link rel="next" href="../wizards/">
       
       
         
@@ -433,6 +433,34 @@
     
   
     Actions and Jobs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup Wizards
   
 
     
@@ -1529,6 +1557,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.disabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        disabled
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#groundskeeping.contracts.actions.FieldSpec.help" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1606,10 +1645,43 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.placeholder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        placeholder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.read_only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        read_only
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#groundskeeping.contracts.actions.FieldSpec.required" class="md-nav__link">
     <span class="md-ellipsis">
       
         required
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.secret_clearable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        secret_clearable
       
     </span>
   </a>
@@ -1847,6 +1919,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wizards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -2840,6 +2940,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.disabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        disabled
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#groundskeeping.contracts.actions.FieldSpec.help" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2917,10 +3028,43 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.placeholder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        placeholder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.read_only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        read_only
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#groundskeeping.contracts.actions.FieldSpec.required" class="md-nav__link">
     <span class="md-ellipsis">
       
         required
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.contracts.actions.FieldSpec.secret_clearable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        secret_clearable
       
     </span>
   </a>
@@ -5019,10 +5163,14 @@ policy to reason about, and the cancellation mode the runner honours.</p>
     <span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">default</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">help</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">placeholder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">choices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChoiceOption</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
     <span class="n">minimum</span><span class="p">:</span> <span class="n">Decimal</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">maximum</span><span class="p">:</span> <span class="n">Decimal</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">disabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">sensitive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">secret_clearable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">validator</span><span class="p">:</span> <span class="n">Validator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -5089,6 +5237,29 @@ policy to reason about, and the cancellation mode the runner honours.</p>
 
 <a href="#groundskeeping.contracts.actions.FieldSpec.default" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="doc-signature highlight"><pre><span></span><code><span class="n">default</span><span class="p">:</span> <span class="nb">object</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.disabled" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">disabled</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.disabled" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">disabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -5259,6 +5430,52 @@ policy to reason about, and the cancellation mode the runner honours.</p>
 
 
 
+<h3 id="groundskeeping.contracts.actions.FieldSpec.placeholder" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">placeholder</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.placeholder" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">placeholder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.read_only" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">read_only</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.read_only" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
 <h3 id="groundskeeping.contracts.actions.FieldSpec.required" class="doc doc-heading">
             <span class="doc doc-object-name doc-attribute-name">required</span>
 
@@ -5270,6 +5487,29 @@ policy to reason about, and the cancellation mode the runner honours.</p>
 
 <a href="#groundskeeping.contracts.actions.FieldSpec.required" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="doc-signature highlight"><pre><span></span><code><span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.contracts.actions.FieldSpec.secret_clearable" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">secret_clearable</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.contracts.actions.FieldSpec.secret_clearable" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">secret_clearable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">

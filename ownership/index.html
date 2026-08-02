@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#ownership-boundary" class="md-skip">
+        <a href="#what-belongs-where" class="md-skip">
           Skip to content
         </a>
       
@@ -379,7 +379,7 @@
   <a href="#groundskeeping-owns" class="md-nav__link">
     <span class="md-ellipsis">
       
-        groundskeeping owns
+        Groundskeeping owns
       
     </span>
   </a>
@@ -387,10 +387,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#consumers-own" class="md-nav__link">
+  <a href="#applications-own" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Consumers own
+        Applications own
       
     </span>
   </a>
@@ -402,17 +402,6 @@
     <span class="md-ellipsis">
       
         Why the boundary is enforced
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#commenting-style" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Commenting style
       
     </span>
   </a>
@@ -524,6 +513,34 @@
     
   
     Actions and Jobs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup Wizards
   
 
     
@@ -773,6 +790,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wizards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/jobs/" class="md-nav__link">
         
   
@@ -942,7 +987,7 @@
   <a href="#groundskeeping-owns" class="md-nav__link">
     <span class="md-ellipsis">
       
-        groundskeeping owns
+        Groundskeeping owns
       
     </span>
   </a>
@@ -950,10 +995,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#consumers-own" class="md-nav__link">
+  <a href="#applications-own" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Consumers own
+        Applications own
       
     </span>
   </a>
@@ -965,17 +1010,6 @@
     <span class="md-ellipsis">
       
         Why the boundary is enforced
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#commenting-style" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Commenting style
       
     </span>
   </a>
@@ -1010,53 +1044,48 @@
   
 
 
-<h1 id="ownership-boundary">Ownership Boundary<a class="headerlink" href="#ownership-boundary" title="Permanent link">&para;</a></h1>
-<p>The package provides the shared operating frame. A consumer application provides the domain.
-Keep that distinction close and most design decisions become simpler.</p>
-<h2 id="groundskeeping-owns">groundskeeping owns<a class="headerlink" href="#groundskeeping-owns" title="Permanent link">&para;</a></h2>
+<h1 id="what-belongs-where">What belongs where<a class="headerlink" href="#what-belongs-where" title="Permanent link">&para;</a></h1>
+<p>Groundskeeping should stay boring and reusable. It owns the TUI frame and the small contracts
+needed to render pages, actions, wizards, configuration summaries, and telemetry. The
+application using it owns the real work.</p>
+<h2 id="groundskeeping-owns">Groundskeeping owns<a class="headerlink" href="#groundskeeping-owns" title="Permanent link">&para;</a></h2>
 <ul>
 <li>route validation and page activation;</li>
 <li>mounted-page state preservation;</li>
 <li>the shared workbench surface;</li>
 <li>generic view models;</li>
 <li>action, field, progress, cancellation, and job contracts;</li>
+<li>setup wizard contracts and the reusable wizard screen;</li>
 <li>in-process job gating;</li>
 <li>read-only configuration inspection and draft/diff models;</li>
-<li>Textual-free infrastructure telemetry contracts; and</li>
+<li>headless infrastructure telemetry contracts; and</li>
 <li>reusable widgets that render normalized models.</li>
 </ul>
-<h2 id="consumers-own">Consumers own<a class="headerlink" href="#consumers-own" title="Permanent link">&para;</a></h2>
+<h2 id="applications-own">Applications own<a class="headerlink" href="#applications-own" title="Permanent link">&para;</a></h2>
 <ul>
 <li>every production page;</li>
 <li>domain presenters, controllers, and services;</li>
 <li>queue semantics and durable records;</li>
-<li>YAML or other consumer configuration formats;</li>
+<li>YAML or other application configuration formats;</li>
 <li>resource-specific <code>oa-configurator</code> adapters;</li>
 <li>model calls, database access, and runtime execution;</li>
 <li>domain telemetry and tuning algorithms;</li>
 <li>operation safety policy; and</li>
 <li>application branding and help text.</li>
 </ul>
+<p>For example, Groundskeeping can render a database setup wizard. Groundworkers decides what a
+"database" means, how to validate a candidate connection, whether an edit affects shared
+resources, and how the final config is saved.</p>
 <h2 id="why-the-boundary-is-enforced">Why the boundary is enforced<a class="headerlink" href="#why-the-boundary-is-enforced" title="Permanent link">&para;</a></h2>
 <p>Two tests hold the line:</p>
 <ul>
-<li><code>test_dependency_boundaries.py</code> checks that the shared package does not reach into consumer
-  packages.</li>
-<li><code>test_telemetry_core.py</code> checks that <code>groundskeeping.telemetry</code> never imports Textual, so
+<li><code>test_dependency_boundaries.py</code> checks that the shared package does not reach into
+  application packages.</li>
+<li><code>test_telemetry_core.py</code> checks that telemetry runtime code never imports Textual, so
   collectors stay usable in worker and test processes that do not construct an application.</li>
 </ul>
 <p>The package top level also avoids importing Textual, so headless contracts, configuration
 inspection, and telemetry sampling can be imported without a running app.</p>
-<h2 id="commenting-style">Commenting style<a class="headerlink" href="#commenting-style" title="Permanent link">&para;</a></h2>
-<p>Write comments for the next person adapting the tool.</p>
-<p>Good comments explain why a boundary exists, what operator-facing behaviour depends on it, and
-where domain logic should stay. They are especially useful around Textual lifecycle methods,
-event routing, worker handoffs, cancellation, secret redaction, and extension points.</p>
-<p>Prefer comments that preserve intent over comments that narrate syntax. Explain why row events
-return to the active page through the workbench surface. Do not explain that a loop iterates
-over rows.</p>
-<p>If a future maintainer is likely to wonder "why is this shaped this way?", leave them a small
-signpost.</p>
 
 
 

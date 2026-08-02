@@ -531,6 +531,34 @@
   
   
     <li class="md-nav__item">
+      <a href="wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup Wizards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="configuration/" class="md-nav__link">
         
   
@@ -740,6 +768,34 @@
     
   
     Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wizards
   
 
     
@@ -987,11 +1043,12 @@
 
 
 <h1 id="groundskeeping">groundskeeping<a class="headerlink" href="#groundskeeping" title="Permanent link">&para;</a></h1>
-<p><code>groundskeeping</code> is a reusable Textual shell for operator tools that help people care for a
-working environment: setup checks, configuration, queues, telemetry, tuning, and long-running
-operations.</p>
-<p>The package provides the shared operating frame. A consumer application provides the domain.
-Keep that distinction close and most design decisions become simpler.</p>
+<p><code>groundskeeping</code> is a reusable Textual shell for operator tools: setup checks, configuration,
+queues, telemetry, tuning, and long-running operations.</p>
+<p>It provides the common TUI pieces; each application decides what those pieces mean. In
+Groundworkers, that means setup pages for database configuration, embeddings, and semantic
+projection. In <code>cava-nlp-shard</code>, it means pages for evaluation runs, runtime configuration,
+and model/backend health.</p>
 <h2 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>add<span class="w"> </span>groundskeeping
 </code></pre></div>
@@ -1000,25 +1057,29 @@ Keep that distinction close and most design decisions become simpler.</p>
 <thead>
 <tr>
 <th>Area</th>
-<th>What the shell provides</th>
+<th>What it is useful for</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><a href="pages/">Pages and the Workbench</a></td>
-<td>Route validation, tab navigation, mounted-page state, and the three-pane workbench surface</td>
+<td>Put application-owned pages into a consistent tabbed shell</td>
 </tr>
 <tr>
 <td><a href="actions/">Actions and Jobs</a></td>
-<td>Field parsing and redaction, operation policy, progress and cancellation, in-process job gating</td>
+<td>Add safe buttons for things like testing a connection or running a bounded check</td>
+</tr>
+<tr>
+<td><a href="wizards/">Setup Wizards</a></td>
+<td>Guide an operator through multi-step setup without putting secrets in view state</td>
 </tr>
 <tr>
 <td><a href="configuration/">Configuration</a></td>
-<td>Read-only inspection of <code>oa-configurator</code> stack config, plus draft and redacted-diff models</td>
+<td>Inspect <code>oa-configurator</code> stack config and prepare safe, redacted edits</td>
 </tr>
 <tr>
 <td><a href="telemetry/">Telemetry</a></td>
-<td>Textual-free source protocols, normalized metrics, sampling runtime, and widgets that render them</td>
+<td>Sample simple infrastructure metrics and render them in the TUI</td>
 </tr>
 </tbody>
 </table>
@@ -1030,9 +1091,9 @@ Keep that distinction close and most design decisions become simpler.</p>
   
       dataclass
   " href="api/app/#groundskeeping.app.OperatorAppSpec"><code>OperatorAppSpec</code></a>. The spec names the app, orders the
-pages, registers the actions, and supplies the policies that decide whether work may run.</p>
-<p>It is the composition root: everything application-specific should arrive there from the
-consumer, not through global lookup inside the shared package.</p>
+pages, registers actions, and supplies the policies that decide whether work may run.</p>
+<p>Application-specific services arrive through page factories. The shared package should not
+import Groundworkers, <code>cava-nlp-shard</code>, or any other application that happens to use it.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">groundskeeping.app</span><span class="w"> </span><span class="kn">import</span> <span class="n">OperatorApp</span><span class="p">,</span> <span class="n">OperatorAppSpec</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">groundskeeping.contracts</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActionRegistry</span><span class="p">,</span> <span class="n">PageRegistration</span><span class="p">,</span> <span class="n">PageRoute</span>
 
@@ -1052,7 +1113,7 @@ consumer, not through global lookup inside the shared package.</p>
 <span class="n">OperatorApp</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </code></pre></div>
 <p>See <a href="quickstart/">Getting Started</a> to run the bundled demo, and
-<a href="ownership/">Ownership Boundary</a> for what belongs in the shell versus your application.</p>
+<a href="ownership/">What belongs where</a> for what belongs in the shell versus your application.</p>
 
 
 

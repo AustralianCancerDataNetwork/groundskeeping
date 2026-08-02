@@ -453,6 +453,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup Wizards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../configuration/" class="md-nav__link">
         
   
@@ -762,6 +790,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wizards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/jobs/" class="md-nav__link">
         
   
@@ -1029,36 +1085,37 @@
 
 
 <h1 id="telemetry">Telemetry<a class="headerlink" href="#telemetry" title="Permanent link">&para;</a></h1>
-<p>Telemetry has a headless core and Textual widgets layered above it.</p>
+<p>Telemetry has simple data contracts, a sampling runtime, and optional Textual widgets.</p>
 <h2 id="the-headless-core">The headless core<a class="headerlink" href="#the-headless-core" title="Permanent link">&para;</a></h2>
-<p><code>groundskeeping.telemetry</code> contains source protocols, availability, normalized metrics,
-snapshots, and sampling runtime. It must remain free of Textual imports so collectors can be
-tested and reused outside a running app.</p>
-<p>This boundary is enforced by a test, not just by convention: importing Textual anywhere under
-<code>groundskeeping.telemetry</code> fails the suite.</p>
-<p>Sources are async. <code>TelemetryRuntime</code> fans out across every registered source, so a page
-probes availability once and then samples on a timer.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">groundskeeping.telemetry</span><span class="w"> </span><span class="kn">import</span> <span class="n">TelemetryRuntime</span>
+<p><code>groundskeeping.contracts.telemetry</code> contains source protocols, availability, normalized
+metrics, and snapshots. <code>groundskeeping.telemetry</code> contains the sampling runtime and provider
+implementations. Both layers remain free of Textual imports so collectors can be tested and
+reused outside a running app.</p>
+<p>The runtime/provider layer does not import Textual. That keeps telemetry usable in tests,
+workers, and small command-line checks.</p>
+<p>Sources are async. <code>TelemetryRuntime</code> fans out across every registered source, so a page can
+probe availability once and then sample on a timer.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">groundskeeping.contracts</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceAvailability</span><span class="p">,</span> <span class="n">TelemetrySnapshot</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">groundskeeping.telemetry</span><span class="w"> </span><span class="kn">import</span> <span class="n">TelemetryRuntime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">groundskeeping.telemetry.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">FakeTelemetrySource</span>
 
 <span class="n">runtime</span> <span class="o">=</span> <span class="n">TelemetryRuntime</span><span class="p">((</span><span class="n">FakeTelemetrySource</span><span class="p">(</span><span class="n">source_id</span><span class="o">=</span><span class="s2">&quot;demo&quot;</span><span class="p">),))</span>
 
-<span class="n">availability</span> <span class="o">=</span> <span class="k">await</span> <span class="n">runtime</span><span class="o">.</span><span class="n">probe_all</span><span class="p">()</span>   <span class="c1"># {&quot;demo&quot;: SourceAvailability(...)}</span>
-<span class="n">snapshots</span> <span class="o">=</span> <span class="k">await</span> <span class="n">runtime</span><span class="o">.</span><span class="n">sample_all</span><span class="p">()</span>     <span class="c1"># (TelemetrySnapshot(...),)</span>
+<span class="n">availability</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SourceAvailability</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">runtime</span><span class="o">.</span><span class="n">probe_all</span><span class="p">()</span>
+<span class="n">snapshots</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TelemetrySnapshot</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">runtime</span><span class="o">.</span><span class="n">sample_all</span><span class="p">()</span>
 </code></pre></div>
 <p><code>probe_all</code> reports which sources are usable and what each can measure; <code>sample_all</code> returns
 normalized metrics keyed by strings such as <code>accelerator.utilisation</code> and
 <code>workload.throughput</code>.</p>
 <h2 id="widgets">Widgets<a class="headerlink" href="#widgets" title="Permanent link">&para;</a></h2>
-<p><code>groundskeeping.widgets.telemetry</code> renders snapshots. Widgets should bind to metric keys and
+<p><code>groundskeeping.widgets.telemetry</code> renders snapshots. Bind widgets to metric keys and
 capabilities, not concrete provider classes.</p>
-<p>A GPU card, for example, should care about accelerator utilisation and memory metrics; it
-should not need to know whether the source is NVIDIA, Apple Silicon, or something added later.
-Adding a provider should not require touching a widget.</p>
+<p>A GPU card, for example, cares about accelerator utilisation and memory metrics. It should not
+need to know whether the source is NVIDIA, Apple Silicon, or something added later.</p>
 <h2 id="ownership">Ownership<a class="headerlink" href="#ownership" title="Permanent link">&para;</a></h2>
-<p>The shell owns Textual-free infrastructure telemetry contracts and the reusable widgets that
+<p>Groundskeeping owns the infrastructure telemetry contracts and the reusable widgets that
 render normalized models.</p>
-<p>Consumers own domain telemetry: queue depth, pipeline progress, database state, workload
+<p>Applications own domain telemetry: queue depth, pipeline progress, database state, workload
 throughput, and tuning interpretation.</p>
 
 

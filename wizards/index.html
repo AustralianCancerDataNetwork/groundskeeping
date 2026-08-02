@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://AustralianCancerDataNetwork.github.io/groundskeeping/configuration/">
+        <link rel="canonical" href="https://AustralianCancerDataNetwork.github.io/groundskeeping/wizards/">
       
       
-        <link rel="prev" href="../wizards/">
+        <link rel="prev" href="../actions/">
       
       
-        <link rel="next" href="../telemetry/">
+        <link rel="next" href="../configuration/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Configuration - groundskeeping</title>
+        <title>Setup Wizards - groundskeeping</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#configuration" class="md-skip">
+        <a href="#setup-wizards" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Configuration
+              Setup Wizards
             
           </span>
         </div>
@@ -450,34 +450,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../wizards/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Setup Wizards
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -497,7 +469,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
+    Setup Wizards
   
 
     
@@ -515,7 +487,7 @@
   <span class="md-ellipsis">
     
   
-    Configuration
+    Setup Wizards
   
 
     
@@ -541,10 +513,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#inspection" class="md-nav__link">
+  <a href="#flow-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Inspection
+        Flow shape
       
     </span>
   </a>
@@ -552,10 +524,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#redaction" class="md-nav__link">
+  <a href="#steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Redaction
+        Steps
       
     </span>
   </a>
@@ -563,10 +535,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-it-does-not-do" class="md-nav__link">
+  <a href="#secrets-and-revisions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What it does not do
+        Secrets and revisions
       
     </span>
   </a>
@@ -574,10 +546,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#extending" class="md-nav__link">
+  <a href="#demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Extending
+        Demo
       
     </span>
   </a>
@@ -588,6 +560,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -995,10 +995,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#inspection" class="md-nav__link">
+  <a href="#flow-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Inspection
+        Flow shape
       
     </span>
   </a>
@@ -1006,10 +1006,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#redaction" class="md-nav__link">
+  <a href="#steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Redaction
+        Steps
       
     </span>
   </a>
@@ -1017,10 +1017,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-it-does-not-do" class="md-nav__link">
+  <a href="#secrets-and-revisions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What it does not do
+        Secrets and revisions
       
     </span>
   </a>
@@ -1028,10 +1028,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#extending" class="md-nav__link">
+  <a href="#demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Extending
+        Demo
       
     </span>
   </a>
@@ -1106,57 +1106,74 @@
   
 
 
-<h1 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h1>
-<p><code>groundskeeping.configurator</code> presents <code>oa-configurator</code> stack configuration safely. It can
-build snapshots, section views, safe drafts, redacted diffs, revision-aware apply intents, and
-wizard-controller entry points.</p>
-<p>Groundworkers can use this to show database resources and launch a setup wizard. Another
-application might use the same pieces for model providers or local runtime paths.</p>
-<h2 id="inspection">Inspection<a class="headerlink" href="#inspection" title="Permanent link">&para;</a></h2>
-<p><a class="autorefs autorefs-internal" title="OAConfiguratorAdapter" href="../api/configurator/#groundskeeping.configurator.adapter.OAConfiguratorAdapter"><code>OAConfiguratorAdapter</code></a> is
-structural: tests and demos can pass fakes, while real applications pass <code>StackConfig</code> and
-<code>PackageConfigBase</code> instances from <code>oa-configurator</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">groundskeeping.configurator</span><span class="w"> </span><span class="kn">import</span> <span class="n">OAConfiguratorAdapter</span>
+<h1 id="setup-wizards">Setup Wizards<a class="headerlink" href="#setup-wizards" title="Permanent link">&para;</a></h1>
+<p>Use a setup wizard when a single action form would be too cramped: database setup, embedding
+provider configuration, choosing whether to reuse or create a resource, or reviewing a change
+before it is saved.</p>
+<p>The split is small:</p>
+<ul>
+<li><code>groundskeeping.contracts.wizards</code> defines headless wizard state, steps, review data,
+  transitions, and results;</li>
+<li><code>groundskeeping.widgets.WizardScreen</code> renders one step at a time; and</li>
+<li>the application owns the <code>WizardController</code>, including candidate state, validation,
+  branching, revision checks, and apply semantics.</li>
+</ul>
+<p>The controller owns the real candidate object. Groundskeeping only renders the current safe
+snapshot.</p>
+<h2 id="flow-shape">Flow shape<a class="headerlink" href="#flow-shape" title="Permanent link">&para;</a></h2>
+<p>A controller returns a <code>WizardSnapshot</code> from <code>start()</code>, then receives submitted field values
+through <code>submit()</code>. Each transition returns the next render-safe snapshot plus any validation
+issues.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">groundskeeping.contracts</span><span class="w"> </span><span class="kn">import</span> <span class="n">WizardController</span>
 
-<span class="n">adapter</span> <span class="o">=</span> <span class="n">OAConfiguratorAdapter</span><span class="p">()</span>
-<span class="n">snapshot</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">stack_config</span><span class="p">,</span> <span class="n">config_path</span><span class="o">=</span><span class="s2">&quot;stack.toml&quot;</span><span class="p">)</span>
-<span class="n">tree_view</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">as_tree_view</span><span class="p">(</span><span class="n">snapshot</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatabaseWizard</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">back</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">review</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
 </code></pre></div>
-<p><code>snapshot</code> groups databases, resources, profiles, aliases, and package configs into
-<code>ConfigSectionView</code> trees. <code>as_tree_view</code> converts a snapshot into a <code>TreeView</code> the workbench
-can render directly.</p>
-<h2 id="redaction">Redaction<a class="headerlink" href="#redaction" title="Permanent link">&para;</a></h2>
-<p>Field names in <code>{"password", "secret", "token", "api_key"}</code> are replaced with <code>RedactedValue</code>
-before they leave the adapter. Non-scalar values are summarised — <code>"3 entries"</code>, <code>"5 items"</code>,
-or the type name — rather than expanded, so a nested credential structure cannot leak through
-a rendered section.</p>
-<p><code>diff</code> builds a redacted structural diff for confirmation surfaces. An entry is marked
-sensitive when the field is named in <code>sensitive_fields</code> or when either side is already a
-<code>RedactedValue</code>; both sides are then replaced before the diff is returned.</p>
-<div class="highlight"><pre><span></span><code><span class="n">diff</span> <span class="o">=</span> <span class="n">adapter</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span>
-    <span class="n">target</span><span class="p">,</span>
-    <span class="n">original_fields</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dsn&quot;</span><span class="p">:</span> <span class="s2">&quot;postgresql://old&quot;</span><span class="p">},</span>
-    <span class="n">candidate_fields</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dsn&quot;</span><span class="p">:</span> <span class="s2">&quot;postgresql://new&quot;</span><span class="p">},</span>
-    <span class="n">sensitive_fields</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;dsn&quot;</span><span class="p">}),</span>
-<span class="p">)</span>
+<p>Pages open a wizard through their <code>PageContext</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">action_selected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_key</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">action_key</span> <span class="o">==</span> <span class="s2">&quot;database.configure&quot;</span><span class="p">:</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">open_wizard</span><span class="p">(</span><span class="n">DatabaseWizard</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
 </code></pre></div>
-<h2 id="what-it-does-not-do">What it does not do<a class="headerlink" href="#what-it-does-not-do" title="Permanent link">&para;</a></h2>
-<p>It does not write TOML. Persistence belongs to <code>oa-configurator</code> and to the application using
-Groundskeeping. That separation protects comments, secrets, external edits, and local safety
-rules.</p>
-<p>Editable candidates still belong to application-owned controllers. <code>ConfigDraft</code> records the
-safe target and changed-field presence, not raw field values. <code>ConfigApplyIntent</code> carries the
-safe target, opaque apply token, expected revision, diff, and effects needed by a public
-mutation API.</p>
-<h2 id="extending">Extending<a class="headerlink" href="#extending" title="Permanent link">&para;</a></h2>
-<p>Applications can add <code>ConfigResourceAdapter</code> implementations for resource types that need
-better labels, choices, validation, verification, or post-apply effects.</p>
-<p><code>NativeConfigResourceAdapter</code> is the fallback for ordinary configuration sections. It is
-intentionally plain: it offers display fields and validates nothing beyond the model layer
-that <code>oa-configurator</code> will run during a real apply.</p>
-<p>Resource adapters can also expose a <code>WizardController</code> for setup flows. Groundskeeping renders
-the controller in a modal wizard; the adapter remains responsible for validation, branching,
-stale-revision checks, and the final apply call.</p>
+<h2 id="steps">Steps<a class="headerlink" href="#steps" title="Permanent link">&para;</a></h2>
+<p>The contracts cover three step types:</p>
+<ul>
+<li><code>ChoiceStep</code> for branch decisions such as reuse/create;</li>
+<li><code>FormStep</code> for typed fields described with <code>FieldSpec</code>; and</li>
+<li><code>ReviewStep</code> for redacted confirmation before apply.</li>
+</ul>
+<p><code>FieldSpec</code> supports text, integer, decimal, boolean, choice, existing path, output path,
+secret, and multiline fields. It also carries presentation metadata such as placeholder text,
+help text, disabled/read-only state, and secret behaviour.</p>
+<h2 id="secrets-and-revisions">Secrets and revisions<a class="headerlink" href="#secrets-and-revisions" title="Permanent link">&para;</a></h2>
+<p>Real candidate values belong in the controller. Snapshots should carry only values needed to
+render the current step, and secret fields should be omitted or represented with redacted
+display values.</p>
+<p>Apply methods should carry an opaque expected-revision token from the start of the wizard to
+the final mutation request. If the underlying config changed while the operator was editing,
+return <code>WizardResultStatus.CONFLICTED</code> instead of overwriting.</p>
+<h2 id="demo">Demo<a class="headerlink" href="#demo" title="Permanent link">&para;</a></h2>
+<p>Run the demo and open the <strong>Configuration</strong> page:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>groundskeeping
+</code></pre></div>
+<p>The <strong>Configure database</strong> action opens a small branching wizard that proves reuse/create,
+choice/text/boolean/secret/multiline fields, validation, back navigation, cancel, redacted
+review, apply, and stale-revision conflict handling.</p>
 
 
 

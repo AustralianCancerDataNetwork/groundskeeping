@@ -544,6 +544,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup Wizards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../configuration/" class="md-nav__link">
         
   
@@ -753,6 +781,34 @@
     
   
     Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/wizards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wizards
   
 
     
@@ -1051,21 +1107,24 @@
 
 
 <h1 id="pages-and-the-workbench">Pages and the Workbench<a class="headerlink" href="#pages-and-the-workbench" title="Permanent link">&para;</a></h1>
-<p>Pages are owned by the consumer and are ordinary Textual widgets. The shell mounts them once,
-activates and deactivates them as the operator moves between tabs, and preserves page-local
-state. A page receives a narrow <a class="autorefs autorefs-internal" title="PageContext" href="../api/pages/#groundskeeping.contracts.pages.PageContext"><code>PageContext</code></a>;
-it does not receive the whole app.</p>
+<p>Pages are ordinary Textual widgets owned by the application using Groundskeeping. The shell
+mounts them once, activates and deactivates them as the operator moves between tabs, and
+preserves page-local state.</p>
+<p>A page receives a narrow <a class="autorefs autorefs-internal" title="PageContext" href="../api/pages/#groundskeeping.contracts.pages.PageContext"><code>PageContext</code></a>. It does
+not receive the whole app.</p>
 <h2 id="the-workbench-surface">The workbench surface<a class="headerlink" href="#the-workbench-surface" title="Permanent link">&para;</a></h2>
 <p>The default page surface is the workbench:</p>
 <ul>
-<li>catalogue on the left;</li>
+<li>flat section navigation or a hierarchical catalogue on the left;</li>
 <li>rows or tree content on the upper right; and</li>
 <li>selected detail on the lower right.</li>
 </ul>
-<p>Pages render package-owned view models such as <code>CatalogueItem</code>, <code>TableView</code>, <code>TreeView</code>,
-<code>EmptyView</code>, <code>TextView</code>, and <code>KeyValueView</code>. Domain objects should be translated before they
-reach the workbench. That keeps the shared shell reusable and keeps consumer language in the
-consumer.</p>
+<p>Use <code>SectionNavigation</code> for peer areas such as Database, Embeddings, and Runtime. Use
+<code>CatalogueNavigation</code> when hierarchy is the point, such as a provider with nested models or an
+evaluation run with nested artefacts.</p>
+<p>Translate domain objects before they reach the workbench. The workbench understands
+<code>SectionItem</code>, <code>CatalogueItem</code>, <code>TableView</code>, <code>TreeView</code>, and friends; it does not need to know
+what a Groundworkers resource or <code>cava-nlp-shard</code> evaluation object is.</p>
 <h2 id="routing">Routing<a class="headerlink" href="#routing" title="Permanent link">&para;</a></h2>
 <p><code>PageRoute</code> is the navigation identity for one page: a <code>key</code>, an operator-facing <code>label</code>, and
 a <code>purpose</code> line rendered beside the heading. <code>PageRegistry</code> validates that keys are unique
@@ -1091,7 +1150,7 @@ startup rather than when an operator clicks a tab.</p>
 <td>The operator moves to a different tab</td>
 </tr>
 <tr>
-<td><code>build_catalogue</code></td>
+<td><code>build_navigation</code></td>
 <td>Each time the page is rendered, to populate the left pane</td>
 </tr>
 <tr>
@@ -1099,8 +1158,12 @@ startup rather than when an operator clicks a tab.</p>
 <td>Each time the page is rendered, to populate the upper-right pane</td>
 </tr>
 <tr>
-<td><code>catalogue_selected</code></td>
-<td>A catalogue node is selected</td>
+<td><code>navigation_selected</code></td>
+<td>A section or catalogue item is selected</td>
+</tr>
+<tr>
+<td><code>action_selected</code></td>
+<td>A command button in the current view is pressed</td>
 </tr>
 <tr>
 <td><code>row_highlighted</code></td>
@@ -1112,31 +1175,32 @@ startup rather than when an operator clicks a tab.</p>
 </tr>
 </tbody>
 </table>
-<p>Row events return to the active page through the workbench surface rather than being handled
-by the widget directly. That keeps the workbench generic: it renders normalized models and
-routes interaction back to whichever page owns the current content.</p>
+<p>Row events return to the active page. The workbench renders generic models; the page decides
+what a highlighted row means.</p>
 <p>If <code>landing_view</code> raises, the shell catches the exception and renders an <code>EmptyView</code>
 explaining that the page could not be rendered. A page that cannot build its landing content
 degrades to a message instead of taking down the app.</p>
 <h2 id="setup-pages">Setup pages<a class="headerlink" href="#setup-pages" title="Permanent link">&para;</a></h2>
-<p>A setup page should answer a concrete operator question: "can this environment do the work I
-am about to ask of it?"</p>
-<p>The page should normally live in the consumer package and use consumer services to inspect the
-environment. <code>groundskeeping</code> supplies the rendering and action contracts; it does not know
-what "ready" means for any particular application.</p>
+<p>A setup page should answer a practical operator question: "is this environment ready for the
+work I am about to run?"</p>
+<p>The page normally lives in the application using Groundskeeping. It can call whatever services
+that application already has for config, credentials, model providers, database checks, or
+runtime health.</p>
 <p>A good setup page usually has:</p>
 <ul>
-<li>a catalogue of setup areas, such as config, database, runtime, model server, paths, or
+<li>a flat list of setup areas, such as config, database, runtime, model server, paths, or
   credentials;</li>
 <li>a landing <code>TreeView</code> summarising overall readiness;</li>
 <li>a <code>TableView</code> for repeated checks where scanning matters;</li>
 <li><code>KeyValueView</code> detail for the selected check;</li>
 <li>one or two safe verification actions; and</li>
-<li>an operation policy that describes effects in the consumer's own vocabulary.</li>
+<li>an operation policy that describes effects in the application's own vocabulary.</li>
 </ul>
-<p>Start read-only. Verification actions are a good first step because they exercise the shell,
-action contracts, progress reporting, and failure presentation without taking ownership of
-durable setup changes too early.</p>
+<p>Start read-only. A <strong>Test connection</strong> or <strong>Refresh status</strong> button is often enough to prove
+the page shape before you add durable writes.</p>
+<p>When setup requires guided edits, expose a <code>ViewAction</code> from the current view and open a
+wizard with <code>PageContext.open_wizard</code>. The page still owns what the wizard means;
+Groundskeeping only renders the navigation, fields, review state, and final result.</p>
 
 
 
