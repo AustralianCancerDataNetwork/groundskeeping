@@ -916,6 +916,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#groundskeeping.widgets.workbench.Workbench.labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        labels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#groundskeeping.widgets.workbench.Workbench.rows_table" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1354,6 +1365,17 @@
     <span class="md-ellipsis">
       
         catalogue
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.widgets.workbench.Workbench.labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        labels
       
     </span>
   </a>
@@ -1810,7 +1832,7 @@
 
 
 <a href="#groundskeeping.widgets.workbench.Workbench" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Workbench</span><span class="p">()</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Workbench</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">WorkbenchLabels</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -1853,6 +1875,28 @@
 
 <a href="#groundskeeping.widgets.workbench.Workbench.catalogue" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="doc-signature highlight"><pre><span></span><code><span class="n">catalogue</span><span class="p">:</span> <span class="n">Tree</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.widgets.workbench.Workbench.labels" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">labels</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#groundskeeping.widgets.workbench.Workbench.labels" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="n">WorkbenchLabels</span><span class="p">()</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2045,7 +2089,7 @@
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">show_context_table</span><span class="p">(</span>
     <span class="n">rows</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">columns</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Field&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">),</span>
+    <span class="n">columns</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 

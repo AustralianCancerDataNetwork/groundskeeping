@@ -1125,6 +1125,10 @@ evaluation run with nested artefacts.</p>
 <p>Translate domain objects before they reach the workbench. The workbench understands
 <code>SectionItem</code>, <code>CatalogueItem</code>, <code>TableView</code>, <code>TreeView</code>, and friends; it does not need to know
 what a Groundworkers resource or <code>cava-nlp-shard</code> evaluation object is.</p>
+<p>Use <code>OperatorAppSpec.workbench_labels</code> to rename shared pane chrome such as the result and
+detail panel labels. Page-owned titles still live on navigation and view contracts: for
+example, <code>SectionNavigation.title</code> names the left pane for a specific page, and
+<code>TableView.title</code> names the current result content.</p>
 <h2 id="routing">Routing<a class="headerlink" href="#routing" title="Permanent link">&para;</a></h2>
 <p><code>PageRoute</code> is the navigation identity for one page: a <code>key</code>, an operator-facing <code>label</code>, and
 a <code>purpose</code> line rendered beside the heading. <code>PageRegistry</code> validates that keys are unique
