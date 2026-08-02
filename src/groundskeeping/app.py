@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import ClassVar
+from typing import ClassVar, cast
 
 from rich.text import Text
 from textual.app import App, ComposeResult
@@ -182,13 +182,11 @@ class OperatorApp(App[None]):
             with Vertical(id="workspace"):
                 yield Label("", id="workspace-title")
                 for route in self.registry:
-                    page = self._pages[route.key]
-                    if not isinstance(page, Widget):
-                        raise TypeError(f"Page {route.key!r} must be a Textual Widget.")
-                    page.add_class("operator-page")
-                    page.styles.height = 0
-                    page.styles.max_height = 0
-                    yield page
+                    page_widget = self._page_widget(route.key)
+                    page_widget.add_class("operator-page")
+                    page_widget.styles.height = 0
+                    page_widget.styles.max_height = 0
+                    yield page_widget
                 yield self._workbench
         yield Footer()
 
@@ -256,16 +254,13 @@ class OperatorApp(App[None]):
         next_page = self._pages[page_key]
         if previous is not None and previous is not next_page:
             previous.deactivate(self._page_context)
-            if isinstance(previous, Widget):
-                previous.remove_class("-active")
+            self._page_widget(self._active_page).remove_class("-active")
         self._active_page = page_key
-        page = next_page
-        if isinstance(page, Widget):
-            page.add_class("-active")
+        self._page_widget(page_key).add_class("-active")
         tabs = self.query_one("#page-tabs", Tabs)
         if tabs.active != page_key:
             tabs.active = page_key
-        page.activate(self._page_context)
+        next_page.activate(self._page_context)
         self._render_page(route)
 
     def _render_page(self, route: PageRoute) -> None:
@@ -287,6 +282,12 @@ class OperatorApp(App[None]):
 
     def _active_widget(self) -> OperatorPage:
         return self._pages[self._active_page]
+
+    def _page_widget(self, page_key: str) -> Widget:
+        page = self._pages[page_key]
+        if not isinstance(page, Widget):
+            raise TypeError(f"Page {page_key!r} must be a Textual Widget.")
+        return cast(Widget, page)
 
     def _select_navigation_item(self, item: NavigationItem) -> None:
         self._active_widget().navigation_selected(item, self._page_context)
