@@ -14,10 +14,12 @@ from textual.widgets import (
     DataTable,
     Input,
     Label,
+    OptionList,
     Select,
     Static,
     TextArea,
 )
+from textual.widgets.option_list import Option
 
 from groundskeeping.contracts.actions import FieldKind, FieldSpec
 from groundskeeping.contracts.wizards import (
@@ -42,6 +44,7 @@ class WizardScreen(ModalScreen[WizardResult]):
         self._snapshot: WizardSnapshot | None = None
         self._field_by_widget_id: dict[str, FieldSpec] = {}
         self._choice_widget_id = "wizard-choice"
+        self._blank_choice_id = "__groundskeeping_blank_choice__"
 
     def compose(self) -> ComposeResult:
         with Vertical(id="wizard-frame"):
@@ -149,21 +152,45 @@ class WizardScreen(ModalScreen[WizardResult]):
             for warning in step.review.warnings:
                 await body.mount(Static(f"Warning: {warning}", classes="wizard-warning"))
 
-    def _field_widget(self, widget_id: str, field: FieldSpec, value: object) -> Input | TextArea | Checkbox | Select:
+    def _field_widget(
+        self, widget_id: str, field: FieldSpec, value: object
+    ) -> Input | TextArea | Checkbox | OptionList:
         disabled = field.disabled or field.read_only
         if field.kind is FieldKind.BOOLEAN:
             return Checkbox(value=bool(value if value is not None else field.default), id=widget_id, disabled=disabled)
         if field.kind is FieldKind.CHOICE:
-            options = tuple((choice.label, choice.value) for choice in field.choices)
             current = value if value is not None else field.default
-            return Select(
-                options,
-                prompt=field.placeholder or "Choose",
-                value=current if current is not None else Select.BLANK,
-                id=widget_id,
-                allow_blank=not field.required,
-                disabled=disabled,
+            options = []
+            if not field.required:
+                options.append(
+                    Option(field.placeholder or "No selection", id=self._blank_choice_id)
+                )
+            options.extend(
+                Option(
+                    choice.label
+                    if choice.description is None
+                    else f"{choice.label} — {choice.description}",
+                    id=choice.value,
+                )
+                for choice in field.choices
             )
+            if not options:
+                options.append(Option(field.placeholder or "No choices", disabled=True))
+            widget = OptionList(
+                *options,
+                id=widget_id,
+                disabled=disabled,
+                classes="wizard-choice-list",
+            )
+            widget.styles.height = min(max(len(options), 2), 8)
+            choice_ids = tuple(option.id for option in options)
+            if current is None and not field.required:
+                widget.highlighted = 0
+            elif current in choice_ids:
+                widget.highlighted = choice_ids.index(str(current))
+            elif field.required and field.choices:
+                widget.highlighted = 0
+            return widget
         if field.kind is FieldKind.MULTILINE:
             widget = TextArea("" if value is None else str(value), id=widget_id)
             widget.read_only = disabled
@@ -238,6 +265,11 @@ def _widget_value(widget: object) -> object:
         return widget.text
     if isinstance(widget, Checkbox):
         return widget.value
+    if isinstance(widget, OptionList):
+        if widget.highlighted is None:
+            return None
+        selected = widget.get_option_at_index(widget.highlighted)
+        return None if selected.id == "__groundskeeping_blank_choice__" else selected.id
     if isinstance(widget, Select):
         selected = widget.value
         return None if selected is Select.BLANK else selected

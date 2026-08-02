@@ -293,7 +293,21 @@ class Workbench(Widget):
         if isinstance(detail, KeyValueView):
             self.show_context_table(detail.rows)
             return
+        if isinstance(detail, TableView):
+            self.show_detail_table(detail)
+            return
         raise TypeError(f"Unsupported detail view: {type(detail).__name__}")
+
+    def show_detail_table(self, detail: TableView) -> None:
+        self.query_one("#context", TextArea).styles.display = "none"
+        table = self.query_one("#context-table", DataTable)
+        table.styles.display = "block"
+        table.clear(columns=True)
+        table.add_columns(*detail.columns)
+        for row in detail.rows:
+            table.add_row(*row.cells, key=row.key)
+        self.query_one("#context-panel").border_title = detail.title
+        self.query_one("#context-panel").border_subtitle = f"{len(detail.rows)} rows"
 
     def show_context_table(
         self,

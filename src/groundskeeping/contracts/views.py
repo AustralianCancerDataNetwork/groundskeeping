@@ -160,5 +160,5 @@ class KeyValueView:
     title: str = "Detail"
 
 
-type DetailView = TextView | KeyValueView
+type DetailView = TextView | KeyValueView | TableView
 type SurfaceView = TableView | TreeView | EmptyView | LoadingView

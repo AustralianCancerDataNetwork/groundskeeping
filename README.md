@@ -74,7 +74,7 @@ Read the screenshot from left to right:
 | Top tabs | The registered pages in the app | `PageRoute`, `PageRegistration` |
 | Left pane | Things the operator can move between inside the current page | `SectionNavigation` + `SectionItem`, or `CatalogueNavigation` + `CatalogueItem` |
 | Upper-right pane | The main content for the selected section or catalogue item | `TableView`, `TreeView`, `EmptyView`, `LoadingView` |
-| Lower-right pane | Extra context for the highlighted row or item | `KeyValueView`, `TextView` |
+| Lower-right pane | Extra context for the highlighted row or item | `KeyValueView`, `TextView`, `TableView` |
 | Buttons above the view | Commands for the current view only | `ViewAction`, routed to `action_selected` |
 
 Pages choose `SectionNavigation` for peer areas or `CatalogueNavigation` for hierarchical
