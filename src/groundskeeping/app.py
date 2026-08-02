@@ -227,6 +227,19 @@ class OperatorApp(App[None]):
                 str(event.row_key.value), self._page_context
             )
 
+    def on_workbench_selection_highlighted(
+        self, event: Workbench.SelectionHighlighted
+    ) -> None:
+        self._active_widget().row_highlighted(event.row_key, self._page_context)
+
+    def on_workbench_selection_changed(self, event: Workbench.SelectionChanged) -> None:
+        page = self._active_widget()
+        handler = getattr(page, "selection_changed", None)
+        if callable(handler):
+            handler(event.row_key, event.selected_keys, self._page_context)
+            return
+        page.row_selected(event.row_key, self._page_context)
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         action_key = self._workbench.action_key(event.button.id)
         if action_key is not None:

@@ -32,6 +32,8 @@ from groundskeeping.contracts import (
     ReviewStep,
     SectionItem,
     SectionNavigation,
+    SelectionTableRow,
+    SelectionTableView,
     SemanticStatus,
     SurfaceView,
     TableRow,
@@ -116,11 +118,21 @@ TELEMETRY_ROUTE = PageRoute(
 class OverviewPage(_DemoPage):
     route = OVERVIEW_ROUTE
 
+    def __init__(self) -> None:
+        super().__init__()
+        self._selected_vocab_keys: tuple[str, ...] = ("__all__",)
+
     def build_navigation(self, context: PageContext) -> SectionNavigation:
         return SectionNavigation(
             items=(
                 SectionItem(
                     "overview.shell", "Shell contracts", status=SemanticStatus.OK
+                ),
+                SectionItem(
+                    "overview.selection",
+                    "Selection table",
+                    status=SemanticStatus.RUNNING,
+                    description="All-vs-specific row controls",
                 ),
                 SectionItem("overview.boundaries", "Consumer boundaries"),
             )
@@ -140,6 +152,71 @@ class OverviewPage(_DemoPage):
                         "configuration": "read-only inspection",
                         "telemetry": "normalized snapshots",
                     },
+                ),
+            ),
+        )
+
+    def navigation_selected(self, item: NavigationItem, context: PageContext) -> None:
+        if item.key == "overview.selection":
+            context.surface.show_view(self.route.key, self._selection_view())
+            context.surface.show_detail(
+                self.route.key,
+                KeyValueView(
+                    title="Selection",
+                    rows=(
+                        ("changed row", "-"),
+                        ("selected keys", ", ".join(self._selected_vocab_keys)),
+                    ),
+                ),
+            )
+            return
+        context.surface.show_view(self.route.key, self.landing_view(context))
+
+    def selection_changed(
+        self, row_key: str, selected_keys: tuple[str, ...], context: PageContext
+    ) -> None:
+        self._selected_vocab_keys = selected_keys or ("__all__",)
+        context.surface.show_view(self.route.key, self._selection_view())
+        context.surface.show_detail(
+            self.route.key,
+            KeyValueView(
+                title="Selection",
+                rows=(
+                    ("changed row", row_key),
+                    ("selected keys", ", ".join(self._selected_vocab_keys)),
+                ),
+            ),
+        )
+
+    def _selection_view(self) -> SelectionTableView:
+        selected = set(self._selected_vocab_keys)
+        return SelectionTableView(
+            title="Vocabulary selection",
+            message="workbench-owned all-vs-specific controls",
+            status=SemanticStatus.RUNNING,
+            columns=("Vocabulary", "Coverage", "State"),
+            selection_mode="all_or_specific",
+            all_row_key="__all__",
+            rows=(
+                SelectionTableRow(
+                    "__all__",
+                    ("All vocabularies", "default", "ready"),
+                    selected="__all__" in selected,
+                ),
+                SelectionTableRow(
+                    "snomed",
+                    ("SNOMED CT", "100%", "complete"),
+                    disabled=True,
+                ),
+                SelectionTableRow(
+                    "loinc",
+                    ("LOINC", "73%", "available"),
+                    selected="loinc" in selected,
+                ),
+                SelectionTableRow(
+                    "rxnorm",
+                    ("RxNorm", "41%", "available"),
+                    selected="rxnorm" in selected,
                 ),
             ),
         )

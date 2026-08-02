@@ -114,6 +114,14 @@ class OperatorPage(Protocol):
     def row_selected(self, row_key: str, context: PageContext) -> None: ...
 
 
+class SelectionAwareOperatorPage(Protocol):
+    """Optional hook for pages that consume workbench-owned selection tables."""
+
+    def selection_changed(
+        self, row_key: str, selected_keys: tuple[str, ...], context: PageContext
+    ) -> None: ...
+
+
 @dataclass(frozen=True)
 class PageRegistration:
     """A page route plus the factory that creates the page widget."""

@@ -20,8 +20,9 @@ Use `SectionNavigation` for peer areas such as Database, Embeddings, and Runtime
 evaluation run with nested artefacts.
 
 Translate domain objects before they reach the workbench. The workbench understands
-`SectionItem`, `CatalogueItem`, `TableView`, `TreeView`, and friends; it does not need to know
-what a Groundworkers resource or `cava-nlp-shard` evaluation object is.
+`SectionItem`, `CatalogueItem`, `TableView`, `SelectionTableView`, `TreeView`, and friends;
+it does not need to know what a Groundworkers resource or `cava-nlp-shard` evaluation object
+is.
 
 Use `OperatorAppSpec.workbench_labels` to rename shared pane chrome such as the result and
 detail panel labels. Page-owned titles still live on navigation and view contracts: for
@@ -53,6 +54,12 @@ startup rather than when an operator clicks a tab.
 
 Row events return to the active page. The workbench renders generic models; the page decides
 what a highlighted row means.
+
+Use `SelectionTableView` when rows are controls, not just data. It renders a
+Groundskeeping-owned selection list with stable row keys, disabled row handling, and
+selection modes for single, multiple, or all-vs-specific selection. Pages that need the full
+selected-key state can implement the optional `SelectionAwareOperatorPage.selection_changed`
+hook; older pages still receive `row_selected` for compatibility.
 
 Detail panes can render `TextView`, `KeyValueView`, or `TableView`. Use a detail `TableView`
 when the selected item has its own repeated data, such as available LLM models for a provider.
