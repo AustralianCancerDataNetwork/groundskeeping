@@ -4,18 +4,22 @@ import asyncio
 from dataclasses import replace
 
 from textual.widget import Widget
-from textual.widgets import Button
+from textual.widgets import Button, DataTable
 
 from groundskeeping.app import OperatorApp, OperatorAppSpec
 from groundskeeping.contracts import (
     MAX_VIEW_ACTIONS,
     EmptyView,
+    KeyValueView,
     NavigationItem,
     PageContext,
     PageRegistration,
     PageRoute,
     SectionNavigation,
     SurfaceView,
+    TableRow,
+    TableView,
+    TextView,
     ViewAction,
     WizardResult,
     WizardResultStatus,
@@ -199,6 +203,61 @@ def test_workbench_clamps_extra_view_actions_without_crashing() -> None:
                 f"view-action-{MAX_VIEW_ACTIONS - 1}"
             ) == f"setup.action.{MAX_VIEW_ACTIONS - 1}"
             assert app._workbench.action_key(f"view-action-{MAX_VIEW_ACTIONS}") is None
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_workbench_renders_table_view_in_detail_pane() -> None:
+    async def run() -> None:
+        app = OperatorApp(build_demo_spec())
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            detail = TableView(
+                title="Model inventory",
+                columns=("Model", "Context", "Status"),
+                rows=tuple(
+                    TableRow(
+                        key=f"model-{index}",
+                        cells=(f"model-{index}", f"{index * 1000}", "available"),
+                    )
+                    for index in range(12)
+                ),
+            )
+
+            app._workbench.show_detail(detail)
+            await pilot.pause()
+
+            context = app.query_one("#context")
+            table = app.query_one("#context-table", DataTable)
+
+            assert context.styles.display == "none"
+            assert table.styles.display == "block"
+            assert table.row_count == 12
+            assert len(table.ordered_columns) == 3
+            assert app.query_one("#context-panel").border_title == "Model inventory"
+            assert app.query_one("#context-panel").border_subtitle == "12 rows"
+
+            app._workbench.show_detail(TextView("Model notes", "Use qwen locally."))
+            await pilot.pause()
+
+            assert context.styles.display == "block"
+            assert table.styles.display == "none"
+            assert app.query_one("#context-panel").border_title == "Model notes"
+            assert app.query_one("#context-panel").border_subtitle == ""
+
+            app._workbench.show_detail(
+                KeyValueView(
+                    rows=(("Provider", "Ollama"),),
+                    title="Model facts",
+                )
+            )
+            await pilot.pause()
+
+            assert context.styles.display == "none"
+            assert table.styles.display == "block"
+            assert app.query_one("#context-panel").border_title == "Model facts"
+            assert app.query_one("#context-panel").border_subtitle == ""
             await pilot.press("q")
 
     asyncio.run(run())

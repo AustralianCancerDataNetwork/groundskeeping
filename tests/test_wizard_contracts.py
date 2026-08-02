@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 
 import pytest
-from textual.widgets import Button
+from textual.widgets import Button, OptionList
 
 from groundskeeping.app import OperatorApp
 from groundskeeping.configurator import (
@@ -14,19 +15,117 @@ from groundskeeping.configurator import (
 )
 from groundskeeping.contracts import (
     Choice,
+    ChoiceOption,
     ChoiceStep,
+    FieldKind,
     FieldSpec,
     FormStep,
     ReviewChange,
     ReviewStep,
     WizardDefinitionError,
+    WizardResult,
     WizardResultStatus,
     WizardReview,
     WizardSnapshot,
     WizardSpec,
+    WizardTransition,
     validate_wizard_steps,
 )
 from groundskeeping.demo import ConfigPage, _DemoConfigWizardController, build_demo_spec
+from groundskeeping.widgets.wizard import WizardScreen
+
+
+class _DynamicChoiceWizard:
+    spec = WizardSpec(
+        key="model-picker",
+        title="Pick a model",
+        purpose="Choose one model from inventory.",
+        apply_label="Apply",
+    )
+
+    def __init__(self) -> None:
+        self.submitted: dict[str, object] = {}
+        self.step = FormStep(
+            key="model",
+            title="Model inventory",
+            fields=(
+                FieldSpec(
+                    key="model",
+                    label="Model",
+                    kind=FieldKind.CHOICE,
+                    choices=tuple(
+                        ChoiceOption(
+                            value=f"model-{index:02d}",
+                            label=f"Model {index:02d}",
+                            description=f"{index * 1000} context",
+                        )
+                        for index in range(12)
+                    ),
+                ),
+            ),
+        )
+        self.review_step = ReviewStep("review", "Review", WizardReview())
+
+    def start(self) -> WizardSnapshot:
+        return WizardSnapshot(
+            spec=self.spec,
+            step=self.step,
+            step_index=0,
+            step_count=2,
+            values={"model": "model-04"},
+        )
+
+    def submit(self, values: Mapping[str, object]) -> WizardTransition:
+        self.submitted = dict(values)
+        return WizardTransition(
+            WizardSnapshot(
+                spec=self.spec,
+                step=self.review_step,
+                step_index=1,
+                step_count=2,
+                can_back=True,
+                can_next=False,
+                can_apply=True,
+            )
+        )
+
+    def back(self) -> WizardSnapshot:
+        return self.start()
+
+    def review(self) -> WizardTransition:
+        return self.submit(self.submitted)
+
+    def apply(self) -> WizardResult:
+        return WizardResult(WizardResultStatus.APPLIED, "Applied.")
+
+    def cancel(self) -> WizardResult:
+        return WizardResult(WizardResultStatus.CANCELLED, "Cancelled.")
+
+
+class _NoChoiceWizard(_DynamicChoiceWizard):
+    def __init__(self) -> None:
+        super().__init__()
+        self.step = FormStep(
+            key="model",
+            title="Model inventory",
+            fields=(
+                FieldSpec(
+                    key="model",
+                    label="Model",
+                    kind=FieldKind.CHOICE,
+                    choices=(),
+                ),
+            ),
+        )
+
+    def start(self) -> WizardSnapshot:
+        return WizardSnapshot(
+            spec=self.spec,
+            step=self.step,
+            step_index=0,
+            step_count=2,
+            values={"model": None},
+        )
 
 
 def test_wizard_definitions_require_unique_keys() -> None:
@@ -164,6 +263,53 @@ def test_demo_config_wizard_reports_stale_revision_conflict() -> None:
 
     assert result.status == WizardResultStatus.CONFLICTED
     assert result.refresh_pages == frozenset({"config"})
+
+
+def test_wizard_choice_field_renders_dynamic_options_inline() -> None:
+    async def run() -> None:
+        controller = _DynamicChoiceWizard()
+        app = OperatorApp(build_demo_spec())
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            app.push_screen(WizardScreen(controller))
+            await pilot.pause()
+
+            picker = app.screen.query_one("#wizard-field-0", OptionList)
+            assert picker.option_count == 12
+            assert picker.region.height > 1
+            assert picker.highlighted == 4
+
+            picker.focus()
+            await pilot.press("down")
+            await pilot.pause()
+
+            assert picker.highlighted == 5
+
+            await pilot.click("#wizard-next")
+            await pilot.pause()
+
+            assert controller.submitted["model"] == "model-05"
+            await pilot.press("escape")
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_wizard_choice_field_handles_empty_required_choices() -> None:
+    async def run() -> None:
+        app = OperatorApp(build_demo_spec())
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            app.push_screen(WizardScreen(_NoChoiceWizard()))
+            await pilot.pause()
+
+            picker = app.screen.query_one("#wizard-field-0", OptionList)
+            assert picker.option_count == 1
+            assert picker.highlighted == 0
+            await pilot.press("escape")
+            await pilot.press("q")
+
+    asyncio.run(run())
 
 
 def test_config_draft_and_apply_intent_are_safe_and_revision_aware() -> None:
