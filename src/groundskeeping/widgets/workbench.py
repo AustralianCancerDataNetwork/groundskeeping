@@ -448,8 +448,8 @@ class Workbench(Widget):
     ) -> Text:
         style = "grey50" if row.disabled else ""
         prompt = Text(self._padded_cells(row.cells, columns, rows), style=style)
-        if row.disabled:
-            prompt.append("  disabled", style="italic grey50")
+        # if row.disabled:
+        #     prompt.append("  disabled", style="italic grey50")
         return prompt
 
     def _padded_cells(
