@@ -44,18 +44,3 @@ Two tests hold the line:
 
 The package top level also avoids importing Textual, so headless contracts, configuration
 inspection, and telemetry sampling can be imported without a running app.
-
-## Commenting style
-
-Write comments for the next person adapting the tool.
-
-Good comments explain why a boundary exists, what operator-facing behaviour depends on it, and
-where domain logic should stay. They are especially useful around Textual lifecycle methods,
-event routing, worker handoffs, cancellation, secret redaction, and extension points.
-
-Prefer comments that preserve intent over comments that narrate syntax. Explain why row events
-return to the active page through the workbench surface. Do not explain that a loop iterates
-over rows.
-
-If a future maintainer is likely to wonder "why is this shaped this way?", leave them a small
-signpost.

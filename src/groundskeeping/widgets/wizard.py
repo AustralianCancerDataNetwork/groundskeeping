@@ -218,7 +218,9 @@ class WizardScreen(ModalScreen[WizardResult]):
     def _sync_buttons(self, snapshot: WizardSnapshot) -> None:
         self.query_one("#wizard-back", Button).disabled = not snapshot.can_back
         self.query_one("#wizard-next", Button).disabled = not snapshot.can_next
-        self.query_one("#wizard-review", Button).disabled = not isinstance(snapshot.step, ReviewStep)
+        self.query_one("#wizard-review", Button).disabled = isinstance(
+            snapshot.step, ReviewStep
+        )
         apply_button = self.query_one("#wizard-apply", Button)
         apply_button.label = snapshot.spec.apply_label
         apply_button.disabled = not snapshot.can_apply

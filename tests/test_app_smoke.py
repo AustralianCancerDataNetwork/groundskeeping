@@ -3,8 +3,61 @@ from __future__ import annotations
 import asyncio
 from dataclasses import replace
 
-from groundskeeping.app import OperatorApp
+from textual.widget import Widget
+from textual.widgets import Button
+
+from groundskeeping.app import OperatorApp, OperatorAppSpec
+from groundskeeping.contracts import (
+    MAX_VIEW_ACTIONS,
+    EmptyView,
+    NavigationItem,
+    PageContext,
+    PageRegistration,
+    PageRoute,
+    SectionNavigation,
+    SurfaceView,
+    ViewAction,
+    WizardResult,
+    WizardResultStatus,
+)
 from groundskeeping.demo import build_demo_spec
+
+
+class _CountingPage(Widget):
+    def __init__(self, route: PageRoute, *, actions: tuple[ViewAction, ...] = ()) -> None:
+        super().__init__()
+        self.route = route
+        self.actions = actions
+        self.render_count = 0
+
+    def activate(self, context: PageContext) -> None:
+        return None
+
+    def deactivate(self, context: PageContext) -> None:
+        return None
+
+    def build_navigation(self, context: PageContext) -> SectionNavigation:
+        return SectionNavigation(items=())
+
+    def landing_view(self, context: PageContext) -> SurfaceView:
+        self.render_count += 1
+        return EmptyView(
+            title=self.route.label,
+            message=f"render {self.render_count}",
+            actions=self.actions,
+        )
+
+    def navigation_selected(self, item: NavigationItem, context: PageContext) -> None:
+        return None
+
+    def action_selected(self, action_key: str, context: PageContext) -> None:
+        return None
+
+    def row_highlighted(self, row_key: str, context: PageContext) -> None:
+        return None
+
+    def row_selected(self, row_key: str, context: PageContext) -> None:
+        return None
 
 
 def test_demo_app_enters_textual_startup_context() -> None:
@@ -51,6 +104,101 @@ def test_single_page_hides_tabs_without_removing_page_registry() -> None:
         async with app.run_test() as pilot:
             assert app.registry.keys() == ("overview",)
             assert app.query_one("#page-tabs").styles.display == "none"
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_wizard_result_refreshes_active_page_when_requested() -> None:
+    async def run() -> None:
+        active_route = PageRoute("setup", "Setup", "Setup page")
+        other_route = PageRoute("other", "Other", "Other page")
+        active_page = _CountingPage(active_route)
+        other_page = _CountingPage(other_route)
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="refresh-test",
+                title="Refresh Test",
+                subtitle=None,
+                default_page=active_route.key,
+                pages=(
+                    PageRegistration(active_route, lambda context: active_page),
+                    PageRegistration(other_route, lambda context: other_page),
+                ),
+            )
+        )
+
+        async with app.run_test() as pilot:
+            baseline = active_page.render_count
+
+            app._wizard_closed(
+                WizardResult(
+                    status=WizardResultStatus.CONFLICTED,
+                    summary="Configuration changed.",
+                    refresh_pages=frozenset({active_route.key}),
+                )
+            )
+            await pilot.pause()
+
+            assert active_page.render_count == baseline + 1
+
+            app._wizard_closed(
+                WizardResult(
+                    status=WizardResultStatus.FAILED,
+                    summary="Other page changed.",
+                    refresh_pages=frozenset({other_route.key}),
+                )
+            )
+            await pilot.pause()
+
+            assert active_page.render_count == baseline + 1
+
+            app._wizard_closed(
+                WizardResult(
+                    status=WizardResultStatus.APPLIED,
+                    summary="Legacy applied result.",
+                )
+            )
+            await pilot.pause()
+
+            assert active_page.render_count == baseline + 2
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_workbench_clamps_extra_view_actions_without_crashing() -> None:
+    async def run() -> None:
+        route = PageRoute("setup", "Setup", "Setup page")
+        page = _CountingPage(
+            route,
+            actions=tuple(
+                ViewAction(f"setup.action.{index}", f"Action {index}")
+                for index in range(MAX_VIEW_ACTIONS + 2)
+            ),
+        )
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="action-clamp-test",
+                title="Action Clamp Test",
+                subtitle=None,
+                pages=(PageRegistration(route, lambda context: page),),
+            )
+        )
+
+        async with app.run_test() as pilot:
+            visible_buttons = tuple(
+                button
+                for button in app.query("#result-actions Button").results(Button)
+                if button.styles.display == "block"
+            )
+
+            assert len(visible_buttons) == MAX_VIEW_ACTIONS
+            assert app._workbench.action_key("view-action-0") == "setup.action.0"
+            assert app._workbench.action_key(
+                f"view-action-{MAX_VIEW_ACTIONS - 1}"
+            ) == f"setup.action.{MAX_VIEW_ACTIONS - 1}"
+            assert app._workbench.action_key(f"view-action-{MAX_VIEW_ACTIONS}") is None
             await pilot.press("q")
 
     asyncio.run(run())

@@ -14,6 +14,7 @@ from textual.widgets import Button, DataTable, OptionList, Static, TextArea, Tre
 from textual.widgets.option_list import Option
 
 from groundskeeping.contracts.views import (
+    MAX_VIEW_ACTIONS,
     CatalogueItem,
     DetailView,
     EmptyView,
@@ -31,8 +32,6 @@ from groundskeeping.contracts.views import (
 )
 from groundskeeping.theme import node_label, status_style
 from groundskeeping.widgets.primitives import EmptyState, LoadingState
-
-MAX_VIEW_ACTIONS = 6
 
 
 class Workbench(Widget):
@@ -155,22 +154,23 @@ class Workbench(Widget):
 
     def show_actions(self, actions: Sequence[ViewAction]) -> None:
         bar = self.query_one("#result-actions", Horizontal)
-        if len(actions) > MAX_VIEW_ACTIONS:
-            raise ValueError(f"A view may expose at most {MAX_VIEW_ACTIONS} actions.")
+        visible_actions = tuple(actions[:MAX_VIEW_ACTIONS])
         self._action_by_button_id = {}
         buttons = tuple(self.query("#result-actions Button").results(Button))
         for index, button in enumerate(buttons):
-            if index >= len(actions):
+            if index >= len(visible_actions):
                 button.styles.display = "none"
+                button.label = ""
+                button.disabled = True
                 continue
-            action = actions[index]
+            action = visible_actions[index]
             assert button.id is not None
             self._action_by_button_id[button.id] = action.key
             button.label = action.label
             button.variant = action.variant
             button.disabled = action.disabled
             button.styles.display = "block"
-        bar.styles.display = "block" if actions else "none"
+        bar.styles.display = "block" if visible_actions else "none"
 
     def action_key(self, button_id: str | None) -> str | None:
         return self._action_by_button_id.get(button_id or "")

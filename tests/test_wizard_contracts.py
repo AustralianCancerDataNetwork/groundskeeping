@@ -213,6 +213,13 @@ def test_demo_app_opens_and_cancels_wizard_from_view_action() -> None:
             await pilot.pause()
 
             assert app.screen.query_one("#wizard-frame") is not None
+            assert not app.screen.query_one("#wizard-review", Button).disabled
+
+            await pilot.click("#wizard-review")
+            await pilot.pause()
+
+            assert app.screen.query_one("#wizard-review", Button).disabled
+            assert not app.screen.query_one("#wizard-apply", Button).disabled
 
             await pilot.click("#wizard-cancel")
             await pilot.pause()

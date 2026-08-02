@@ -9,6 +9,8 @@ from typing import Literal
 
 type ViewActionVariant = Literal["default", "primary", "success", "warning", "error"]
 
+MAX_VIEW_ACTIONS = 6
+
 
 class SemanticStatus(StrEnum):
     """Small health/status vocabulary understood by shared widgets."""
@@ -23,7 +25,11 @@ class SemanticStatus(StrEnum):
 
 @dataclass(frozen=True)
 class ViewAction:
-    """One command rendered with the current workbench view."""
+    """One command rendered with the current workbench view.
+
+    The shared workbench renders at most `MAX_VIEW_ACTIONS` actions. Extra actions remain part
+    of the view model but are not assigned visible buttons.
+    """
 
     key: str
     label: str

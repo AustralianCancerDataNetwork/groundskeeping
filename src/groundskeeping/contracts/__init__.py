@@ -49,6 +49,7 @@ from groundskeeping.contracts.telemetry import (
     TelemetrySource,
 )
 from groundskeeping.contracts.views import (
+    MAX_VIEW_ACTIONS,
     CatalogueItem,
     CatalogueNavigation,
     DetailView,
