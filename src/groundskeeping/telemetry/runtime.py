@@ -6,11 +6,11 @@ import asyncio
 from collections import defaultdict, deque
 from collections.abc import Iterable, Mapping
 
-from groundskeeping.telemetry.contracts import TelemetrySource
-from groundskeeping.telemetry.models import (
+from groundskeeping.contracts.telemetry import (
     SourceAvailability,
     SourceStatus,
     TelemetrySnapshot,
+    TelemetrySource,
 )
 
 

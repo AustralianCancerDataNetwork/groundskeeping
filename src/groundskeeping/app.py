@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import ClassVar
 
@@ -11,7 +11,17 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
 from textual.widget import Widget
-from textual.widgets import DataTable, Footer, Header, Label, Tab, Tabs, Tree
+from textual.widgets import (
+    Button,
+    DataTable,
+    Footer,
+    Header,
+    Label,
+    OptionList,
+    Tab,
+    Tabs,
+    Tree,
+)
 
 from groundskeeping.contracts.actions import (
     ActionRegistry,
@@ -38,11 +48,20 @@ from groundskeeping.contracts.views import (
     CatalogueItem,
     DetailView,
     EmptyView,
+    NavigationItem,
+    PageNavigation,
+    SectionItem,
     SurfaceView,
+)
+from groundskeeping.contracts.wizards import (
+    WizardController,
+    WizardResult,
+    WizardResultStatus,
 )
 from groundskeeping.navigation import SurfaceLease
 from groundskeeping.theme import GROUNDSKEEPING_THEME
 from groundskeeping.widgets import Workbench
+from groundskeeping.widgets.wizard import WizardScreen
 
 
 @dataclass(frozen=True)
@@ -63,7 +82,9 @@ class OperatorAppSpec:
     def validate(self) -> PageRegistry:
         routes = tuple(registration.route for registration in self.pages)
         registry = PageRegistry(routes)
-        if len({id(registration.factory) for registration in self.pages}) != len(self.pages):
+        if len({id(registration.factory) for registration in self.pages}) != len(
+            self.pages
+        ):
             raise ValueError("Page registrations must use distinct factories.")
         ActionRegistry(tuple(self.actions), page_keys=registry.keys())
         if self.default_page is not None:
@@ -77,9 +98,9 @@ class _WorkbenchSurface(PageSurfacePort):
         self._lease_by_page: dict[str, SurfaceLease] = {}
         self._generation = 0
 
-    def show_catalogue(self, page_key: str, items: Sequence[CatalogueItem]) -> None:
-        self._workbench.populate_catalogue(items)
-        self._lease(page_key, "catalogue")
+    def show_navigation(self, page_key: str, navigation: PageNavigation) -> None:
+        self._workbench.show_navigation(navigation)
+        self._lease(page_key, "navigation")
 
     def show_view(self, page_key: str, view: SurfaceView) -> None:
         self._workbench.show_surface(view)
@@ -91,7 +112,9 @@ class _WorkbenchSurface(PageSurfacePort):
 
     def _lease(self, page_key: str, source_key: str) -> SurfaceLease:
         self._generation += 1
-        lease = SurfaceLease(page_key=page_key, source_key=source_key, generation=self._generation)
+        lease = SurfaceLease(
+            page_key=page_key, source_key=source_key, generation=self._generation
+        )
         self._lease_by_page[page_key] = lease
         return lease
 
@@ -113,6 +136,9 @@ class _AppPageContext(PageContext):
 
     def notify(self, message: str, *, severity: NotifySeverity = "information") -> None:
         self._app.notify(message, severity=severity)
+
+    def open_wizard(self, controller: WizardController) -> None:
+        self._app.open_wizard(controller)
 
 
 class OperatorApp(App[None]):
@@ -141,7 +167,7 @@ class OperatorApp(App[None]):
             registration.route.key: registration.factory(self._page_context)
             for registration in spec.pages
         }
-        self._catalogue_by_key: dict[str, CatalogueItem] = {}
+        self._navigation_by_key: dict[str, NavigationItem] = {}
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -158,6 +184,8 @@ class OperatorApp(App[None]):
                     if not isinstance(page, Widget):
                         raise TypeError(f"Page {route.key!r} must be a Textual Widget.")
                     page.add_class("operator-page")
+                    page.styles.height = 0
+                    page.styles.max_height = 0
                     yield page
                 yield self._workbench
         yield Footer()
@@ -165,6 +193,8 @@ class OperatorApp(App[None]):
     def on_mount(self) -> None:
         self.register_theme(GROUNDSKEEPING_THEME)
         self.theme = GROUNDSKEEPING_THEME.name
+        if len(self.registry) == 1:
+            self.query_one("#page-tabs", Tabs).styles.display = "none"
         self.show_page(self._active_page)
 
     def on_tabs_tab_activated(self, event: Tabs.TabActivated) -> None:
@@ -176,15 +206,47 @@ class OperatorApp(App[None]):
             return
         data = event.node.data
         if isinstance(data, CatalogueItem):
-            self._select_catalogue_item(data)
+            self._select_navigation_item(data)
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        if event.option_list.id != "sections" or event.option.id is None:
+            return
+        item = self._navigation_by_key.get(event.option.id)
+        if isinstance(item, SectionItem):
+            self._select_navigation_item(item)
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         if event.data_table.id == "result-table":
-            self._active_widget().row_highlighted(str(event.row_key.value), self._page_context)
+            self._active_widget().row_highlighted(
+                str(event.row_key.value), self._page_context
+            )
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         if event.data_table.id == "result-table":
-            self._active_widget().row_selected(str(event.row_key.value), self._page_context)
+            self._active_widget().row_selected(
+                str(event.row_key.value), self._page_context
+            )
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        action_key = self._workbench.action_key(event.button.id)
+        if action_key is not None:
+            self._active_widget().action_selected(action_key, self._page_context)
+
+    def open_wizard(self, controller: WizardController) -> None:
+        self.push_screen(WizardScreen(controller), callback=self._wizard_closed)
+
+    def _wizard_closed(self, result: WizardResult | None) -> None:
+        if result is None:
+            return
+        severity: NotifySeverity = "information"
+        if result.status in {WizardResultStatus.CONFLICTED, WizardResultStatus.FAILED}:
+            severity = "error"
+        elif result.status is WizardResultStatus.CANCELLED:
+            severity = "warning"
+        self.notify(result.summary, severity=severity)
+        refresh_pages = set(result.refresh_pages)
+        if self._active_page in refresh_pages or (result.applied and not refresh_pages):
+            self._render_page(self.registry.get(self._active_page))
 
     def show_page(self, page_key: str) -> None:
         route = self.registry.get(page_key)
@@ -210,9 +272,11 @@ class OperatorApp(App[None]):
         heading.append(route.purpose, style="grey62")
         self.query_one("#workspace-title", Label).update(heading)
         page = self._active_widget()
-        items = tuple(page.build_catalogue(self._page_context))
-        self._catalogue_by_key = {item.key: item for item in self._walk_catalogue(items)}
-        self._workbench.populate_catalogue(items)
+        navigation = page.build_navigation(self._page_context)
+        self._navigation_by_key = {
+            item.key: item for item in self._walk_navigation(navigation)
+        }
+        self._workbench.show_navigation(navigation)
         try:
             view = page.landing_view(self._page_context)
         except Exception as exc:  # noqa: BLE001
@@ -222,12 +286,24 @@ class OperatorApp(App[None]):
     def _active_widget(self) -> OperatorPage:
         return self._pages[self._active_page]
 
-    def _select_catalogue_item(self, item: CatalogueItem) -> None:
-        self._active_widget().catalogue_selected(item, self._page_context)
+    def _select_navigation_item(self, item: NavigationItem) -> None:
+        self._active_widget().navigation_selected(item, self._page_context)
 
-    def _walk_catalogue(self, items: tuple[CatalogueItem, ...]) -> tuple[CatalogueItem, ...]:
+    def _walk_navigation(
+        self, navigation: PageNavigation
+    ) -> tuple[NavigationItem, ...]:
+        walked: list[NavigationItem] = []
+        for item in navigation.items:
+            walked.append(item)
+            if isinstance(item, CatalogueItem):
+                walked.extend(self._walk_catalogue_items(item.children))
+        return tuple(walked)
+
+    def _walk_catalogue_items(
+        self, items: tuple[CatalogueItem, ...]
+    ) -> tuple[CatalogueItem, ...]:
         walked: list[CatalogueItem] = []
         for item in items:
             walked.append(item)
-            walked.extend(self._walk_catalogue(item.children))
+            walked.extend(self._walk_catalogue_items(item.children))
         return tuple(walked)

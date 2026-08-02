@@ -7,10 +7,12 @@ from dataclasses import dataclass
 from typing import Literal, Protocol, overload
 
 from groundskeeping.contracts.views import (
-    CatalogueItem,
     DetailView,
+    NavigationItem,
+    PageNavigation,
     SurfaceView,
 )
+from groundskeeping.contracts.wizards import WizardController
 
 type NotifySeverity = Literal["information", "warning", "error"]
 """Toast severities the shell forwards to Textual's notification system."""
@@ -64,7 +66,7 @@ class PageRegistry(Sequence[PageRoute]):
 class PageSurfacePort(Protocol):
     """Workbench surface methods consumer pages may call."""
 
-    def show_catalogue(self, page_key: str, items: Sequence[CatalogueItem]) -> None: ...
+    def show_navigation(self, page_key: str, navigation: PageNavigation) -> None: ...
 
     def show_view(self, page_key: str, view: SurfaceView) -> None: ...
 
@@ -81,7 +83,11 @@ class PageContext(Protocol):
 
     def request_navigation(self, page_key: str) -> None: ...
 
-    def notify(self, message: str, *, severity: NotifySeverity = "information") -> None: ...
+    def notify(
+        self, message: str, *, severity: NotifySeverity = "information"
+    ) -> None: ...
+
+    def open_wizard(self, controller: WizardController) -> None: ...
 
 
 class OperatorPage(Protocol):
@@ -93,11 +99,15 @@ class OperatorPage(Protocol):
 
     def deactivate(self, context: PageContext) -> None: ...
 
-    def build_catalogue(self, context: PageContext) -> Sequence[CatalogueItem]: ...
+    def build_navigation(self, context: PageContext) -> PageNavigation: ...
 
     def landing_view(self, context: PageContext) -> SurfaceView: ...
 
-    def catalogue_selected(self, item: CatalogueItem, context: PageContext) -> None: ...
+    def navigation_selected(
+        self, item: NavigationItem, context: PageContext
+    ) -> None: ...
+
+    def action_selected(self, action_key: str, context: PageContext) -> None: ...
 
     def row_highlighted(self, row_key: str, context: PageContext) -> None: ...
 

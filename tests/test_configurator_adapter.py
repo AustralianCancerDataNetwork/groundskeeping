@@ -77,17 +77,28 @@ def test_adapter_can_render_snapshot_as_tree_view() -> None:
 def test_diff_redacts_sensitive_values() -> None:
     adapter = OAConfiguratorAdapter()
     target = ConfigTarget(kind="database", key="metadata", title="metadata")
-    draft = ConfigDraft(
-        target=target,
+    diff = adapter.diff(
+        target,
         original_fields={"url": "postgresql://old", "password": "old-secret"},
         candidate_fields={"url": "postgresql://new", "password": "new-secret"},
-        expected_revision="abc",
+        sensitive_fields=frozenset({"password"}),
     )
-
-    diff = adapter.diff(draft, sensitive_fields=frozenset({"password"}))
 
     assert diff.changed
     password = next(entry for entry in diff.entries if entry.field == "password")
     assert isinstance(password.before, RedactedValue)
     assert isinstance(password.after, RedactedValue)
     assert "new-secret" not in repr(diff)
+
+
+def test_config_draft_only_tracks_safe_changed_field_presence() -> None:
+    target = ConfigTarget(kind="database", key="metadata", title="metadata")
+    draft = ConfigDraft(
+        target=target,
+        changed_fields=frozenset({"url", "password"}),
+        expected_revision="abc",
+    )
+
+    assert draft.changed
+    assert draft.changed_fields == frozenset({"url", "password"})
+    assert "secret" not in repr(draft)

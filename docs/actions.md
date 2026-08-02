@@ -1,14 +1,15 @@
 # Actions and Jobs
 
-Actions are declarations plus runners.
+Actions are buttons with a runner behind them. Use them for bounded operations such as
+**Test connection**, **Refresh status**, **Populate embeddings**, or **Run evaluation sample**.
 
 ## ActionSpec
 
 An [`ActionSpec`][groundskeeping.contracts.actions.ActionSpec] describes the operator-facing
 command: label, summary, fields, resources, effects, cancellation mode, and runner.
 
-`ActionRegistry` provides exact-key lookup and validates at startup that action keys are
-unique and that every `page_key` refers to a registered page.
+`ActionRegistry` validates at startup that action keys are unique and that every `page_key`
+refers to a registered page.
 
 ```python
 from groundskeeping.contracts import (
@@ -42,8 +43,7 @@ reaches the runner. Each field declares a `FieldKind` — `TEXT`, `SECRET`, `MUL
 value and a presentation-safe value.
 
 A field is masked when it is explicitly `sensitive` or when its kind is `SECRET`. Masked
-values render as `<redacted>` in confirmations, diffs, and result surfaces, so a secret typed
-into an action never reaches a log line or a rendered view by accident.
+values render as `<redacted>` in confirmations, diffs, and result surfaces.
 
 Numeric fields validate bounds through `minimum` and `maximum`, and any field may carry a
 `validator` that returns a `ValidationIssue`. Parsing failures raise `ValueError` with the
@@ -52,7 +52,7 @@ field's operator-facing label, not its key.
 ## Running an action
 
 The runner receives an [`ActionContext`][groundskeeping.contracts.actions.ActionContext] with
-progress and cancellation, so long-running work can report what it is doing without importing
+progress and cancellation. That lets a runner report useful status without importing Textual
 widgets.
 
 ```python
@@ -90,10 +90,9 @@ parses params, runs preflight validation, builds a context, and returns the outc
 
 ## Operation policy
 
-`OperationPolicy` decides whether an action may proceed and what the operator is told before
-it does. `AllowAllOperationPolicy` is the permissive default; consumers substitute a policy
-that describes effects in their own vocabulary and blocks operations that are unsafe in their
-environment.
+`OperationPolicy` decides whether an action may proceed and what the operator is told first.
+`AllowAllOperationPolicy` is the permissive default. Applications can substitute a policy that
+uses their own vocabulary and blocks unsafe operations.
 
 ## Jobs
 
@@ -103,6 +102,6 @@ Use [`JobManager`][groundskeeping.contracts.jobs.JobManager] and `JobPolicy` to 
 in-process work and show progress. `SingleForegroundJobPolicy` is the default and allows one
 foreground job at a time.
 
-Keep queue state, retries, leases, and durable records inside the consumer. The shell tracks
+Keep queue state, retries, leases, and durable records inside the application. The shell tracks
 what is running right now so it can render progress and honour cancellation; it does not
 remember work across restarts.

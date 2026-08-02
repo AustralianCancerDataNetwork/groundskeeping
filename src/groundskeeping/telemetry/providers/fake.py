@@ -5,13 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from groundskeeping.contracts.views import SemanticStatus
-from groundskeeping.telemetry.models import (
+from groundskeeping.contracts.telemetry import (
     MetricValue,
     SourceAvailability,
     SourceStatus,
     TelemetrySnapshot,
 )
+from groundskeeping.contracts.views import SemanticStatus
 
 
 @dataclass

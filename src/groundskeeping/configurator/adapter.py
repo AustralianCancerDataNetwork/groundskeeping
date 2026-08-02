@@ -10,6 +10,7 @@ from groundskeeping.configurator.models import (
     ConfigDiff,
     ConfigDiffEntry,
     ConfigDraft,
+    ConfigResourceAdapter,
     ConfigSectionView,
     ConfigTarget,
     ConfiguratorSnapshot,
@@ -17,6 +18,7 @@ from groundskeeping.configurator.models import (
 )
 from groundskeeping.contracts.actions import FieldSpec, ValidationIssue
 from groundskeeping.contracts.views import SemanticStatus, TreeNode, TreeView
+from groundskeeping.contracts.wizards import WizardController
 
 _SECRET_FIELD_NAMES = frozenset({"password", "secret", "token", "api_key"})
 
@@ -69,16 +71,18 @@ class OAConfiguratorAdapter:
 
     def diff(
         self,
-        draft: ConfigDraft,
+        target: ConfigTarget,
+        original_fields: Mapping[str, object],
+        candidate_fields: Mapping[str, object],
         *,
         sensitive_fields: frozenset[str] = frozenset(),
     ) -> ConfigDiff:
         """Build a redacted structural diff for confirmation surfaces."""
-        fields = sorted(set(draft.original_fields) | set(draft.candidate_fields))
+        fields = sorted(set(original_fields) | set(candidate_fields))
         entries: list[ConfigDiffEntry] = []
         for field in fields:
-            before = draft.original_fields.get(field)
-            after = draft.candidate_fields.get(field)
+            before = original_fields.get(field)
+            after = candidate_fields.get(field)
             if before == after:
                 continue
             sensitive = field in sensitive_fields or isinstance(before, RedactedValue) or isinstance(after, RedactedValue)
@@ -90,7 +94,24 @@ class OAConfiguratorAdapter:
                     sensitive=sensitive,
                 )
             )
-        return ConfigDiff(target=draft.target, entries=tuple(entries))
+        return ConfigDiff(target=target, entries=tuple(entries))
+
+    def wizard_controller(
+        self,
+        target: ConfigTarget,
+        adapters: Iterable[ConfigResourceAdapter],
+    ) -> WizardController | None:
+        """Return the first consumer adapter that can drive a setup wizard.
+
+        Groundskeeping only brokers the Textual-free controller. The adapter that
+        understands the resource still owns candidate state, validation, revision checks,
+        and apply semantics.
+        """
+
+        for adapter in adapters:
+            if adapter.supports(target):
+                return adapter.wizard_controller(target)
+        return None
 
     def _mapping_section(
         self,
@@ -225,3 +246,6 @@ class NativeConfigResourceAdapter:
 
     def post_apply_effects(self, draft: ConfigDraft) -> tuple[str, ...]:
         return ()
+
+    def wizard_controller(self, target: ConfigTarget) -> WizardController | None:
+        return None

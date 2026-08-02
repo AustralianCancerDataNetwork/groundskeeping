@@ -14,10 +14,10 @@ uv add groundskeeping
 uv run groundskeeping
 ```
 
-The demo composes overview, configuration, and telemetry pages. It also registers a small
-action so the app spec and action registry can be exercised without a consumer application.
+The demo shows the shell without depending on Groundworkers or `cava-nlp-shard`. It includes
+overview, configuration, telemetry, an action button, and a small setup wizard.
 
-The demo source is the shortest complete example of the composition root; read
+The demo source is the shortest complete example of the app shape; read
 `src/groundskeeping/demo.py` alongside this guide.
 
 ## Build your first page
@@ -30,10 +30,12 @@ once, then activates and deactivates it as the operator moves between tabs.
 from textual.widget import Widget
 
 from groundskeeping.contracts import (
-    CatalogueItem,
     EmptyView,
+    NavigationItem,
     PageContext,
     PageRoute,
+    SectionItem,
+    SectionNavigation,
     SurfaceView,
 )
 
@@ -47,13 +49,15 @@ class SetupPage(Widget):
 
     def deactivate(self, context: PageContext) -> None: ...
 
-    def build_catalogue(self, context: PageContext) -> tuple[CatalogueItem, ...]:
-        return (CatalogueItem(key="config", label="Configuration", kind="area"),)
+    def build_navigation(self, context: PageContext) -> SectionNavigation:
+        return SectionNavigation(items=(SectionItem("config", "Configuration"),))
 
     def landing_view(self, context: PageContext) -> SurfaceView:
-        return EmptyView(title="Setup", message="Select an area from the catalogue.")
+        return EmptyView(title="Setup", message="Select a setup section.")
 
-    def catalogue_selected(self, item: CatalogueItem, context: PageContext) -> None: ...
+    def navigation_selected(self, item: NavigationItem, context: PageContext) -> None: ...
+
+    def action_selected(self, action_key: str, context: PageContext) -> None: ...
 
     def row_highlighted(self, row_key: str, context: PageContext) -> None: ...
 
@@ -62,7 +66,7 @@ class SetupPage(Widget):
 
 Register it in an `OperatorAppSpec` and run the app. Start read-only: a page that only
 inspects is enough to exercise routing, the workbench, and failure presentation before you
-take ownership of durable changes.
+add durable changes.
 
 ## Run the tests
 
@@ -73,5 +77,6 @@ uv run ruff check .
 uv run ty check src/
 ```
 
-The tests cover route validation, app startup, action and job contracts, configurator
-redaction, telemetry import boundaries, and consumer dependency boundaries.
+The tests cover route validation, app startup, action and job contracts, wizard branching and
+redaction, configuration redaction, telemetry import boundaries, and application dependency
+boundaries.

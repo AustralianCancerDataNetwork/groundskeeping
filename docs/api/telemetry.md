@@ -1,7 +1,5 @@
 # Telemetry
 
-::: groundskeeping.telemetry.contracts
-
-::: groundskeeping.telemetry.models
+::: groundskeeping.contracts.telemetry
 
 ::: groundskeeping.telemetry.runtime

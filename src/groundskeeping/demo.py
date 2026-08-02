@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from textual.widget import Widget
 
@@ -14,22 +14,39 @@ from groundskeeping.contracts import (
     ActionOutcome,
     ActionRegistry,
     ActionSpec,
-    CatalogueItem,
+    Choice,
+    ChoiceOption,
+    ChoiceStep,
     EmptyView,
     ExecutionKind,
     FieldKind,
     FieldSpec,
+    FormStep,
     KeyValueView,
+    NavigationItem,
     OperatorPage,
     PageContext,
     PageRegistration,
     PageRoute,
+    ReviewChange,
+    ReviewStep,
+    SectionItem,
+    SectionNavigation,
     SemanticStatus,
     SurfaceView,
     TableRow,
     TableView,
     TreeNode,
     TreeView,
+    ValidationIssue,
+    ViewAction,
+    WizardResult,
+    WizardResultStatus,
+    WizardReview,
+    WizardSnapshot,
+    WizardSpec,
+    WizardTransition,
+    validate_wizard_steps,
 )
 from groundskeeping.telemetry.providers import FakeTelemetrySource
 
@@ -60,14 +77,17 @@ class _DemoPage(Widget):
     def deactivate(self, context: PageContext) -> None:
         return None
 
-    def build_catalogue(self, context: PageContext) -> tuple[CatalogueItem, ...]:
-        return ()
+    def build_navigation(self, context: PageContext) -> SectionNavigation:
+        return SectionNavigation(items=())
 
     def landing_view(self, context: PageContext) -> SurfaceView:
         return EmptyView(title=self.route.label, message="No demo content.")
 
-    def catalogue_selected(self, item: CatalogueItem, context: PageContext) -> None:
+    def navigation_selected(self, item: NavigationItem, context: PageContext) -> None:
         context.surface.show_view(self.route.key, self.landing_view(context))
+
+    def action_selected(self, action_key: str, context: PageContext) -> None:
+        return None
 
     def row_highlighted(self, row_key: str, context: PageContext) -> None:
         return None
@@ -96,10 +116,14 @@ TELEMETRY_ROUTE = PageRoute(
 class OverviewPage(_DemoPage):
     route = OVERVIEW_ROUTE
 
-    def build_catalogue(self, context: PageContext) -> tuple[CatalogueItem, ...]:
-        return (
-            CatalogueItem("overview.shell", "Shell contracts", "topic", status=SemanticStatus.OK),
-            CatalogueItem("overview.boundaries", "Consumer boundaries", "topic", status=SemanticStatus.INFO),
+    def build_navigation(self, context: PageContext) -> SectionNavigation:
+        return SectionNavigation(
+            items=(
+                SectionItem(
+                    "overview.shell", "Shell contracts", status=SemanticStatus.OK
+                ),
+                SectionItem("overview.boundaries", "Consumer boundaries"),
+            )
         )
 
     def landing_view(self, context: PageContext) -> SurfaceView:
@@ -126,7 +150,9 @@ class ConfigPage(_DemoPage):
 
     def __init__(self) -> None:
         super().__init__()
-        stack = _DemoStackConfig(
+        self._revision = "demo-config-0"
+        self._apply_count = 0
+        self._stack = _DemoStackConfig(
             path="/demo/stack.toml",
             active_profile="tre",
             databases={
@@ -136,25 +162,357 @@ class ConfigPage(_DemoPage):
                     role="readonly",
                 )
             },
-            resources={"ollama": {"url": "http://ollama:11434", "kind": "model-server"}},
+            resources={
+                "ollama": {"url": "http://ollama:11434", "kind": "model-server"}
+            },
             profiles={"tre": {"database": "metadata"}},
             aliases={"default-model": "snowflake-arctic-embed2"},
         )
-        self._snapshot = OAConfiguratorAdapter().snapshot(stack, title="Demo stack configuration")
+        self._snapshot = self._build_snapshot()
 
-    def build_catalogue(self, context: PageContext) -> tuple[CatalogueItem, ...]:
-        return tuple(
-            CatalogueItem(
-                key=section.target.key,
-                label=section.target.title,
-                kind=section.target.kind,
-                status=section.target.status,
+    @property
+    def revision(self) -> str:
+        return self._revision
+
+    @property
+    def active_database(self) -> str:
+        return self._stack.profiles[self._stack.active_profile]["database"]
+
+    def _build_snapshot(self):
+        return OAConfiguratorAdapter().snapshot(
+            self._stack, title="Demo stack configuration"
+        )
+
+    def build_navigation(self, context: PageContext) -> SectionNavigation:
+        return SectionNavigation(
+            items=tuple(
+                SectionItem(
+                    key=section.target.key,
+                    label=section.target.title,
+                    status=section.target.status,
+                )
+                for section in self._snapshot.sections
             )
-            for section in self._snapshot.sections
         )
 
     def landing_view(self, context: PageContext) -> SurfaceView:
-        return OAConfiguratorAdapter().as_tree_view(self._snapshot)
+        view = OAConfiguratorAdapter().as_tree_view(self._snapshot)
+        return replace(
+            view,
+            message=f"{view.message}; revision: {self._revision}",
+            actions=(
+                ViewAction(
+                    "config.configure",
+                    "Configure database",
+                    variant="primary",
+                ),
+            ),
+        )
+
+    def action_selected(self, action_key: str, context: PageContext) -> None:
+        if action_key == "config.configure":
+            context.open_wizard(_DemoConfigWizardController(self))
+
+    def apply_demo_config(self, candidate: Mapping[str, object]) -> None:
+        strategy = str(candidate["strategy"])
+        if strategy == "create":
+            key = str(candidate["database_key"])
+            self._stack.databases[key] = _DemoDatabase(
+                url=str(candidate["url"]),
+                password=str(candidate["password"]),
+                role=str(candidate["role"]),
+            )
+            self._stack.profiles[self._stack.active_profile]["database"] = key
+        else:
+            self._stack.profiles[self._stack.active_profile]["database"] = str(
+                candidate["target"]
+            )
+        self._apply_count += 1
+        self._revision = f"demo-config-{self._apply_count}"
+        self._snapshot = self._build_snapshot()
+
+
+class _DemoConfigWizardController:
+    """Tiny consumer-owned wizard proving the setup API shape."""
+
+    spec = WizardSpec(
+        key="demo.database-config",
+        title="Configure demo database",
+        purpose=(
+            "Choose an existing database target or create a new one. The controller "
+            "owns real candidate values; snapshots only carry render-safe values."
+        ),
+        apply_label="Apply config",
+    )
+
+    def __init__(self, page: ConfigPage) -> None:
+        self._page = page
+        self._expected_revision = page.revision
+        self._step_index = 0
+        self._candidate: dict[str, object] = {
+            "strategy": "reuse",
+            "target": page.active_database,
+            "make_default": True,
+        }
+        self._display_values: dict[str, object] = dict(self._candidate)
+        validate_wizard_steps(self._steps())
+
+    def start(self) -> WizardSnapshot:
+        return self._snapshot()
+
+    def submit(self, values: Mapping[str, object]) -> WizardTransition:
+        step = self._steps()[self._step_index]
+        if isinstance(step, ChoiceStep):
+            issues = self._submit_choice(step, values)
+        elif isinstance(step, FormStep):
+            issues = self._submit_form(step, values)
+        else:
+            issues = ()
+        if issues:
+            return WizardTransition(self._snapshot(issues=issues), issues)
+        self._step_index = min(self._step_index + 1, len(self._steps()) - 1)
+        return WizardTransition(self._snapshot())
+
+    def back(self) -> WizardSnapshot:
+        self._step_index = max(0, self._step_index - 1)
+        return self._snapshot()
+
+    def review(self) -> WizardTransition:
+        self._step_index = len(self._steps()) - 1
+        return WizardTransition(self._snapshot())
+
+    def apply(self) -> WizardResult:
+        if self._page.revision != self._expected_revision:
+            return WizardResult(
+                status=WizardResultStatus.CONFLICTED,
+                summary="Configuration changed before apply.",
+                detail={
+                    "expected_revision": self._expected_revision,
+                    "actual_revision": self._page.revision,
+                },
+                refresh_pages=frozenset({CONFIG_ROUTE.key}),
+            )
+        self._page.apply_demo_config(self._candidate)
+        return WizardResult(
+            status=WizardResultStatus.APPLIED,
+            summary="Demo database configuration applied.",
+            refresh_pages=frozenset({CONFIG_ROUTE.key}),
+        )
+
+    def cancel(self) -> WizardResult:
+        return WizardResult(
+            status=WizardResultStatus.CANCELLED,
+            summary="Configuration wizard cancelled.",
+        )
+
+    def _steps(self) -> tuple[ChoiceStep | FormStep | ReviewStep, ...]:
+        form = self._create_step()
+        if self._candidate.get("strategy") == "reuse":
+            form = self._reuse_step()
+        return (self._strategy_step(), form, self._review_step())
+
+    def _snapshot(
+        self, *, issues: tuple[ValidationIssue, ...] = ()
+    ) -> WizardSnapshot:
+        steps = self._steps()
+        self._step_index = min(self._step_index, len(steps) - 1)
+        step = steps[self._step_index]
+        return WizardSnapshot(
+            spec=self.spec,
+            step=step,
+            step_index=self._step_index,
+            step_count=len(steps),
+            values=self._safe_values(step),
+            issues=issues,
+            can_back=self._step_index > 0,
+            can_next=not isinstance(step, ReviewStep),
+            can_apply=isinstance(step, ReviewStep)
+            and step.review.ready_to_apply
+            and not issues,
+            expected_revision=self._expected_revision,
+        )
+
+    def _safe_values(self, step: ChoiceStep | FormStep | ReviewStep) -> Mapping[str, object]:
+        if isinstance(step, ChoiceStep):
+            return {step.key: self._display_values.get(step.key)}
+        if isinstance(step, FormStep):
+            return {
+                field.key: None
+                if field.masks_value
+                else self._display_values.get(field.key, field.default)
+                for field in step.fields
+            }
+        return {}
+
+    def _strategy_step(self) -> ChoiceStep:
+        return ChoiceStep(
+            key="strategy",
+            title="Choose setup path",
+            purpose="Reuse a known target or create a new database entry.",
+            choices=(
+                Choice(
+                    "reuse",
+                    "Reuse existing database",
+                    "Select a configured database and make it active.",
+                ),
+                Choice(
+                    "create",
+                    "Create new database",
+                    "Collect the connection details needed for a new target.",
+                ),
+            ),
+        )
+
+    def _reuse_step(self) -> FormStep:
+        return FormStep(
+            key="reuse-database",
+            title="Select existing target",
+            fields=(
+                FieldSpec(
+                    key="target",
+                    label="Database target",
+                    kind=FieldKind.CHOICE,
+                    choices=tuple(
+                        ChoiceOption(value=key, label=key)
+                        for key in sorted(self._page._stack.databases)
+                    ),
+                    default=self._page.active_database,
+                    help="Choose the database entry the active profile should use.",
+                ),
+                FieldSpec(
+                    key="make_default",
+                    label="Use for active profile",
+                    kind=FieldKind.BOOLEAN,
+                    default=True,
+                    help="Demo-only boolean field used to prove typed inputs.",
+                ),
+            ),
+        )
+
+    def _create_step(self) -> FormStep:
+        return FormStep(
+            key="create-database",
+            title="Enter connection details",
+            fields=(
+                FieldSpec(
+                    key="database_key",
+                    label="Database key",
+                    kind=FieldKind.TEXT,
+                    placeholder="metadata",
+                    help="Unique key used by the active profile.",
+                    validator=_validate_database_key,
+                ),
+                FieldSpec(
+                    key="url",
+                    label="Connection URL",
+                    kind=FieldKind.TEXT,
+                    placeholder="postgresql://host:5432/db",
+                    help="Connection string or service URL owned by the consumer.",
+                ),
+                FieldSpec(
+                    key="role",
+                    label="Role",
+                    kind=FieldKind.CHOICE,
+                    choices=(
+                        ChoiceOption("readonly", "Read only"),
+                        ChoiceOption("writer", "Writer"),
+                    ),
+                    default="readonly",
+                ),
+                FieldSpec(
+                    key="ssl",
+                    label="Require TLS",
+                    kind=FieldKind.BOOLEAN,
+                    default=True,
+                    required=False,
+                ),
+                FieldSpec(
+                    key="password",
+                    label="Password",
+                    kind=FieldKind.SECRET,
+                    placeholder="not shown in review",
+                    help="Secret values stay in the controller and are redacted in snapshots.",
+                ),
+                FieldSpec(
+                    key="notes",
+                    label="Operator notes",
+                    kind=FieldKind.MULTILINE,
+                    required=False,
+                    help="Optional free-text context for the consumer apply operation.",
+                ),
+            ),
+        )
+
+    def _review_step(self) -> ReviewStep:
+        strategy = str(self._candidate.get("strategy", "reuse"))
+        changes: list[ReviewChange] = []
+        if strategy == "reuse":
+            changes.append(
+                ReviewChange(
+                    "active database",
+                    self._page.active_database,
+                    self._candidate.get("target"),
+                )
+            )
+        else:
+            changes.extend(
+                (
+                    ReviewChange("database key", "-", self._candidate.get("database_key")),
+                    ReviewChange("url", "-", self._candidate.get("url")),
+                    ReviewChange("role", "-", self._candidate.get("role")),
+                    ReviewChange("password", "-", "configured", sensitive=True),
+                )
+            )
+        return ReviewStep(
+            key="review",
+            title="Review changes",
+            purpose="Check the render-safe summary before the consumer applies changes.",
+            review=WizardReview(
+                changes=tuple(changes),
+                effects=(
+                    "Update the active profile database target.",
+                    f"Carry revision token {self._expected_revision}.",
+                ),
+                warnings=(
+                    "Real applications should run database verification off the event loop.",
+                ),
+            ),
+        )
+
+    def _submit_choice(
+        self, step: ChoiceStep, values: Mapping[str, object]
+    ) -> tuple[ValidationIssue, ...]:
+        value = values.get(step.key)
+        allowed = {choice.key for choice in step.choices}
+        if value not in allowed:
+            return (ValidationIssue("Choose a setup path.", field_key=step.key),)
+        self._candidate[step.key] = value
+        self._display_values[step.key] = value
+        return ()
+
+    def _submit_form(
+        self, step: FormStep, values: Mapping[str, object]
+    ) -> tuple[ValidationIssue, ...]:
+        issues: list[ValidationIssue] = []
+        for field in step.fields:
+            try:
+                parsed = field.parse(values.get(field.key))
+            except ValueError as exc:
+                issues.append(ValidationIssue(str(exc), field_key=field.key))
+                continue
+            self._candidate[field.key] = parsed.value
+            self._display_values[field.key] = parsed.redacted
+        return tuple(issues)
+
+
+def _validate_database_key(value: object) -> ValidationIssue | None:
+    text = str(value)
+    if not text.replace("_", "").replace("-", "").isalnum():
+        return ValidationIssue(
+            "Use letters, numbers, hyphens, or underscores only.",
+            field_key="database_key",
+        )
+    return None
 
 
 class TelemetryPage(_DemoPage):
@@ -164,16 +522,24 @@ class TelemetryPage(_DemoPage):
         super().__init__()
         self._source = FakeTelemetrySource()
 
-    def build_catalogue(self, context: PageContext) -> tuple[CatalogueItem, ...]:
-        return (
-            CatalogueItem("fake.accelerator", "Accelerator", "capability", status=SemanticStatus.OK),
-            CatalogueItem("fake.workload", "Workload", "capability", status=SemanticStatus.RUNNING),
+    def build_navigation(self, context: PageContext) -> SectionNavigation:
+        return SectionNavigation(
+            items=(
+                SectionItem(
+                    "fake.accelerator", "Accelerator", status=SemanticStatus.OK
+                ),
+                SectionItem("fake.workload", "Workload", status=SemanticStatus.RUNNING),
+            )
         )
 
     def landing_view(self, context: PageContext) -> SurfaceView:
         metrics = (
             ("Accelerator", f"{self._source.utilisation:.0f}%", "fake"),
-            ("Memory", f"{self._source.memory_used_mb} / {self._source.memory_total_mb} MiB", "fake"),
+            (
+                "Memory",
+                f"{self._source.memory_used_mb} / {self._source.memory_total_mb} MiB",
+                "fake",
+            ),
             ("Throughput", f"{self._source.throughput:.0f} items/s", "fake"),
         )
         return TableView(
@@ -182,7 +548,11 @@ class TelemetryPage(_DemoPage):
             status=SemanticStatus.RUNNING,
             columns=("Metric", "Value", "Source"),
             rows=tuple(
-                TableRow(key=f"metric.{index}", cells=row, detail={"metric": row[0], "value": row[1]})
+                TableRow(
+                    key=f"metric.{index}",
+                    cells=row,
+                    detail={"metric": row[0], "value": row[1]},
+                )
                 for index, row in enumerate(metrics)
             ),
         )
@@ -194,7 +564,10 @@ class TelemetryPage(_DemoPage):
                 rows=(
                     ("row", row_key),
                     ("source", self._source.source_id),
-                    ("note", "The widget sees normalized metric keys, not a provider class."),
+                    (
+                        "note",
+                        "The widget sees normalized metric keys, not a provider class.",
+                    ),
                 )
             ),
         )
@@ -210,7 +583,9 @@ def build_demo_spec() -> OperatorAppSpec:
     def telemetry_factory(context: PageContext) -> OperatorPage:
         return TelemetryPage()
 
-    def demo_runner(params: Mapping[str, object], context: ActionContext) -> ActionOutcome:
+    def demo_runner(
+        params: Mapping[str, object], context: ActionContext
+    ) -> ActionOutcome:
         context.emit("demo", completed=1, total=1, message="demo action executed")
         return ActionOutcome(
             status=SemanticStatus.OK,

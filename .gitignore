@@ -226,3 +226,4 @@ __pycache__/
 .venv/
 *.ipynb
 _temp/
+_design/

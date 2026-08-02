@@ -5,7 +5,7 @@ from __future__ import annotations
 from rich.table import Table
 from textual.widgets import Static
 
-from groundskeeping.telemetry.models import TelemetrySnapshot
+from groundskeeping.contracts.telemetry import TelemetrySnapshot
 
 
 class TelemetryMetricGrid(Static):

@@ -5,6 +5,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Literal
+
+type ViewActionVariant = Literal["default", "primary", "success", "warning", "error"]
+
+MAX_VIEW_ACTIONS = 6
 
 
 class SemanticStatus(StrEnum):
@@ -19,6 +24,20 @@ class SemanticStatus(StrEnum):
 
 
 @dataclass(frozen=True)
+class ViewAction:
+    """One command rendered with the current workbench view.
+
+    The shared workbench renders at most `MAX_VIEW_ACTIONS` actions. Extra actions remain part
+    of the view model but are not assigned visible buttons.
+    """
+
+    key: str
+    label: str
+    variant: ViewActionVariant = "default"
+    disabled: bool = False
+
+
+@dataclass(frozen=True)
 class CatalogueItem:
     """One navigable item in a page's catalogue tree."""
 
@@ -28,6 +47,36 @@ class CatalogueItem:
     ref: object | None = None
     status: SemanticStatus = SemanticStatus.INFO
     children: tuple[CatalogueItem, ...] = ()
+
+
+@dataclass(frozen=True)
+class SectionItem:
+    """One flat, navigable section within a page."""
+
+    key: str
+    label: str
+    status: SemanticStatus = SemanticStatus.INFO
+    description: str | None = None
+
+
+@dataclass(frozen=True)
+class SectionNavigation:
+    """Flat page navigation rendered as a selectable section list."""
+
+    items: tuple[SectionItem, ...]
+    title: str = "Sections"
+
+
+@dataclass(frozen=True)
+class CatalogueNavigation:
+    """Hierarchical page navigation rendered as a catalogue tree."""
+
+    items: tuple[CatalogueItem, ...]
+    title: str = "Catalogue"
+
+
+type NavigationItem = SectionItem | CatalogueItem
+type PageNavigation = SectionNavigation | CatalogueNavigation
 
 
 @dataclass(frozen=True)
@@ -48,6 +97,7 @@ class TableView:
     rows: tuple[TableRow, ...]
     status: SemanticStatus = SemanticStatus.INFO
     message: str | None = None
+    actions: tuple[ViewAction, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -69,6 +119,7 @@ class TreeView:
     status: SemanticStatus = SemanticStatus.INFO
     message: str | None = None
     notes: tuple[str, ...] = ()
+    actions: tuple[ViewAction, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -79,6 +130,7 @@ class EmptyView:
     message: str
     status: SemanticStatus = SemanticStatus.IDLE
     command: str | None = None
+    actions: tuple[ViewAction, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -89,6 +141,7 @@ class LoadingView:
     message: str
     detail: str | None = None
     command: str | None = None
+    actions: tuple[ViewAction, ...] = ()
 
 
 @dataclass(frozen=True)

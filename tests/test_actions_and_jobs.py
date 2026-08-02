@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 
 import pytest
@@ -38,7 +39,7 @@ def test_field_spec_parses_types_and_redacts_sensitive_values() -> None:
 
 
 def test_action_registry_validates_unique_keys_and_page_references() -> None:
-    def runner(params: dict[str, object], context: ActionContext) -> None:
+    def runner(params: Mapping[str, object], context: ActionContext) -> None:
         return None
 
     action = ActionSpec("overview.echo", "overview", "Echo", "Echo test", runner)
@@ -51,7 +52,7 @@ def test_action_registry_validates_unique_keys_and_page_references() -> None:
 
 
 def test_run_action_sync_parses_preflights_and_presents_outcome() -> None:
-    def runner(params: dict[str, object], context: ActionContext) -> ActionOutcome:
+    def runner(params: Mapping[str, object], context: ActionContext) -> ActionOutcome:
         context.emit("step", completed=1, total=1, message="done")
         context.cancellation.raise_if_requested()
         return ActionOutcome(
