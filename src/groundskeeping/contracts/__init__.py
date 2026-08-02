@@ -40,6 +40,7 @@ from groundskeeping.contracts.pages import (
     PageRegistry,
     PageRoute,
     PageSurfacePort,
+    SelectionAwareOperatorPage,
 )
 from groundskeeping.contracts.telemetry import (
     MetricValue,
@@ -60,6 +61,9 @@ from groundskeeping.contracts.views import (
     PageNavigation,
     SectionItem,
     SectionNavigation,
+    SelectionMode,
+    SelectionTableRow,
+    SelectionTableView,
     SemanticStatus,
     SurfaceView,
     TableRow,

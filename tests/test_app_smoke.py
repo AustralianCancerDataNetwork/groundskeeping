@@ -4,8 +4,9 @@ import asyncio
 from dataclasses import replace
 
 import pytest
+from textual.coordinate import Coordinate
 from textual.widget import Widget
-from textual.widgets import Button, DataTable
+from textual.widgets import Button, DataTable, OptionList, SelectionList
 
 from groundskeeping.app import OperatorApp, OperatorAppSpec
 from groundskeeping.contracts import (
@@ -17,6 +18,8 @@ from groundskeeping.contracts import (
     PageRegistration,
     PageRoute,
     SectionNavigation,
+    SelectionTableRow,
+    SelectionTableView,
     SurfaceView,
     TableRow,
     TableView,
@@ -64,6 +67,26 @@ class _CountingPage(Widget):
 
     def row_selected(self, row_key: str, context: PageContext) -> None:
         return None
+
+
+class _SelectionPage(_CountingPage):
+    def __init__(self, route: PageRoute, view: SelectionTableView) -> None:
+        super().__init__(route)
+        self.view = view
+        self.selection_events: list[tuple[str, tuple[str, ...]]] = []
+        self.highlighted_rows: list[str] = []
+
+    def landing_view(self, context: PageContext) -> SurfaceView:
+        self.render_count += 1
+        return self.view
+
+    def row_highlighted(self, row_key: str, context: PageContext) -> None:
+        self.highlighted_rows.append(row_key)
+
+    def selection_changed(
+        self, row_key: str, selected_keys: tuple[str, ...], context: PageContext
+    ) -> None:
+        self.selection_events.append((row_key, selected_keys))
 
 
 class _NonWidgetPage:
@@ -348,6 +371,226 @@ def test_workbench_renders_table_view_in_detail_pane() -> None:
             assert table.styles.display == "block"
             assert app.query_one("#context-panel").border_title == "Model facts"
             assert app.query_one("#context-panel").border_subtitle == ""
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_workbench_selection_table_mouse_first_click_toggles_row() -> None:
+    async def run() -> None:
+        route = PageRoute("setup", "Setup", "Setup page")
+        page = _SelectionPage(
+            route,
+            SelectionTableView(
+                title="Vocabulary coverage",
+                columns=("Vocabulary", "Coverage"),
+                rows=(
+                    SelectionTableRow("snomed", ("SNOMED", "complete")),
+                    SelectionTableRow("loinc", ("LOINC", "partial")),
+                ),
+            ),
+        )
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="selection-click-test",
+                title="Selection Click Test",
+                subtitle=None,
+                pages=(PageRegistration(route, lambda context: page),),
+            )
+        )
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            selection = app.query_one("#result-selection-table", SelectionList)
+            assert selection.styles.display == "block"
+
+            await pilot.click("#result-selection-table", offset=(2, 1))
+            await pilot.pause()
+
+            assert page.selection_events[-1] == ("snomed", ("snomed",))
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_workbench_selection_table_keyboard_enter_toggles_highlighted_row() -> None:
+    async def run() -> None:
+        route = PageRoute("setup", "Setup", "Setup page")
+        page = _SelectionPage(
+            route,
+            SelectionTableView(
+                title="Vocabulary coverage",
+                columns=("Vocabulary",),
+                rows=(
+                    SelectionTableRow("snomed", ("SNOMED",)),
+                    SelectionTableRow("loinc", ("LOINC",)),
+                ),
+            ),
+        )
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="selection-enter-test",
+                title="Selection Enter Test",
+                subtitle=None,
+                pages=(PageRegistration(route, lambda context: page),),
+            )
+        )
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            selection = app.query_one("#result-selection-table", SelectionList)
+            selection.focus()
+            selection.highlighted = 1
+
+            await pilot.press("enter")
+            await pilot.pause()
+
+            assert page.selection_events[-1] == ("loinc", ("loinc",))
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_workbench_selection_table_all_row_clears_specific_rows() -> None:
+    async def run() -> None:
+        route = PageRoute("setup", "Setup", "Setup page")
+        page = _SelectionPage(
+            route,
+            SelectionTableView(
+                title="Vocabulary coverage",
+                columns=("Vocabulary",),
+                rows=(
+                    SelectionTableRow("__all__", ("All",)),
+                    SelectionTableRow("snomed", ("SNOMED",), selected=True),
+                    SelectionTableRow("loinc", ("LOINC",), selected=True),
+                ),
+                selection_mode="all_or_specific",
+                all_row_key="__all__",
+            ),
+        )
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="selection-all-test",
+                title="Selection All Test",
+                subtitle=None,
+                pages=(PageRegistration(route, lambda context: page),),
+            )
+        )
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            selection = app.query_one("#result-selection-table", SelectionList)
+            selection.focus()
+            selection.highlighted = 0
+
+            await pilot.press("enter")
+            await pilot.pause()
+
+            assert page.selection_events[-1] == ("__all__", ("__all__",))
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_workbench_selection_table_specific_row_clears_all_row() -> None:
+    async def run() -> None:
+        route = PageRoute("setup", "Setup", "Setup page")
+        page = _SelectionPage(
+            route,
+            SelectionTableView(
+                title="Vocabulary coverage",
+                columns=("Vocabulary",),
+                rows=(
+                    SelectionTableRow("__all__", ("All",), selected=True),
+                    SelectionTableRow("snomed", ("SNOMED",)),
+                ),
+                selection_mode="all_or_specific",
+                all_row_key="__all__",
+            ),
+        )
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="selection-specific-test",
+                title="Selection Specific Test",
+                subtitle=None,
+                pages=(PageRegistration(route, lambda context: page),),
+            )
+        )
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            selection = app.query_one("#result-selection-table", SelectionList)
+            selection.focus()
+            selection.highlighted = 1
+
+            await pilot.press("enter")
+            await pilot.pause()
+
+            assert page.selection_events[-1] == ("snomed", ("snomed",))
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_workbench_selection_table_disabled_rows_do_not_toggle() -> None:
+    async def run() -> None:
+        route = PageRoute("setup", "Setup", "Setup page")
+        page = _SelectionPage(
+            route,
+            SelectionTableView(
+                title="Vocabulary coverage",
+                columns=("Vocabulary",),
+                rows=(
+                    SelectionTableRow("__all__", ("All",), selected=True),
+                    SelectionTableRow("snomed", ("SNOMED",), disabled=True),
+                ),
+                selection_mode="all_or_specific",
+                all_row_key="__all__",
+            ),
+        )
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="selection-disabled-test",
+                title="Selection Disabled Test",
+                subtitle=None,
+                pages=(PageRegistration(route, lambda context: page),),
+            )
+        )
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            selection = app.query_one("#result-selection-table", SelectionList)
+            selection.focus()
+            selection.highlighted = 1
+
+            await pilot.press("enter")
+            await pilot.pause()
+
+            assert page.selection_events == []
+            assert selection.selected == ["__all__"]
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_demo_app_exposes_selection_table_view() -> None:
+    async def run() -> None:
+        app = OperatorApp(build_demo_spec())
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            sections = app.query_one("#sections", OptionList)
+            sections.focus()
+            sections.highlighted = 1
+            await pilot.press("enter")
+            await pilot.pause()
+
+            selection = app.query_one("#result-selection-table", SelectionList)
+            assert selection.styles.display == "block"
+            assert selection.selected == ["__all__"]
+
+            selection.focus()
+            selection.highlighted = 2
+            await pilot.press("enter")
+            await pilot.pause()
+
+            assert selection.selected == ["loinc"]
+            detail = app.query_one("#context-table", DataTable)
+            assert "loinc" in str(detail.get_cell_at(Coordinate(1, 1)))
             await pilot.press("q")
 
     asyncio.run(run())

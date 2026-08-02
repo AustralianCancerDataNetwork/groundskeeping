@@ -4,7 +4,8 @@ import asyncio
 from collections.abc import Mapping
 
 import pytest
-from textual.widgets import Button, OptionList
+from textual.widgets import Button, Input, Select
+from textual.widgets._select import SelectOverlay
 
 from groundskeeping.app import OperatorApp
 from groundskeeping.configurator import (
@@ -265,7 +266,7 @@ def test_demo_config_wizard_reports_stale_revision_conflict() -> None:
     assert result.refresh_pages == frozenset({"config"})
 
 
-def test_wizard_choice_field_renders_dynamic_options_inline() -> None:
+def test_wizard_choice_field_renders_stable_select_control() -> None:
     async def run() -> None:
         controller = _DynamicChoiceWizard()
         app = OperatorApp(build_demo_spec())
@@ -274,16 +275,15 @@ def test_wizard_choice_field_renders_dynamic_options_inline() -> None:
             app.push_screen(WizardScreen(controller))
             await pilot.pause()
 
-            picker = app.screen.query_one("#wizard-field-0", OptionList)
-            assert picker.option_count == 12
-            assert picker.region.height > 1
-            assert picker.highlighted == 4
+            picker = app.screen.query_one("#wizard-field-0", Select)
+            assert picker.value == "model-04"
+            assert not picker.disabled
 
             picker.focus()
+            await pilot.press("enter")
             await pilot.press("down")
+            await pilot.press("enter")
             await pilot.pause()
-
-            assert picker.highlighted == 5
 
             await pilot.click("#wizard-next")
             await pilot.pause()
@@ -303,9 +303,33 @@ def test_wizard_choice_field_handles_empty_required_choices() -> None:
             app.push_screen(WizardScreen(_NoChoiceWizard()))
             await pilot.pause()
 
-            picker = app.screen.query_one("#wizard-field-0", OptionList)
-            assert picker.option_count == 1
-            assert picker.highlighted == 0
+            picker = app.screen.query_one("#wizard-field-0", Select)
+            assert picker.disabled
+            assert picker.value == "__groundskeeping_no_choice__"
+            await pilot.press("escape")
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_wizard_choice_field_selects_via_mouse() -> None:
+    async def run() -> None:
+        controller = _DynamicChoiceWizard()
+        app = OperatorApp(build_demo_spec())
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            app.push_screen(WizardScreen(controller))
+            await pilot.pause()
+
+            await pilot.click("#wizard-field-0")
+            await pilot.pause()
+            await pilot.click(SelectOverlay, offset=(2, 2))
+            await pilot.pause()
+
+            await pilot.click("#wizard-next")
+            await pilot.pause()
+
+            assert controller.submitted["model"] == "model-01"
             await pilot.press("escape")
             await pilot.press("q")
 
@@ -371,6 +395,63 @@ def test_demo_app_opens_and_cancels_wizard_from_view_action() -> None:
             await pilot.pause()
 
             assert app.screen.id == "_default"
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_demo_wizard_choice_step_selects_setup_path_via_keyboard() -> None:
+    async def run() -> None:
+        app = OperatorApp(build_demo_spec())
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            app.show_page("config")
+            await pilot.pause()
+
+            await pilot.click("#view-action-0")
+            await pilot.pause()
+
+            picker = app.screen.query_one("#wizard-choice", Select)
+            picker.focus()
+            await pilot.press("enter")
+            await pilot.press("down")
+            await pilot.press("enter")
+            await pilot.pause()
+
+            await pilot.click("#wizard-next")
+            await pilot.pause()
+
+            assert app.screen.query_one("#wizard-field-0", Input).placeholder == "metadata"
+            await pilot.press("escape")
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_demo_wizard_choice_step_selects_setup_path_via_mouse() -> None:
+    async def run() -> None:
+        app = OperatorApp(build_demo_spec())
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            app.show_page("config")
+            await pilot.pause()
+
+            await pilot.click("#view-action-0")
+            await pilot.pause()
+
+            await pilot.click("#wizard-choice")
+            await pilot.pause()
+            overlay = app.screen.query_one(SelectOverlay)
+            assert overlay.styles.display == "block"
+            assert overlay.content_region.height > 0
+            await pilot.click(SelectOverlay, offset=(2, 2))
+            await pilot.pause()
+
+            await pilot.click("#wizard-next")
+            await pilot.pause()
+
+            assert app.screen.query_one("#wizard-field-0", Input).placeholder == "metadata"
+            await pilot.press("escape")
             await pilot.press("q")
 
     asyncio.run(run())

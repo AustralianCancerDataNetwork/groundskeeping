@@ -64,6 +64,10 @@ The contracts cover three step types:
 secret, and multiline fields. It also carries presentation metadata such as placeholder text,
 help text, disabled/read-only state, and secret behaviour.
 
+Choice fields render as Textual `Select` controls. Keyboard and mouse selection both populate
+the submitted field value, and long option lists open as scrollable menus while focus stays
+with the active control.
+
 ## Secrets and revisions
 
 Real candidate values belong in the controller. Snapshots should carry only values needed to

@@ -8,6 +8,7 @@ from enum import StrEnum
 from typing import Literal
 
 type ViewActionVariant = Literal["default", "primary", "success", "warning", "error"]
+type SelectionMode = Literal["single", "multiple", "all_or_specific"]
 
 MAX_VIEW_ACTIONS = 6
 
@@ -116,6 +117,32 @@ class TableView:
 
 
 @dataclass(frozen=True)
+class SelectionTableRow:
+    """One selectable row in a workbench-owned selection table."""
+
+    key: str
+    cells: tuple[str, ...]
+    selected: bool = False
+    disabled: bool = False
+    selection_group: str | None = None
+    detail: object | None = None
+
+
+@dataclass(frozen=True)
+class SelectionTableView:
+    """A table-shaped surface where Groundskeeping owns row toggle semantics."""
+
+    title: str
+    columns: tuple[str, ...]
+    rows: tuple[SelectionTableRow, ...]
+    status: SemanticStatus = SemanticStatus.INFO
+    message: str | None = None
+    actions: tuple[ViewAction, ...] = ()
+    selection_mode: SelectionMode = "multiple"
+    all_row_key: str | None = None
+
+
+@dataclass(frozen=True)
 class TreeNode:
     """A tree-shaped detail node."""
 
@@ -176,4 +203,4 @@ class KeyValueView:
 
 
 type DetailView = TextView | KeyValueView | TableView
-type SurfaceView = TableView | TreeView | EmptyView | LoadingView
+type SurfaceView = TableView | SelectionTableView | TreeView | EmptyView | LoadingView

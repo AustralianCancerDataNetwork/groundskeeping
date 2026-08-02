@@ -102,6 +102,15 @@ Screen {
     color: $text-warning;
 }
 
+Select.wizard-choice-list {
+    width: 1fr;
+}
+
+Select.wizard-choice-list > SelectOverlay {
+    height: 10;
+    max-height: 10;
+}
+
 .section {
     border: round $accent 40%;
     border-title-align: left;

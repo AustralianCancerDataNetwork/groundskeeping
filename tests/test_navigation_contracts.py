@@ -7,6 +7,8 @@ from groundskeeping.contracts import (
     PageRoute,
     SectionItem,
     SectionNavigation,
+    SelectionTableRow,
+    SelectionTableView,
     TableView,
     ViewAction,
 )
@@ -58,3 +60,22 @@ def test_surface_actions_are_commands_not_navigation_items() -> None:
     )
 
     assert view.actions[0].key == "database.verify"
+
+
+def test_selection_table_contract_carries_stable_selection_state() -> None:
+    view = SelectionTableView(
+        title="Vocabulary coverage",
+        columns=("Vocabulary", "Coverage"),
+        rows=(
+            SelectionTableRow("__all__", ("All", "default"), selected=True),
+            SelectionTableRow("snomed", ("SNOMED", "complete"), disabled=True),
+            SelectionTableRow("loinc", ("LOINC", "partial"), selection_group="vocab"),
+        ),
+        selection_mode="all_or_specific",
+        all_row_key="__all__",
+    )
+
+    assert view.selection_mode == "all_or_specific"
+    assert view.all_row_key == "__all__"
+    assert tuple(row.key for row in view.rows if row.selected) == ("__all__",)
+    assert view.rows[1].disabled
