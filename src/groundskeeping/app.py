@@ -52,6 +52,7 @@ from groundskeeping.contracts.views import (
     PageNavigation,
     SectionItem,
     SurfaceView,
+    WorkbenchLabels,
 )
 from groundskeeping.contracts.wizards import (
     WizardController,
@@ -76,6 +77,7 @@ class OperatorAppSpec:
     operation_policy: OperationPolicy = field(default_factory=AllowAllOperationPolicy)
     job_policy: JobPolicy = field(default_factory=SingleForegroundJobPolicy)
     result_presenter: ResultPresenter = field(default_factory=DefaultResultPresenter)
+    workbench_labels: WorkbenchLabels = field(default_factory=WorkbenchLabels)
     default_page: str | None = None
     metadata: Mapping[str, object] | None = None
 
@@ -157,7 +159,7 @@ class OperatorApp(App[None]):
         self.sub_title = spec.subtitle or ""
         self.jobs = JobManager(spec.job_policy)
         self._active_page = spec.default_page or self.registry[0].key
-        self._workbench = Workbench()
+        self._workbench = Workbench(spec.workbench_labels)
         self._surface = _WorkbenchSurface(self._workbench)
         # Textual's App already owns an internal `_context()` method used during
         # startup. Keep the page-facing context under a distinct name so the shell does

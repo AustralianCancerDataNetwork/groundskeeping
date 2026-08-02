@@ -29,6 +29,7 @@ from groundskeeping.contracts.views import (
     TreeNode,
     TreeView,
     ViewAction,
+    WorkbenchLabels,
 )
 from groundskeeping.theme import node_label, status_style
 from groundskeeping.widgets.primitives import EmptyState, LoadingState
@@ -37,8 +38,9 @@ from groundskeeping.widgets.primitives import EmptyState, LoadingState
 class Workbench(Widget):
     """Shared page surface with navigation left and rows/detail right."""
 
-    def __init__(self) -> None:
+    def __init__(self, labels: WorkbenchLabels | None = None) -> None:
         super().__init__(id="workbench")
+        self.labels = labels or WorkbenchLabels()
         self._loading_timer: Timer | None = None
         self._loading_frame = 0
         self._loading_view: LoadingView | None = None
@@ -48,19 +50,19 @@ class Workbench(Widget):
         with Horizontal(id="workbench-main"):
             with Vertical(id="catalogue-panel", classes="section"):
                 yield OptionList(id="sections")
-                yield Tree("Catalogue", id="catalogue")
+                yield Tree(self.labels.catalogue_root, id="catalogue")
             with Vertical(id="workbench-right"):
                 with Vertical(id="result-panel", classes="section"):
                     with Horizontal(id="result-header"):
                         yield Static("", id="result-status")
                         yield Static(
-                            "Select a section to inspect it.", id="result-summary"
+                            self.labels.initial_result_summary, id="result-summary"
                         )
                     with Horizontal(id="result-actions"):
                         for index in range(MAX_VIEW_ACTIONS):
                             yield Button("", id=f"view-action-{index}")
                     yield DataTable(id="result-table")
-                    yield Tree("Result details", id="result-tree")
+                    yield Tree(self.labels.result_tree_root, id="result-tree")
                     yield EmptyState("", id="result-empty")
                     yield LoadingState("", id="result-loading")
                 with Vertical(id="context-panel", classes="section"):
@@ -68,9 +70,9 @@ class Workbench(Widget):
                     yield DataTable(id="context-table")
 
     def on_mount(self) -> None:
-        self.query_one("#catalogue-panel").border_title = "Sections"
-        self.query_one("#result-panel").border_title = "Rows"
-        self.query_one("#context-panel").border_title = "Detail"
+        self.query_one("#catalogue-panel").border_title = self.labels.navigation_panel
+        self.query_one("#result-panel").border_title = self.labels.result_panel
+        self.query_one("#context-panel").border_title = self.labels.detail_panel
         self.catalogue.show_root = False
         self.catalogue.root.expand()
         self.catalogue.styles.display = "none"
@@ -317,12 +319,12 @@ class Workbench(Widget):
         self,
         rows: Iterable[tuple[str, str]],
         *,
-        columns: tuple[str, str] = ("Field", "Value"),
+        columns: tuple[str, str] | None = None,
     ) -> None:
         self.query_one("#context", TextArea).styles.display = "none"
         table = self.query_one("#context-table", DataTable)
         table.styles.display = "block"
         table.clear(columns=True)
-        table.add_columns(*columns)
+        table.add_columns(*(columns or self.labels.key_value_columns))
         for label, value in rows:
             table.add_row(label, value)

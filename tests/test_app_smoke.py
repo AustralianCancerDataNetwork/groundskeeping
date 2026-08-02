@@ -23,6 +23,7 @@ from groundskeeping.contracts import (
     ViewAction,
     WizardResult,
     WizardResultStatus,
+    WorkbenchLabels,
 )
 from groundskeeping.demo import build_demo_spec
 
@@ -108,6 +109,43 @@ def test_single_page_hides_tabs_without_removing_page_registry() -> None:
         async with app.run_test() as pilot:
             assert app.registry.keys() == ("overview",)
             assert app.query_one("#page-tabs").styles.display == "none"
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_app_spec_can_override_workbench_chrome_labels() -> None:
+    async def run() -> None:
+        demo = build_demo_spec()
+        spec = replace(
+            demo,
+            workbench_labels=WorkbenchLabels(
+                navigation_panel="Setup areas",
+                result_panel="Checks",
+                detail_panel="Inspector",
+                catalogue_root="Setup catalogue",
+                result_tree_root="Check details",
+                initial_result_summary="Choose a setup area.",
+                key_value_columns=("Setting", "Value"),
+            ),
+        )
+        app = OperatorApp(spec)
+
+        async with app.run_test() as pilot:
+            assert app.query_one("#result-panel").border_title == "Checks"
+            assert app.query_one("#context-panel").border_title == "Inspector"
+
+            app._workbench.show_navigation(SectionNavigation(items=()))
+            assert app.query_one("#catalogue-panel").border_title == "Sections"
+
+            app._workbench.show_context_table((("provider", "ollama"),))
+            await pilot.pause()
+
+            table = app.query_one("#context-table", DataTable)
+            assert tuple(str(column.label) for column in table.ordered_columns) == (
+                "Setting",
+                "Value",
+            )
             await pilot.press("q")
 
     asyncio.run(run())

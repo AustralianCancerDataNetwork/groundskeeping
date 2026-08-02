@@ -69,6 +69,7 @@ from groundskeeping.contracts.views import (
     TreeView,
     ViewAction,
     ViewActionVariant,
+    WorkbenchLabels,
 )
 from groundskeeping.contracts.wizards import (
     Choice,
