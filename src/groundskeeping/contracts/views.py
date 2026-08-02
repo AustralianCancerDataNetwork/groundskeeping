@@ -23,8 +23,6 @@ class WorkbenchLabels:
     navigation_panel: str = "Sections"
     result_panel: str = "Rows"
     detail_panel: str = "Detail"
-    catalogue_root: str = "Catalogue"
-    result_tree_root: str = "Result details"
     initial_result_summary: str = "Select a section to inspect it."
     key_value_columns: tuple[str, str] = ("Field", "Value")
 

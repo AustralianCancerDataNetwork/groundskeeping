@@ -50,7 +50,7 @@ class Workbench(Widget):
         with Horizontal(id="workbench-main"):
             with Vertical(id="catalogue-panel", classes="section"):
                 yield OptionList(id="sections")
-                yield Tree(self.labels.catalogue_root, id="catalogue")
+                yield Tree("Catalogue", id="catalogue")
             with Vertical(id="workbench-right"):
                 with Vertical(id="result-panel", classes="section"):
                     with Horizontal(id="result-header"):
@@ -62,7 +62,7 @@ class Workbench(Widget):
                         for index in range(MAX_VIEW_ACTIONS):
                             yield Button("", id=f"view-action-{index}")
                     yield DataTable(id="result-table")
-                    yield Tree(self.labels.result_tree_root, id="result-tree")
+                    yield Tree("Result details", id="result-tree")
                     yield EmptyState("", id="result-empty")
                     yield LoadingState("", id="result-loading")
                 with Vertical(id="context-panel", classes="section"):
@@ -319,12 +319,14 @@ class Workbench(Widget):
         self,
         rows: Iterable[tuple[str, str]],
         *,
-        columns: tuple[str, str] | None = None,
+        columns: tuple[str, ...] | None = None,
     ) -> None:
         self.query_one("#context", TextArea).styles.display = "none"
         table = self.query_one("#context-table", DataTable)
         table.styles.display = "block"
         table.clear(columns=True)
-        table.add_columns(*(columns or self.labels.key_value_columns))
+        table.add_columns(
+            *(self.labels.key_value_columns if columns is None else columns)
+        )
         for label, value in rows:
             table.add_row(label, value)

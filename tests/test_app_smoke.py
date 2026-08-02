@@ -172,8 +172,6 @@ def test_app_spec_can_override_workbench_chrome_labels() -> None:
                 navigation_panel="Setup areas",
                 result_panel="Checks",
                 detail_panel="Inspector",
-                catalogue_root="Setup catalogue",
-                result_tree_root="Check details",
                 initial_result_summary="Choose a setup area.",
                 key_value_columns=("Setting", "Value"),
             ),
@@ -195,6 +193,11 @@ def test_app_spec_can_override_workbench_chrome_labels() -> None:
                 "Setting",
                 "Value",
             )
+
+            app._workbench.show_context_table((), columns=())
+            await pilot.pause()
+
+            assert len(table.ordered_columns) == 0
             await pilot.press("q")
 
     asyncio.run(run())
