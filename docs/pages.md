@@ -9,14 +9,14 @@ it does not receive the whole app.
 
 The default page surface is the workbench:
 
-- catalogue on the left;
+- flat section navigation or a hierarchical catalogue on the left;
 - rows or tree content on the upper right; and
 - selected detail on the lower right.
 
-Pages render package-owned view models such as `CatalogueItem`, `TableView`, `TreeView`,
-`EmptyView`, `TextView`, and `KeyValueView`. Domain objects should be translated before they
-reach the workbench. That keeps the shared shell reusable and keeps consumer language in the
-consumer.
+Pages return `SectionNavigation` for flat peer areas and `CatalogueNavigation` for genuinely
+hierarchical content. The workbench renders these as an option list and a tree respectively.
+Domain objects should be translated before they reach either navigation model or a surface
+view.
 
 ## Routing
 
@@ -34,9 +34,10 @@ startup rather than when an operator clicks a tab.
 |---|---|
 | `activate` | The page becomes the visible tab |
 | `deactivate` | The operator moves to a different tab |
-| `build_catalogue` | Each time the page is rendered, to populate the left pane |
+| `build_navigation` | Each time the page is rendered, to populate the left pane |
 | `landing_view` | Each time the page is rendered, to populate the upper-right pane |
-| `catalogue_selected` | A catalogue node is selected |
+| `navigation_selected` | A section or catalogue item is selected |
+| `action_selected` | A command button in the current view is pressed |
 | `row_highlighted` | A result-table row is highlighted |
 | `row_selected` | A result-table row is selected |
 
@@ -59,7 +60,7 @@ what "ready" means for any particular application.
 
 A good setup page usually has:
 
-- a catalogue of setup areas, such as config, database, runtime, model server, paths, or
+- a flat list of setup areas, such as config, database, runtime, model server, paths, or
   credentials;
 - a landing `TreeView` summarising overall readiness;
 - a `TableView` for repeated checks where scanning matters;
@@ -70,3 +71,7 @@ A good setup page usually has:
 Start read-only. Verification actions are a good first step because they exercise the shell,
 action contracts, progress reporting, and failure presentation without taking ownership of
 durable setup changes too early.
+
+When setup requires guided edits, expose a `ViewAction` from the current view and open a
+consumer-owned wizard with `PageContext.open_wizard`. The page still owns what the wizard
+means; Groundskeeping only renders the navigation, fields, review state, and final result.

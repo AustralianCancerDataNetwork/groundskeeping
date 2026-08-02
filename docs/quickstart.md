@@ -30,10 +30,12 @@ once, then activates and deactivates it as the operator moves between tabs.
 from textual.widget import Widget
 
 from groundskeeping.contracts import (
-    CatalogueItem,
     EmptyView,
+    NavigationItem,
     PageContext,
     PageRoute,
+    SectionItem,
+    SectionNavigation,
     SurfaceView,
 )
 
@@ -47,13 +49,15 @@ class SetupPage(Widget):
 
     def deactivate(self, context: PageContext) -> None: ...
 
-    def build_catalogue(self, context: PageContext) -> tuple[CatalogueItem, ...]:
-        return (CatalogueItem(key="config", label="Configuration", kind="area"),)
+    def build_navigation(self, context: PageContext) -> SectionNavigation:
+        return SectionNavigation(items=(SectionItem("config", "Configuration"),))
 
     def landing_view(self, context: PageContext) -> SurfaceView:
-        return EmptyView(title="Setup", message="Select an area from the catalogue.")
+        return EmptyView(title="Setup", message="Select a setup section.")
 
-    def catalogue_selected(self, item: CatalogueItem, context: PageContext) -> None: ...
+    def navigation_selected(self, item: NavigationItem, context: PageContext) -> None: ...
+
+    def action_selected(self, action_key: str, context: PageContext) -> None: ...
 
     def row_highlighted(self, row_key: str, context: PageContext) -> None: ...
 

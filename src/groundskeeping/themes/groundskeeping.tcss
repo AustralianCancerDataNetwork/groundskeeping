@@ -43,6 +43,65 @@ Screen {
     max-height: 0;
 }
 
+#wizard-frame {
+    width: 88;
+    max-width: 92%;
+    height: 32;
+    max-height: 90%;
+    margin: 2 4;
+    padding: 1 2;
+    background: $surface;
+    border: round $accent;
+}
+
+#wizard-title {
+    height: 1;
+    text-style: bold;
+}
+
+#wizard-progress {
+    height: 1;
+    color: $text-muted;
+}
+
+#wizard-body {
+    height: 1fr;
+    margin-top: 1;
+    margin-bottom: 1;
+}
+
+#wizard-errors {
+    min-height: 1;
+    max-height: 4;
+    color: $text-error;
+}
+
+#wizard-buttons {
+    height: 3;
+    align-horizontal: right;
+}
+
+#wizard-buttons Button {
+    width: 14;
+    min-width: 14;
+    margin-left: 1;
+}
+
+.wizard-field-label {
+    height: 1;
+    margin-top: 1;
+    text-style: bold;
+}
+
+.wizard-field-help {
+    color: $text-muted;
+    margin-bottom: 1;
+}
+
+.wizard-warning {
+    color: $text-warning;
+}
+
 .section {
     border: round $accent 40%;
     border-title-align: left;
@@ -85,8 +144,13 @@ Screen {
     height: 2fr;
 }
 
-Tree, TextArea, DataTable {
+Tree, OptionList, TextArea, DataTable {
     height: 1fr;
+}
+
+#sections {
+    border: none;
+    background: transparent;
 }
 
 #context {
@@ -101,6 +165,19 @@ Tree, TextArea, DataTable {
 #result-header {
     height: 1;
     margin-bottom: 1;
+}
+
+#result-actions {
+    display: none;
+    height: 3;
+    layout: horizontal;
+    margin-bottom: 1;
+}
+
+#result-actions Button {
+    width: auto;
+    min-width: 16;
+    margin: 0 1 0 0;
 }
 
 #result-status {

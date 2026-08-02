@@ -14,11 +14,14 @@ Pages are owned by the consumer and are ordinary Textual widgets. The shell moun
 
 The default page surface is the workbench:
 
-- catalogue on the left;
+- flat section navigation or a hierarchical catalogue on the left;
 - rows or tree content on the upper right; and
 - selected detail on the lower right.
 
-Pages render package-owned view models such as `CatalogueItem`, `TableView`, `TreeView`, `EmptyView`, `TextView`, and `KeyValueView`. Domain objects should be translated before they reach the workbench. That keeps the shared shell reusable and keeps consumer language in the consumer.
+Pages choose `SectionNavigation` for peer areas or `CatalogueNavigation` for hierarchical
+content. They render package-owned view models such as `SectionItem`, `CatalogueItem`,
+`TableView`, `TreeView`, `EmptyView`, `TextView`, and `KeyValueView`. Domain objects should be
+translated before they reach the workbench.
 
 ## Setup Pages
 
@@ -28,7 +31,7 @@ The page should normally live in the consumer package and use consumer services 
 
 A good setup page usually has:
 
-- a catalogue of setup areas, such as config, database, runtime, model server, paths, or credentials;
+- a flat section list for peer setup areas such as config, database, runtime, or credentials;
 - a landing `TreeView` summarising overall readiness;
 - a `TableView` for repeated checks where scanning matters;
 - `KeyValueView` detail for the selected check;
@@ -72,6 +75,7 @@ Consumers own domain telemetry: queue depth, pipeline progress, database state, 
 - the shared workbench surface;
 - generic view models;
 - action, field, progress, cancellation, and job contracts;
+- Textual-free setup wizard contracts and a reusable modal wizard surface;
 - in-process job gating;
 - read-only configuration inspection and draft/diff models;
 - Textual-free infrastructure telemetry contracts; and
@@ -89,16 +93,6 @@ Consumers own:
 - operation safety policy; and
 - application branding and help text.
 
-## Commenting Style
-
-Write comments for the next person adapting the tool.
-
-Good comments explain why a boundary exists, what operator-facing behaviour depends on it, and where domain logic should stay. They are especially useful around Textual lifecycle methods, event routing, worker handoffs, cancellation, secret redaction, and extension points.
-
-Prefer comments that preserve intent over comments that narrate syntax. Explain why row events return to the active page through the workbench surface. Do not explain that a loop iterates over rows.
-
-If a future maintainer is likely to wonder "why is this shaped this way?", leave them a small signpost.
-
 ## Running The Demo
 
 ```bash
@@ -107,10 +101,15 @@ uv run groundskeeping
 
 The demo composes overview, configuration, and telemetry pages. It also registers a small action so the app spec and action registry can be exercised without a consumer application.
 
+Open the Configuration page and choose **Configure database** to try the reusable setup
+wizard surface.
+
 ## Running Tests
 
 ```bash
 uv run --extra dev pytest -q
 ```
 
-The tests cover route validation, app startup, action and job contracts, configurator redaction, telemetry import boundaries, and consumer dependency boundaries.
+The tests cover route validation, app startup, action and job contracts, wizard branching and
+redaction, configurator redaction, telemetry import boundaries, and consumer dependency
+boundaries.

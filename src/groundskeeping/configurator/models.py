@@ -8,6 +8,7 @@ from typing import Protocol
 
 from groundskeeping.contracts.actions import FieldSpec, ValidationIssue
 from groundskeeping.contracts.views import SemanticStatus
+from groundskeeping.contracts.wizards import WizardController
 
 EffectRef = str
 
@@ -54,17 +55,23 @@ class ConfiguratorSnapshot:
 
 @dataclass(frozen=True)
 class ConfigDraft:
-    """Candidate edit against one configuration target.
+    """Presentation-safe description of an edit session.
 
     The expected revision is opaque on purpose. `oa-configurator` owns how a real file or
     in-memory stack is fingerprinted; the widget only carries the token back when asking
     a public mutation service to apply the draft.
+
+    The real candidate object belongs to the consumer-owned wizard/controller. This draft
+    only names the safe target and records which fields are changed.
     """
 
     target: ConfigTarget
-    original_fields: Mapping[str, object]
-    candidate_fields: Mapping[str, object]
+    changed_fields: frozenset[str] = frozenset()
     expected_revision: str | None = None
+
+    @property
+    def changed(self) -> bool:
+        return bool(self.changed_fields)
 
 
 @dataclass(frozen=True)
@@ -89,7 +96,9 @@ class ConfigDiff:
 class ConfigApplyIntent:
     """UI-level request to apply a validated draft through `oa-configurator`."""
 
-    draft: ConfigDraft
+    target: ConfigTarget
+    apply_token: str
+    expected_revision: str | None
     diff: ConfigDiff
     effects: tuple[EffectRef, ...] = ()
 
@@ -108,3 +117,5 @@ class ConfigResourceAdapter(Protocol):
     def validate(self, draft: ConfigDraft) -> tuple[ValidationIssue, ...]: ...
 
     def post_apply_effects(self, draft: ConfigDraft) -> tuple[EffectRef, ...]: ...
+
+    def wizard_controller(self, target: ConfigTarget) -> WizardController | None: ...

@@ -1,10 +1,11 @@
-"""Normalized telemetry models."""
+"""Textual-free telemetry source and metric contracts."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Protocol
 
 from groundskeeping.contracts.views import SemanticStatus
 
@@ -46,10 +47,22 @@ class TelemetrySnapshot:
     metrics: tuple[MetricValue, ...]
 
     @classmethod
-    def empty(cls, source_id: str, *, capabilities: frozenset[str] = frozenset()) -> TelemetrySnapshot:
+    def empty(
+        cls, source_id: str, *, capabilities: frozenset[str] = frozenset()
+    ) -> TelemetrySnapshot:
         return cls(
             source_id=source_id,
             sampled_at=datetime.now(UTC),
             capabilities=capabilities,
             metrics=(),
         )
+
+
+class TelemetrySource(Protocol):
+    """A read-only source of normalized telemetry snapshots."""
+
+    source_id: str
+
+    async def probe(self) -> SourceAvailability: ...
+
+    async def sample(self) -> TelemetrySnapshot: ...

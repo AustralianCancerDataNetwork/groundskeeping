@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from groundskeeping.contracts import PageRegistry, PageRoute
+from groundskeeping.contracts import (
+    PageRegistry,
+    PageRoute,
+    SectionItem,
+    SectionNavigation,
+    TableView,
+    ViewAction,
+)
 
 
 def test_page_registry_rejects_duplicate_keys() -> None:
@@ -27,3 +34,27 @@ def test_page_registry_looks_up_routes_by_key() -> None:
 
     with pytest.raises(KeyError, match="Unknown"):
         registry.get("missing")
+
+
+def test_section_navigation_is_flat_and_ordered() -> None:
+    navigation = SectionNavigation(
+        (
+            SectionItem("database", "Database"),
+            SectionItem("embeddings", "Embeddings"),
+        ),
+        title="Setup",
+    )
+
+    assert navigation.title == "Setup"
+    assert tuple(item.key for item in navigation.items) == ("database", "embeddings")
+
+
+def test_surface_actions_are_commands_not_navigation_items() -> None:
+    view = TableView(
+        title="Database",
+        columns=("Resource",),
+        rows=(),
+        actions=(ViewAction("database.verify", "Test connections", variant="primary"),),
+    )
+
+    assert view.actions[0].key == "database.verify"

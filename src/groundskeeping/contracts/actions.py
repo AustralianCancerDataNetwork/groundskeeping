@@ -76,10 +76,14 @@ class FieldSpec:
     required: bool = True
     default: object | None = None
     help: str | None = None
+    placeholder: str | None = None
     choices: tuple[ChoiceOption, ...] = ()
     minimum: Decimal | int | None = None
     maximum: Decimal | int | None = None
+    disabled: bool = False
+    read_only: bool = False
     sensitive: bool = False
+    secret_clearable: bool = False
     validator: Validator | None = field(default=None, compare=False, repr=False)
 
     @property

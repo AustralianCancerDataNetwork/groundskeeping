@@ -1,10 +1,3 @@
-"""Textual-free telemetry contracts and runtime."""
+"""Textual-free telemetry runtime and providers."""
 
-from groundskeeping.telemetry.contracts import TelemetrySource
-from groundskeeping.telemetry.models import (
-    MetricValue,
-    SourceAvailability,
-    SourceStatus,
-    TelemetrySnapshot,
-)
 from groundskeeping.telemetry.runtime import TelemetryRuntime

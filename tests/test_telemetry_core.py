@@ -4,7 +4,8 @@ import asyncio
 import subprocess
 import sys
 
-from groundskeeping.telemetry import SourceStatus, TelemetryRuntime
+from groundskeeping.contracts import SourceStatus
+from groundskeeping.telemetry import TelemetryRuntime
 from groundskeeping.telemetry.providers import FakeTelemetrySource
 
 

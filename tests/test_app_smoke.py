@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 
 from groundskeeping.app import OperatorApp
 from groundskeeping.demo import build_demo_spec
@@ -21,11 +22,35 @@ def test_demo_app_enters_textual_startup_context() -> None:
             context_panel = app.query_one("#context-panel")
 
             assert catalogue_panel.region.height > 0
+            assert app.query_one("#sections").styles.display == "block"
+            assert app.query_one("#catalogue").styles.display == "none"
             assert workbench_right.region.height > 0
             assert catalogue_panel.region.x < workbench_right.region.x
             assert catalogue_panel.region.y == workbench_right.region.y
             assert result_panel.region.y < context_panel.region.y
-            assert result_panel.region.x == context_panel.region.x == workbench_right.region.x
+            assert (
+                result_panel.region.x
+                == context_panel.region.x
+                == workbench_right.region.x
+            )
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_single_page_hides_tabs_without_removing_page_registry() -> None:
+    async def run() -> None:
+        demo = build_demo_spec()
+        spec = replace(
+            demo,
+            pages=(demo.pages[0],),
+            default_page=demo.pages[0].route.key,
+        )
+        app = OperatorApp(spec)
+
+        async with app.run_test() as pilot:
+            assert app.registry.keys() == ("overview",)
+            assert app.query_one("#page-tabs").styles.display == "none"
             await pilot.press("q")
 
     asyncio.run(run())

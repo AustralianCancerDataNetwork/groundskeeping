@@ -65,6 +65,7 @@ nav:
   - User Guide:
       - Pages and the Workbench: pages.md
       - Actions and Jobs: actions.md
+      - Setup Wizards: wizards.md
       - Configuration: configuration.md
       - Telemetry: telemetry.md
   - API Reference:
@@ -72,6 +73,7 @@ nav:
       - Page Contracts: api/pages.md
       - Views: api/views.md
       - Actions: api/actions.md
+      - Wizards: api/wizards.md
       - Jobs: api/jobs.md
       - Configurator: api/configurator.md
       - Telemetry: api/telemetry.md

@@ -2,7 +2,8 @@
 
 `groundskeeping.configurator` understands the public shape of `oa-configurator` stack
 configuration well enough to inspect and present it safely. It can build snapshots, section
-views, drafts, redacted diffs, and apply intents.
+views, drafts, redacted diffs, revision-aware apply intents, and wizard-controller entry
+points.
 
 ## Inspection
 
@@ -34,7 +35,12 @@ sensitive when the field is named in `sensitive_fields` or when either side is a
 `RedactedValue`; both sides are then replaced before the diff is returned.
 
 ```python
-diff = adapter.diff(draft, sensitive_fields=frozenset({"dsn"}))
+diff = adapter.diff(
+    target,
+    original_fields={"dsn": "postgresql://old"},
+    candidate_fields={"dsn": "postgresql://new"},
+    sensitive_fields=frozenset({"dsn"}),
+)
 ```
 
 ## What it does not do
@@ -43,8 +49,10 @@ It does not write TOML. Persistence belongs to the public `oa-configurator` muta
 to the consumer's operation policy. That separation protects comments, secrets, external
 edits, and tenant-specific safety rules.
 
-Editable drafts and persistence are intentionally left for a later phase that can use a public
-revision-aware mutation API.
+Editable candidates still belong to consumer-owned controllers. `ConfigDraft` records the safe
+target and changed-field presence, not raw field values. `ConfigApplyIntent` carries the safe
+target, opaque apply token, expected revision, diff, and effects needed by a public mutation
+API.
 
 ## Extending
 
@@ -54,3 +62,7 @@ need better labels, choices, validation, verification, or post-apply effects.
 `NativeConfigResourceAdapter` is the fallback for ordinary configuration sections. It is
 intentionally plain: it offers display fields and validates nothing beyond the model layer
 that `oa-configurator` will run during a real apply.
+
+Resource adapters can also expose a `WizardController` for setup flows. Groundskeeping can
+render the controller in a modal wizard, but the adapter remains responsible for validation,
+branching, stale-revision checks, and the final apply call.

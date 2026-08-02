@@ -4,24 +4,26 @@ Telemetry has a headless core and Textual widgets layered above it.
 
 ## The headless core
 
-`groundskeeping.telemetry` contains source protocols, availability, normalized metrics,
-snapshots, and sampling runtime. It must remain free of Textual imports so collectors can be
-tested and reused outside a running app.
+`groundskeeping.contracts.telemetry` contains source protocols, availability, normalized
+metrics, and snapshots. `groundskeeping.telemetry` contains the sampling runtime and provider
+implementations. Both layers remain free of Textual imports so collectors can be tested and
+reused outside a running app.
 
-This boundary is enforced by a test, not just by convention: importing Textual anywhere under
-`groundskeeping.telemetry` fails the suite.
+This boundary is enforced by tests, not just by convention: importing Textual anywhere under
+the telemetry runtime/provider layer fails the suite.
 
 Sources are async. `TelemetryRuntime` fans out across every registered source, so a page
 probes availability once and then samples on a timer.
 
 ```python
+from groundskeeping.contracts import SourceAvailability, TelemetrySnapshot
 from groundskeeping.telemetry import TelemetryRuntime
 from groundskeeping.telemetry.providers import FakeTelemetrySource
 
 runtime = TelemetryRuntime((FakeTelemetrySource(source_id="demo"),))
 
-availability = await runtime.probe_all()   # {"demo": SourceAvailability(...)}
-snapshots = await runtime.sample_all()     # (TelemetrySnapshot(...),)
+availability: dict[str, SourceAvailability] = await runtime.probe_all()
+snapshots: tuple[TelemetrySnapshot, ...] = await runtime.sample_all()
 ```
 
 `probe_all` reports which sources are usable and what each can measure; `sample_all` returns
