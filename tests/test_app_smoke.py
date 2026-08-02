@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import replace
 
+import pytest
 from textual.widget import Widget
 from textual.widgets import Button, DataTable
 
@@ -23,6 +24,7 @@ from groundskeeping.contracts import (
     ViewAction,
     WizardResult,
     WizardResultStatus,
+    WorkbenchLabels,
 )
 from groundskeeping.demo import build_demo_spec
 
@@ -50,6 +52,35 @@ class _CountingPage(Widget):
             message=f"render {self.render_count}",
             actions=self.actions,
         )
+
+    def navigation_selected(self, item: NavigationItem, context: PageContext) -> None:
+        return None
+
+    def action_selected(self, action_key: str, context: PageContext) -> None:
+        return None
+
+    def row_highlighted(self, row_key: str, context: PageContext) -> None:
+        return None
+
+    def row_selected(self, row_key: str, context: PageContext) -> None:
+        return None
+
+
+class _NonWidgetPage:
+    def __init__(self, route: PageRoute) -> None:
+        self.route = route
+
+    def activate(self, context: PageContext) -> None:
+        return None
+
+    def deactivate(self, context: PageContext) -> None:
+        return None
+
+    def build_navigation(self, context: PageContext) -> SectionNavigation:
+        return SectionNavigation(items=())
+
+    def landing_view(self, context: PageContext) -> SurfaceView:
+        return EmptyView(title=self.route.label, message="render")
 
     def navigation_selected(self, item: NavigationItem, context: PageContext) -> None:
         return None
@@ -95,6 +126,25 @@ def test_demo_app_enters_textual_startup_context() -> None:
     asyncio.run(run())
 
 
+def test_operator_app_rejects_non_widget_pages() -> None:
+    async def run() -> None:
+        route = PageRoute("setup", "Setup", "Setup page")
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="non-widget-test",
+                title="Non Widget Test",
+                subtitle=None,
+                pages=(PageRegistration(route, lambda context: _NonWidgetPage(route)),),
+            )
+        )
+
+        with pytest.raises(TypeError, match="must be a Textual Widget"):
+            async with app.run_test():
+                pass
+
+    asyncio.run(run())
+
+
 def test_single_page_hides_tabs_without_removing_page_registry() -> None:
     async def run() -> None:
         demo = build_demo_spec()
@@ -108,6 +158,46 @@ def test_single_page_hides_tabs_without_removing_page_registry() -> None:
         async with app.run_test() as pilot:
             assert app.registry.keys() == ("overview",)
             assert app.query_one("#page-tabs").styles.display == "none"
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_app_spec_can_override_workbench_chrome_labels() -> None:
+    async def run() -> None:
+        demo = build_demo_spec()
+        spec = replace(
+            demo,
+            workbench_labels=WorkbenchLabels(
+                navigation_panel="Setup areas",
+                result_panel="Checks",
+                detail_panel="Inspector",
+                initial_result_summary="Choose a setup area.",
+                key_value_columns=("Setting", "Value"),
+            ),
+        )
+        app = OperatorApp(spec)
+
+        async with app.run_test() as pilot:
+            assert app.query_one("#result-panel").border_title == "Checks"
+            assert app.query_one("#context-panel").border_title == "Inspector"
+
+            app._workbench.show_navigation(SectionNavigation(items=()))
+            assert app.query_one("#catalogue-panel").border_title == "Sections"
+
+            app._workbench.show_context_table((("provider", "ollama"),))
+            await pilot.pause()
+
+            table = app.query_one("#context-table", DataTable)
+            assert tuple(str(column.label) for column in table.ordered_columns) == (
+                "Setting",
+                "Value",
+            )
+
+            app._workbench.show_context_table((), columns=())
+            await pilot.pause()
+
+            assert len(table.ordered_columns) == 0
             await pilot.press("q")
 
     asyncio.run(run())

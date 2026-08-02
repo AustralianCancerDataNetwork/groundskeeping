@@ -12,6 +12,21 @@ type ViewActionVariant = Literal["default", "primary", "success", "warning", "er
 MAX_VIEW_ACTIONS = 6
 
 
+@dataclass(frozen=True)
+class WorkbenchLabels:
+    """Operator-facing labels for reusable workbench chrome.
+
+    Page-owned content still supplies its own titles through navigation and view contracts.
+    These labels only cover structural defaults in the shared shell.
+    """
+
+    navigation_panel: str = "Sections"
+    result_panel: str = "Rows"
+    detail_panel: str = "Detail"
+    initial_result_summary: str = "Select a section to inspect it."
+    key_value_columns: tuple[str, str] = ("Field", "Value")
+
+
 class SemanticStatus(StrEnum):
     """Small health/status vocabulary understood by shared widgets."""
 

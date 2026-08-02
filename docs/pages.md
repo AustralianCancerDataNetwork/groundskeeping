@@ -23,6 +23,11 @@ Translate domain objects before they reach the workbench. The workbench understa
 `SectionItem`, `CatalogueItem`, `TableView`, `TreeView`, and friends; it does not need to know
 what a Groundworkers resource or `cava-nlp-shard` evaluation object is.
 
+Use `OperatorAppSpec.workbench_labels` to rename shared pane chrome such as the result and
+detail panel labels. Page-owned titles still live on navigation and view contracts: for
+example, `SectionNavigation.title` names the left pane for a specific page, and
+`TableView.title` names the current result content.
+
 ## Routing
 
 `PageRoute` is the navigation identity for one page: a `key`, an operator-facing `label`, and

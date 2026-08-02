@@ -58,6 +58,9 @@ OperatorApp(spec).run()
 
 Groundskeeping owns the frame around those pages. `DatabaseSetupPage`,
 `EmbeddingsSetupPage`, and the services behind them stay in the application.
+Use `workbench_labels` on `OperatorAppSpec` when the shared pane chrome needs different
+language, such as naming the upper-right pane **Checks** instead of **Rows**. Page navigation
+and view contracts still supply their own content titles.
 
 The default page surface is the workbench:
 
