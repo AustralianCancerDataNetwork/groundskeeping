@@ -57,3 +57,20 @@ def test_oa_configurator_imports_are_confined_to_typed_adapter() -> None:
     for path in _source_files():
         if _oa_imports(path):
             assert path.relative_to(package_root) == allowed
+
+
+def test_generic_configuration_workflow_has_no_textual_or_oa_imports() -> None:
+    configurator_root = (
+        Path(__file__).parents[1] / "src" / "groundskeeping" / "configurator"
+    )
+    generic_paths = (
+        configurator_root / "mutation.py",
+        configurator_root / "controller.py",
+        configurator_root / "conformance.py",
+        configurator_root / "providers" / "fake.py",
+    )
+
+    for path in generic_paths:
+        source = path.read_text(encoding="utf-8")
+        assert "textual" not in source
+        assert not _oa_imports(path)

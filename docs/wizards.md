@@ -1,91 +1,46 @@
 # Setup Wizards
 
-Use a setup wizard when a single action form would be too cramped: database setup, embedding
-provider configuration, choosing whether to reuse or create a resource, or reviewing a change
-before it is saved.
+Use a setup wizard when an analyst needs a little guidance: choosing whether to reuse or create a database, entering provider settings, reviewing shared-reference effects, or understanding why a proposed change cannot be applied.
 
-The split is small:
+`WizardScreen` renders the portable step contracts in `groundskeeping.contracts.wizards`. It supports choice, form, and review steps, plus Back, Next, Review, Apply, and Cancel behavior. Choice fields work with keyboard and mouse input, and long option lists remain scrollable.
 
-- `groundskeeping.contracts.wizards` defines headless wizard state, steps, review data,
-  transitions, and results;
-- `groundskeeping.widgets.WizardScreen` renders one step at a time; and
-- the application owns the `WizardController`, including candidate state, validation,
-  branching, revision checks, and apply semantics.
+For general application workflows, an application can implement `WizardController` directly. For configuration, use `ConfigWizardController` and `ConfigMutationService`; this gives all consuming applications the same branch, validation, redaction, planning, conflict, and apply behavior without duplicating a controller.
 
-The controller owns the real candidate object. Groundskeeping only renders the current safe
-snapshot.
+## Configuration wizard responsibilities
 
-## Flow shape
+The application declares the words and shape of the workflow with `ConfigWorkflowSpec`. The mutation provider supplies `FieldSpec` values and owns real candidate state. `ConfigWizardController` joins the two and emits render-safe `WizardSnapshot` values for `WizardScreen`.
 
-A controller returns a `WizardSnapshot` from `start()`, then receives submitted field values
-through `submit()`. Each transition returns the next render-safe snapshot plus any validation
-issues.
+This separation is useful when configuration rules evolve. A provider can add a field, change validation, or produce a richer effect without teaching the Textual screen about oa-configurator or application policy. The workflow needs an update only when the actual step grouping or branch experience changes.
 
-```python
-from groundskeeping.contracts import WizardController
+Conditions are simple equality checks against an earlier, non-sensitive field. A branch cannot depend on a secret, and each field appears in exactly one step. Groundskeeping validates the declaration when the controller starts and reports duplicate, missing, late, or unsuitable field keys as definition errors.
 
-class DatabaseWizard:
-    def start(self):
-        ...
+## What happens to submitted values
 
-    def submit(self, values):
-        ...
+Ordinary accepted values are retained in presentation-safe controller state so Back can restore them. When a branch changes, values belonging to inactive steps are removed from the controller and the provider is told which fields to discard.
 
-    def back(self):
-        ...
+Secrets take a shorter path. The screen collects the value, the controller parses it and passes it to the provider for that step, and then the controller clears its real-value mapping. The provider may keep a secret only inside private candidate state behind the opaque session token. Snapshots and revisited secret controls never receive it.
 
-    def review(self):
-        ...
+## Review and apply
 
-    def apply(self):
-        ...
+The provider prepares the review. A `ConfigPlan` contains a redacted diff, structured effects, warnings, validation issues, and an opaque apply token. An error blocks apply; warnings do not. The screen never reconstructs a candidate from displayed values.
 
-    def cancel(self):
-        ...
-```
+Applying consumes the token before work begins. The result distinguishes:
 
-Pages open a wizard through their `PageContext`:
+- **applied**, which may refresh affected pages;
+- **conflicted**, which tells the analyst to reload rather than overwriting a newer revision;
+- **rejected**, which means the provider understood the request but refused it; and
+- **failed**, which means the operation itself could not be completed.
+
+Cancel asks the provider to invalidate the session and prepared token without applying. Conflict, rejection, failure, success, and cancel all prevent the same apply token from being used again.
+
+## Open a wizard
+
+Pages continue to use the same `PageContext` entry point:
 
 ```python
 def action_selected(self, action_key, context):
     if action_key == "database.configure":
-        context.open_wizard(DatabaseWizard(...))
+        context.open_wizard(ConfigWizardController(workflow, mutation_service))
 ```
 
-## Steps
-
-The contracts cover three step types:
-
-- `ChoiceStep` for branch decisions such as reuse/create;
-- `FormStep` for typed fields described with `FieldSpec`; and
-- `ReviewStep` for redacted confirmation before apply.
-
-`FieldSpec` supports text, integer, decimal, boolean, choice, existing path, output path,
-secret, and multiline fields. It also carries presentation metadata such as placeholder text,
-help text, disabled/read-only state, and secret behaviour.
-
-Choice fields render as Textual `Select` controls. Keyboard and mouse selection both populate
-the submitted field value, and long option lists open as scrollable menus while focus stays
-with the active control.
-
-## Secrets and revisions
-
-Real candidate values belong in the controller. Snapshots should carry only values needed to
-render the current step, and secret fields should be omitted or represented with redacted
-display values.
-
-Apply methods should carry an opaque expected-revision token from the start of the wizard to
-the final mutation request. If the underlying config changed while the operator was editing,
-return `WizardResultStatus.CONFLICTED` instead of overwriting.
-
-## Demo
-
-Run the demo and open the **Configuration** page:
-
-```bash
-uv run groundskeeping
-```
-
-The **Configure database** action opens a small branching wizard that proves reuse/create,
-choice/text/boolean/secret/multiline fields, validation, back navigation, cancel, redacted
-review, apply, and stale-revision conflict handling.
+Run `uv run groundskeeping` and open **Configuration** to try the fake provider's branching database flow.

@@ -252,7 +252,11 @@ class OperatorApp(App[None]):
         if result is None:
             return
         severity: NotifySeverity = "information"
-        if result.status in {WizardResultStatus.CONFLICTED, WizardResultStatus.FAILED}:
+        if result.status in {
+            WizardResultStatus.CONFLICTED,
+            WizardResultStatus.REJECTED,
+            WizardResultStatus.FAILED,
+        }:
             severity = "error"
         elif result.status is WizardResultStatus.CANCELLED:
             severity = "warning"

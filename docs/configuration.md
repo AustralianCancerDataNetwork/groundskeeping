@@ -1,32 +1,22 @@
-# Configuration inspection
+# Configuration
 
-`groundskeeping.configurator` turns an `oa-configurator` 1.x stack into presentation-safe views for an operator interface. Groundskeeping supports oa-configurator 1.1 and later releases in the 1.x series.
+Groundskeeping gives an application a safe, consistent way to show an `oa-configurator` 1.x stack and guide an analyst through a configuration change. Groundskeeping supports oa-configurator 1.1 and later releases in the 1.x series.
 
-## What an analyst sees
+## Inspect the current environment
 
-The configuration browser presents the seven current parts of a stack in a stable order:
+The configuration browser shows connections, databases, providers, models, vector stores, package-specific tools, and logging in a stable order. Empty sections stay visible, so an analyst can tell the difference between “not configured” and “not inspected.” Default logging is identified explicitly.
 
-1. connections;
-2. databases;
-3. providers;
-4. models;
-5. vector stores;
-6. package-specific tools; and
-7. logging.
+References include the destination section and name plus a useful state:
 
-Empty sections remain visible, so an analyst can distinguish “not configured” from a section the application forgot to inspect. Default logging is marked as such. The source path may be shown to help the analyst identify which configuration is open, but it is display metadata only and does not make the file writable through groundskeeping.
+- **resolved** means the entry exists with the required type;
+- **missing** means no entry with that name exists; and
+- **wrong kind** means the name exists, but its concrete type cannot be used by that field—for example, a vector store pointing to a CDM database instead of a generic database.
 
-References are shown as the destination section and name, together with one of three states:
+The source path helps the analyst confirm which configuration is open. It is display metadata, not permission to write that file. The current stack model has no profile, resource-alias, or active-profile layer; the application passes the effective `StackConfig` it wants inspected.
 
-- **resolved** means the named entry exists with the required type;
-- **missing** means no entry with that name exists in the destination section; and
-- **wrong kind** means an entry exists, but its concrete type cannot be used by that field—for example, a vector store pointing to a CDM database instead of a generic database.
+### Add inspection to an application
 
-The current stack model has no profile, resource-alias, or active-profile layer. Applications pass the effective `StackConfig` they want the operator to inspect.
-
-## Use it in an application
-
-Pass the current `StackConfig` to `snapshot()`, then render the returned snapshot directly or convert it to the shared `TreeView`:
+Pass the current `StackConfig` to `snapshot()`, then render the snapshot directly or convert it to the shared `TreeView`:
 
 ```python
 from groundskeeping.configurator import OAConfiguratorAdapter
@@ -42,11 +32,11 @@ For a stack loaded from disk, `snapshot.path` comes from `StackConfig.loaded_pat
 snapshot = adapter.snapshot(candidate, config_path="/review/proposed.toml")
 ```
 
-The adapter walks the public fields on oa-configurator's concrete models. A generic database therefore shows only generic database fields, while a CDM database also shows its vocabulary connection and vocabulary/results schemas.
+The adapter walks public fields on oa-configurator's concrete models. A generic database therefore shows generic database fields, while a CDM database also shows its vocabulary connection and vocabulary/results schemas.
 
 ### Give tool sections a schema
 
-`StackConfig.tools` contains untyped dictionaries because package schemas are discovered at runtime. If your application has resolved package configuration instances, pass them to the adapter so their field metadata and `RefTo` declarations can be inspected:
+`StackConfig.tools` contains untyped dictionaries because package schemas are discovered at runtime. If the application has resolved package configuration instances, pass them to the adapter so their sensitivity metadata and `RefTo` declarations can be inspected:
 
 ```python
 snapshot = adapter.snapshot(
@@ -55,29 +45,97 @@ snapshot = adapter.snapshot(
 )
 ```
 
-Without a matching package instance, the tool remains visible but is marked **Package schema unavailable**. Groundskeeping redacts conservatively and shows its ordinary values, but does not claim that references are valid when it does not know which fields are references.
+Without a matching package instance, the tool remains visible and is marked **Package schema unavailable**. Groundskeeping shows a conservative summary but does not claim that unknown references are valid.
 
-## Redaction guarantees
+## Guide an analyst through a change
 
-For typed models, fields marked `Sensitive` by oa-configurator are replaced with `RedactedValue` before a `ConfigSectionView` is created. For untyped tool dictionaries and nested free-form configuration, conservative secret names such as `password`, `api_key`, `secret`, and `token` are redacted recursively. Collections are summarized only after this redaction pass.
+A configuration workflow looks like an ordinary setup wizard. The analyst chooses an available operation, completes one step at a time, reviews a redacted diff and the affected references, and applies only when the provider says the plan is ready.
 
-Snapshots, tree nodes, widget labels, notes, diffs, and repr output therefore contain redaction markers rather than raw known secrets. Applications should still avoid putting credentials under misleading, non-secret key names in free-form dictionaries; without schema metadata or a recognizable key, groundskeeping cannot infer that an arbitrary value is sensitive.
+Back keeps previously accepted ordinary values. Changing an earlier branch removes values from steps that no longer apply. Secret controls clear as soon as they are submitted; the review shows only that a secret changed. If another process updates the configuration first, the result is a conflict with reload guidance rather than an overwrite. A provider rejection is also distinct from a transport or operational failure.
 
-`diff()` applies the same presentation boundary to confirmation views. Name sensitive fields explicitly when the values do not already carry a `RedactedValue`:
+Unavailable and unsupported are different states. An unavailable provider may work again later. An unsupported operation is not offered as an actionable control for that target.
+
+## Add a write flow to an application
+
+The application supplies two pieces:
+
+1. a `ConfigWorkflowSpec` with operator-facing copy, ordered field groups, and declarative branch conditions; and
+2. a `ConfigMutationService` that supplies fields and privately owns validation, candidate state, planning, revision checks, and persistence.
+
+The workflow names stable provider field keys. It does not contain callbacks, widgets, oa-configurator models, or application state:
 
 ```python
-diff = adapter.diff(
-    target,
-    original_fields={"dsn": "postgresql://old"},
-    candidate_fields={"dsn": "postgresql://new"},
-    sensitive_fields=frozenset({"dsn"}),
+from groundskeeping.configurator import (
+    ConfigBranchCondition,
+    ConfigTarget,
+    ConfigTargetKind,
+    ConfigWizardController,
+    ConfigWorkflowSpec,
+    ConfigWorkflowStep,
+    ConfigWorkflowStepKind,
+    MutationOperation,
 )
+
+target = ConfigTarget(
+    kind=ConfigTargetKind.DATABASE,
+    key="metadata",
+    title="Metadata database",
+)
+
+workflow = ConfigWorkflowSpec(
+    key="database-create",
+    target=target,
+    operation=MutationOperation.CREATE,
+    title="Create database configuration",
+    purpose="Reuse an existing database or describe a new one.",
+    steps=(
+        ConfigWorkflowStep(
+            key="strategy",
+            title="Setup approach",
+            field_keys=("strategy",),
+            kind=ConfigWorkflowStepKind.CHOICE,
+        ),
+        ConfigWorkflowStep(
+            key="new-database",
+            title="New database",
+            field_keys=("database_name", "connection_url", "password"),
+            when=(ConfigBranchCondition("strategy", "create"),),
+        ),
+    ),
+)
+
+controller = ConfigWizardController(workflow, mutation_service)
+context.open_wizard(controller)
 ```
+
+`ConfigMutationService` is deliberately independent of oa-configurator. A provider can use oa-configurator internally, but it must return Groundskeeping's portable fields, issues, plans, and results. The seven service calls have clear jobs:
+
+- `capabilities()` says whether this target and operation are supported;
+- `fields()` provides the `FieldSpec` definitions used by the declared workflow;
+- `begin()` creates private candidate state and returns an opaque session and expected revision;
+- `submit()` validates one step, updates the private candidate, and discards invalidated branch fields;
+- `plan()` returns only a redacted diff, structured effects, warnings, issues, and a single-use apply token;
+- `apply()` consumes that token before returning applied, conflicted, rejected, or failed; and
+- `cancel()` invalidates the session and any prepared token without persisting.
+
+Plan readiness is derived from the plan: an error issue always blocks apply, and a ready plan always has an apply token. Warnings may accompany a ready plan. Apply tokens and expected revisions are opaque provider values; applications should not parse or construct them in UI code.
+
+## Secret boundary
+
+For inspection, typed fields marked `Sensitive` by oa-configurator become `RedactedValue` before a `ConfigSectionView` is created. Untyped tool dictionaries and nested free-form configuration use a conservative fallback for names such as `password`, `api_key`, `secret`, and `token`. Collections are summarized only after that recursive redaction pass.
+
+For writes, `FieldSpec` identifies sensitive inputs. The generic controller passes a submitted secret to `ConfigMutationService.submit()` and immediately drops its local real-value mapping. Controller state keeps only a configured/not-configured marker, secret controls render empty when revisited, and plans must contain a redacted diff. `ConfigDraft`, `ConfigPlan`, `ConfigApplyIntent`, snapshots, issues, effects, results, and test history must never contain raw submitted values.
+
+Free-form data still needs honest field names or schema metadata. Groundskeeping cannot infer that an arbitrary value under a misleading key is a credential.
+
+## Try the reference provider
+
+`FakeConfigMutationService` provides deterministic create, update, validation, warning, conflict, rejection, failure, token-reuse, and cancellation scenarios without writing a file. The bundled demo uses it with `fake_database_workflow()` so an app developer can see the intended composition without first implementing persistence.
+
+External providers can run `assert_mutation_service_conformance()` from `groundskeeping.configurator.conformance` with a target and valid step submissions. The helper verifies capabilities, field coverage, begin/stage/plan/apply, single-use apply tokens, and cancellation invalidation. Provider-specific tests should additionally inject validation, conflict, rejection, failure, and secret canaries.
 
 ## Ownership boundary
 
-Groundskeeping inspects and presents configuration; it does not interpret package policy or write TOML. Candidate construction, oa-configurator validation, persistence, revision checks, and application restart policy stay with the application and its configuration provider.
+Groundskeeping owns wizard mechanics, safe presentation state, declarative branch recalculation, and portable lifecycle results. It does not write TOML or decide what a valid database, provider, or model looks like.
 
-`ConfigDraft` records only the target and the presence of changed fields, never submitted values. `ConfigApplyIntent` carries an opaque apply token, expected revision, redacted diff, and presentation-safe effects. This keeps the UI state useful without moving real candidate objects or secrets into groundskeeping.
-
-Applications can implement `ConfigResourceAdapter` when a target needs domain-specific labels, fields, validation, verification, or post-apply effects. `NativeConfigResourceAdapter` remains the plain fallback for targets without richer application behavior.
+The consuming application and its mutation provider own candidate construction, oa-configurator validation, reference policy, verification, persistence, revision comparison, and restart behavior. Real candidate objects and raw submitted values stay behind that provider boundary.

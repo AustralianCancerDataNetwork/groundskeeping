@@ -21,10 +21,8 @@ from textual.app import App, ComposeResult
 from textual.widgets import Tree
 
 from groundskeeping.configurator import (
-    ConfigDraft,
     ConfigReferenceStatus,
     ConfigReferenceView,
-    ConfigTarget,
     ConfigTargetKind,
     ConfiguratorSnapshot,
     OAConfiguratorAdapter,
@@ -276,41 +274,3 @@ def test_target_kinds_are_the_oa_configurator_1_x_sections() -> None:
         ConfigTargetKind.TOOL,
         ConfigTargetKind.LOGGING,
     )
-
-
-def test_diff_redacts_sensitive_values() -> None:
-    adapter = OAConfiguratorAdapter()
-    target = ConfigTarget(
-        kind=ConfigTargetKind.DATABASE,
-        key="metadata",
-        title="metadata",
-    )
-    diff = adapter.diff(
-        target,
-        original_fields={"url": "postgresql://old", "password": "old-secret"},
-        candidate_fields={"url": "postgresql://new", "password": "new-secret"},
-        sensitive_fields=frozenset({"password"}),
-    )
-
-    assert diff.changed
-    password = next(entry for entry in diff.entries if entry.field == "password")
-    assert isinstance(password.before, RedactedValue)
-    assert isinstance(password.after, RedactedValue)
-    assert "new-secret" not in repr(diff)
-
-
-def test_config_draft_only_tracks_safe_changed_field_presence() -> None:
-    target = ConfigTarget(
-        kind=ConfigTargetKind.DATABASE,
-        key="metadata",
-        title="metadata",
-    )
-    draft = ConfigDraft(
-        target=target,
-        changed_fields=frozenset({"url", "password"}),
-        expected_revision="abc",
-    )
-
-    assert draft.changed
-    assert draft.changed_fields == frozenset({"url", "password"})
-    assert "secret" not in repr(draft)

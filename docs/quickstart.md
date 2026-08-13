@@ -14,10 +14,9 @@ uv add groundskeeping
 uv run groundskeeping
 ```
 
-The demo shows the shell without depending on Groundworkers or `cava-nlp-shard`. Its configuration page uses the oa-configurator 1.x section layout—connections, databases, providers, models, vector stores, tools, and logging—and includes a small setup wizard.
+The demo shows the shell without depending on Groundworkers or `cava-nlp-shard`. Its configuration page uses the oa-configurator 1.x section layout—connections, databases, providers, models, vector stores, tools, and logging—and opens the generic configuration controller against the deterministic fake provider.
 
-The demo source is the shortest complete example of the app shape; read
-`src/groundskeeping/demo.py` alongside this guide.
+The demo source is the shortest complete example of the app shape; read `src/groundskeeping/demo.py` alongside this guide.
 
 ## Build your first page
 
@@ -63,9 +62,7 @@ class SetupPage(Widget):
     def row_selected(self, row_key: str, context: PageContext) -> None: ...
 ```
 
-Register it in an `OperatorAppSpec` and run the app. Start read-only: a page that only
-inspects is enough to exercise routing, the workbench, and failure presentation before you
-add durable changes.
+Register it in an `OperatorAppSpec` and run the app. Start read-only: a page that only inspects is enough to exercise routing, the workbench, and failure presentation before you add durable changes. When the page needs writes, add a `ConfigWorkflowSpec` and a `ConfigMutationService` rather than maintaining a configuration-specific wizard controller.
 
 ## Run the tests
 
@@ -76,6 +73,4 @@ uv run ruff check .
 uv run ty check src/
 ```
 
-The tests cover route validation, app startup, action and job contracts, wizard branching and
-redaction, configuration redaction, telemetry import boundaries, and application dependency
-boundaries.
+The tests cover route validation, app startup, action and job contracts, generic configuration workflows, secret redaction, mutation provider conformance, telemetry import boundaries, and application dependency boundaries.

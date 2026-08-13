@@ -74,7 +74,11 @@ class WizardScreen(ModalScreen[WizardResult]):
             return
         if event.button.id == "wizard-apply":
             result = self._controller.apply()
-            if result.status in {WizardResultStatus.CONFLICTED, WizardResultStatus.FAILED}:
+            if result.status in {
+                WizardResultStatus.CONFLICTED,
+                WizardResultStatus.REJECTED,
+                WizardResultStatus.FAILED,
+            }:
                 self._show_result_issue(result)
                 event.button.disabled = True
                 return
@@ -89,7 +93,20 @@ class WizardScreen(ModalScreen[WizardResult]):
     async def _submit_current_step(self) -> None:
         snapshot = self._require_snapshot()
         values = {} if isinstance(snapshot.step, ReviewStep) else self._collect_values(snapshot)
-        transition = self._controller.submit(values)
+        try:
+            transition = self._controller.submit(values)
+        finally:
+            # The screen owns the short-lived raw submission mapping and mounted input.
+            # Clear both before the first await so a secret cannot survive the transition.
+            values.clear()
+            for widget_id, field in self._field_by_widget_id.items():
+                if not field.masks_value:
+                    continue
+                widget = self.query_one(f"#{widget_id}")
+                if isinstance(widget, Input):
+                    widget.value = ""
+                elif isinstance(widget, TextArea):
+                    widget.text = ""
         await self._set_snapshot(transition.snapshot)
 
     async def _set_snapshot(self, snapshot: WizardSnapshot) -> None:
@@ -257,8 +274,8 @@ class WizardScreen(ModalScreen[WizardResult]):
     def _sync_buttons(self, snapshot: WizardSnapshot) -> None:
         self.query_one("#wizard-back", Button).disabled = not snapshot.can_back
         self.query_one("#wizard-next", Button).disabled = not snapshot.can_next
-        self.query_one("#wizard-review", Button).disabled = isinstance(
-            snapshot.step, ReviewStep
+        self.query_one("#wizard-review", Button).disabled = (
+            isinstance(snapshot.step, ReviewStep) or not snapshot.can_review
         )
         apply_button = self.query_one("#wizard-apply", Button)
         apply_button.label = snapshot.spec.apply_label

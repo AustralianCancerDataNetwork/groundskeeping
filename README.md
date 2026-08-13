@@ -125,7 +125,9 @@ retries, leases, and durable records inside the application.
 
 Sensitive typed fields and conservatively recognized secrets in free-form configuration are redacted before they enter view models. Unknown tool schemas are identified instead of being treated as reference-valid.
 
-Groundskeeping does not write TOML. Candidate construction, validation, persistence, and application policy stay with oa-configurator and the consuming application. Applications can add `ConfigResourceAdapter` implementations for targets that need richer labels, choices, verification, or effects.
+For writes, applications declare a `ConfigWorkflowSpec` and provide a `ConfigMutationService`. The generic controller handles steps, Back, branch invalidation, redacted review, apply gating, conflict, rejection, failure, and cancel without taking ownership of candidate objects. The provider supplies fields and privately owns validation, revision checks, and persistence.
+
+Groundskeeping does not write TOML. Raw submitted values and real candidates stay behind the provider boundary; snapshots and plans carry only safe field presence, redacted diffs, structured effects, issues, and opaque tokens. A deterministic fake provider and reusable conformance helper are included for application development.
 
 ## Telemetry
 
@@ -151,19 +153,19 @@ throughput, tuning interpretation, and any other application-specific signal.
 - the shared workbench surface;
 - generic view models;
 - action, field, progress, cancellation, and job contracts;
-- headless setup wizard contracts and a reusable modal wizard surface;
+- headless setup wizard contracts, a reusable modal wizard surface, and generic configuration workflow mechanics;
 - in-process job gating;
-- read-only configuration inspection and draft/diff models;
+- typed configuration inspection and presentation-safe mutation contracts;
 - headless infrastructure telemetry contracts; and
 - reusable widgets that render normalized models.
 
 Applications using Groundskeeping own:
 
 - every production page;
-- domain presenters, controllers, and services;
+- domain presenters and services;
 - queue semantics and durable records;
 - YAML or other application configuration formats;
-- resource-specific `oa-configurator` adapters;
+- configuration fields, validation, private candidate state, and persistence providers;
 - model calls, database access, and runtime execution;
 - domain telemetry and tuning algorithms;
 - operation safety policy; and
@@ -177,8 +179,7 @@ uv run groundskeeping
 
 The demo shows the shell shape without depending on Groundworkers or `cava-nlp-shard`.
 
-Open the Configuration page and choose **Configure database** to try the reusable setup
-wizard surface.
+Open the Configuration page and choose **Configure database** to try the generic controller, declarative branch flow, and fake mutation provider.
 
 ## Running tests
 
@@ -186,6 +187,4 @@ wizard surface.
 uv run --extra dev pytest -q
 ```
 
-The tests cover route validation, app startup, action and job contracts, wizard branching and
-redaction, configurator redaction, telemetry import boundaries, and application dependency
-boundaries.
+The tests cover route validation, app startup, action and job contracts, wizard branching and redaction, configuration mutation lifecycles, provider conformance, telemetry import boundaries, and application dependency boundaries.
