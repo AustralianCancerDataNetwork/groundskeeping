@@ -121,8 +121,7 @@ retries, leases, and durable records inside the application.
 
 ## Configuration
 
-`groundskeeping.configurator` presents `oa-configurator` stack configuration safely. It can
-build snapshots, section views, safe drafts, redacted diffs, and apply intents.
+`groundskeeping.configurator` presents `oa-configurator` 1.x stack configuration safely. Groundskeeping requires oa-configurator 1.1 or later within that major version. Its stable inspection targets are connections, databases, providers, models, vector stores, tools, and logging. It can build snapshots, section views, safe drafts, redacted diffs, and apply intents.
 
 It does not write TOML. Persistence belongs to `oa-configurator` and to the application using
 Groundskeeping. That separation protects comments, secrets, external edits, and local safety

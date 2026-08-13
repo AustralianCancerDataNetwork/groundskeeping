@@ -5,10 +5,10 @@ description = "Reusable Textual operator shell, workbench, configuration browser
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [
-    { name = "UNSW CAVA platform tooling" },
+  { name = "Georgie Kennedy", email = "georgie.kennedy@unsw.edu.au" },
 ]
 dependencies = [
-    "oa-configurator>=0.1.2,<0.3",
+    "oa-configurator>=1.1,<2",
     "textual>=8.2,<9",
 ]
 
