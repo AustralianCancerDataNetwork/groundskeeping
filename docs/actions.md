@@ -1,15 +1,19 @@
-# Actions and Jobs
+# Actions and jobs
 
-Actions are buttons with a runner behind them. Use them for bounded operations such as
-**Test connection**, **Refresh status**, **Populate embeddings**, or **Run evaluation sample**.
+Actions connect operator-facing buttons to application-owned work. Use them for bounded operations such as **Test connection**, **Refresh status**, **Populate embeddings**, or **Run evaluation sample**.
 
-## ActionSpec
+## Choose the right execution model
 
-An [`ActionSpec`][groundskeeping.contracts.actions.ActionSpec] describes the operator-facing
-command: label, summary, fields, resources, effects, cancellation mode, and runner.
+| Work | Use | Why |
+|---|---|---|
+| A quick check completed by this process | `ActionSpec` with `ExecutionKind.QUICK` | The result can be shown immediately. |
+| Work that should remain responsive in the TUI | `ActionSpec` plus `JobManager` | The shell can show progress and honour the declared cancellation mode. |
+| Work that must survive restarts, retry, lease, or run on another worker | An application-owned durable queue | Shell jobs exist only for the lifetime of this TUI process. |
+| A configuration change with review and revision checks | `ConfigWizardController` | The configuration lifecycle is richer than a general action. |
 
-`ActionRegistry` validates at startup that action keys are unique and that every `page_key`
-refers to a registered page.
+## Describe an action for the operator
+
+An [`ActionSpec`][groundskeeping.contracts.actions.ActionSpec] carries the label, summary, input fields, effects, resources, execution mode, cancellation mode, and runner. Use language that explains both intent and scope.
 
 ```python
 from groundskeeping.contracts import (
@@ -23,37 +27,52 @@ from groundskeeping.contracts import (
 registry = ActionRegistry(
     (
         ActionSpec(
-            key="setup.verify",
+            key="setup.verify_database",
             page_key="setup",
-            label="Verify connection",
+            label="Test database connection",
             summary="Open a read-only connection and report the server version.",
-            runner=verify_runner,
-            fields=(FieldSpec(key="timeout", label="Timeout", kind=FieldKind.INTEGER),),
+            runner=verify_database,
+            fields=(
+                FieldSpec(
+                    key="timeout",
+                    label="Timeout in seconds",
+                    kind=FieldKind.INTEGER,
+                    default=10,
+                    minimum=1,
+                    maximum=60,
+                ),
+            ),
             execution=ExecutionKind.QUICK,
+            resource_refs=frozenset({"database:metadata"}),
         ),
     )
 )
 ```
 
-## Fields, parsing, and redaction
+`ActionRegistry` checks key uniqueness and, when page keys are supplied, verifies that every action belongs to a registered page.
 
-[`FieldSpec`][groundskeeping.contracts.actions.FieldSpec] parses and redacts input before it
-reaches the runner. Each field declares a `FieldKind` — `TEXT`, `SECRET`, `MULTILINE`, `INTEGER`, `DECIMAL`,
-`BOOLEAN`, `CHOICE`, `EXISTING_PATH`, or `OUTPUT_PATH` — and `parse` returns both the real
-value and a presentation-safe value.
+## Collect and protect inputs
 
-A field is masked when it is explicitly `sensitive` or when its kind is `SECRET`. Masked
-values render as `<redacted>` in confirmations, diffs, and result surfaces.
+[`FieldSpec`][groundskeeping.contracts.actions.FieldSpec] converts raw form input into a real value for the runner and a presentation-safe value for confirmation and results.
 
-Numeric fields validate bounds through `minimum` and `maximum`, and any field may carry a
-`validator` that returns a `ValidationIssue`. Parsing failures raise `ValueError` with the
-field's operator-facing label, not its key.
+| Input | `FieldKind` | Useful options |
+|---|---|---|
+| Short text | `TEXT` | `placeholder`, `validator` |
+| Password, key, or token | `SECRET` | `sensitive`, `secret_clearable` |
+| Longer free text | `MULTILINE` | `placeholder`, `validator` |
+| Whole or decimal number | `INTEGER`, `DECIMAL` | `minimum`, `maximum` |
+| Yes/no value | `BOOLEAN` | `default` |
+| One declared option | `CHOICE` | `choices` |
+| Existing input path | `EXISTING_PATH` | Existence is checked during parsing. |
+| Destination path | `OUTPUT_PATH` | `~` is expanded, but the path is not created. |
 
-## Running an action
+A field is masked when its kind is `SECRET` or `sensitive=True`. Its presentation value becomes `<redacted>`. Sensitive validator messages are also replaced with a generic field error so a validator cannot echo a submitted credential into the UI or logs.
 
-The runner receives an [`ActionContext`][groundskeeping.contracts.actions.ActionContext] with
-progress and cancellation. That lets a runner report useful status without importing Textual
-widgets.
+Use `preflight` for validation that depends on several parsed fields or current application state. Keep lasting business rules in the application service as well; UI validation improves guidance but is not an authorization boundary.
+
+## Report progress without importing Textual
+
+The runner receives an [`ActionContext`][groundskeeping.contracts.actions.ActionContext] with a progress sink and cancellation token. It can remain headless and easy to test.
 
 ```python
 from collections.abc import Mapping
@@ -61,47 +80,41 @@ from collections.abc import Mapping
 from groundskeeping.contracts import (
     ActionContext,
     ActionOutcome,
+    EmptyView,
     SemanticStatus,
-    TableRow,
-    TableView,
 )
 
 
-def verify_runner(params: Mapping[str, object], context: ActionContext) -> ActionOutcome:
-    context.emit("verify", completed=0, total=1, message="connecting")
-    ...
+def verify_database(
+    params: Mapping[str, object],
+    context: ActionContext,
+) -> ActionOutcome:
+    context.emit("connect", completed=0, total=1, message="Opening a read-only connection")
+    version = database_service.server_version(timeout=int(params["timeout"]))
+    context.emit("connect", completed=1, total=1, message="Connection verified")
     return ActionOutcome(
         status=SemanticStatus.OK,
-        summary="Connection verified",
-        view=TableView(
-            title="Connection",
-            columns=("check", "result"),
-            rows=(TableRow(key="server", cells=("server", "postgres 16.2")),),
+        summary="Database connection verified",
+        view=EmptyView(
+            title="Database connection",
+            message=f"Server {version} accepted a read-only connection.",
+            status=SemanticStatus.OK,
         ),
     )
 ```
 
-`ActionOutcome.view` is a `SurfaceView` — `TableView`, `TreeView`, `EmptyView`, or
-`LoadingView` — so an action decides how its own result is presented in the upper-right pane.
-`refresh_pages` names the page keys whose content is now stale.
+`ActionOutcome.view` can be any `SurfaceView`. Use a `TableView` when the result contains comparable checks, a `TreeView` for nested readiness, or an `EmptyView` for one concise result. `refresh_pages` identifies pages whose displayed state became stale.
 
-`run_action_sync` runs an action end to end for tests, demos, and simple quick actions: it
-parses params, runs preflight validation, builds a context, and returns the outcome.
+`run_action_sync()` is useful in tests and small demos: it parses fields, runs preflight validation, creates an action context, and returns the outcome without constructing the TUI.
 
-## Operation policy
+## Gate effects with operation policy
 
-`OperationPolicy` decides whether an action may proceed and what the operator is told first.
-`AllowAllOperationPolicy` is the permissive default. Applications can substitute a policy that
-uses their own vocabulary and blocks unsafe operations.
+`OperationPolicy` decides whether an action may proceed and what the operator should be told before it runs. `AllowAllOperationPolicy` is a permissive default for low-risk applications and demos.
 
-## Jobs
+Production applications should use their own vocabulary and policy when actions consume shared resources, alter durable state, or need an explicit confirmation. `resource_refs` and `effect_refs` give policy stable identifiers without teaching Groundskeeping about application objects.
 
-A shell job is work launched by this TUI process. It is **not** a durable processing queue.
+## Treat shell jobs as temporary
 
-Use [`JobManager`][groundskeeping.contracts.jobs.JobManager] and `JobPolicy` to gate
-in-process work and show progress. `SingleForegroundJobPolicy` is the default and allows one
-foreground job at a time.
+`JobManager` tracks work launched by the current TUI and provides progress and cancellation state. `SingleForegroundJobPolicy` allows one foreground job at a time.
 
-Keep queue state, retries, leases, and durable records inside the application. The shell tracks
-what is running right now so it can render progress and honour cancellation; it does not
-remember work across restarts.
+Do not use it as a durable queue. Keep retry rules, leases, persisted job records, recovery after restart, and remote-worker coordination in the consuming application. The page can adapt that durable state into Groundskeeping views without transferring ownership to the shell.

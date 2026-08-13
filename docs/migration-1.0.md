@@ -1,25 +1,57 @@
 # Migrating from 0.3 to 1.0
 
-Groundskeeping 1.0 adopts the oa-configurator 1.x stack directly and replaces the provisional configuration write types with the generic mutation service and controller. This is a clean API transition; there are no aliases for the removed 0.x profile/resource model or forwarding wrappers for the provisional write API.
+Groundskeeping 1.0 uses the oa-configurator 1.x stack directly and replaces the provisional configuration write API with the generic mutation service and controller. This is a clean transition: there are no aliases for the removed profile/resource model and no forwarding wrappers for provisional write types.
 
-## Configuration inspection
+This page is for developers maintaining an existing integration. Analysts do not need to migrate saved wizard state; a wizard session is intentionally temporary.
 
-Pass an oa-configurator 1.x `StackConfig` to `OAConfiguratorAdapter.snapshot()`. The browser shows connections, databases, providers, models, vector stores, tools, and logging. `ConfiguratorSnapshot` no longer contains profile state, and its optional path is inspection metadata sourced from `StackConfig.loaded_path`.
+## Change summary
 
-## Configuration writes
+| 0.3 integration | 1.0 replacement | Required action |
+|---|---|---|
+| Provisional profile/resource inspection | `OAConfiguratorAdapter.snapshot(StackConfig)` | Pass the effective oa-configurator stack directly. |
+| Profile or active-profile presentation | No equivalent | Remove UI and code that expect profile state. |
+| `ConfigResourceAdapter` or application-specific configuration controller | `ConfigWorkflowSpec`, `ConfigMutationService`, and `ConfigWizardController` | Move candidate and persistence behavior behind the provider. |
+| String effects | Structured `EffectRef` values | Supply source, optional destination, field, label, kind, and status. |
+| Cancellation represented with apply outcomes | `ConfigMutationService.cancel()` and `WizardResultStatus.CANCELLED` | Keep cancellation separate from actual apply attempts. |
+| Sensitive `ReviewChange` values retained but hidden by `repr` | Values replaced with `<redacted>` during construction | Move any logic that needs the real value behind the provider boundary. |
 
-Replace application-specific configuration controllers and `ConfigResourceAdapter` implementations with:
+## Update inspection
 
-- `ConfigWorkflowSpec` for stable copy, steps, field grouping, and branches;
-- `ConfigMutationService` for fields, private candidates, validation, planning, persistence, and cancellation; and
-- `ConfigWizardController` for the reusable lifecycle.
+Pass an oa-configurator 1.x `StackConfig` to `OAConfiguratorAdapter.snapshot()`. The resulting browser contains connections, databases, providers, models, vector stores, tools, and logging. `ConfiguratorSnapshot` no longer has profile state, and its optional path is display metadata sourced from `StackConfig.loaded_path`.
 
-`ConfigDraft`, `ConfigDiff`, `ConfigPlan`, `ConfigApplyIntent`, and related mutation types live in `groundskeeping.configurator.mutation`. Effects are structured `EffectRef` objects rather than strings. Cancellation is performed through `cancel()` and produces `WizardResultStatus.CANCELLED`; it is not a `ConfigApplyStatus`.
+```python
+adapter = OAConfiguratorAdapter()
+snapshot = adapter.snapshot(stack_config)
+```
 
-Provider fields must all appear in the workflow exactly once. Branch conditions use value sets with optional negation, fields are fetched once when the controller starts, and configuration review is generated automatically after all active steps are complete.
+If the stack's tool dictionaries have resolved package configuration instances, pass them through `package_configs` so typed sensitivity and reference metadata remain available.
 
-## Sensitive review values
+## Replace configuration writes
 
-In 0.3, `ReviewChange(sensitive=True)` hid its values in `repr` but the `before` and `after` attributes still retained the originals. In 1.0, construction immediately replaces both attributes with `<redacted>`. `ConfigDiffEntry` applies the same rule with `RedactedValue`. Consumers that previously read a sensitive review value must move that logic behind their mutation provider; raw values are no longer available from presentation models.
+The new composition has three parts:
 
-Sensitive `FieldSpec` validators also receive a protected error boundary. If a validator returns or raises a message containing the submitted secret, the public parse error is the generic `<label> is invalid` message.
+```text
+ConfigWorkflowSpec + ConfigMutationService → ConfigWizardController → WizardScreen
+```
+
+- Put stable copy, steps, field grouping, and branch conditions in `ConfigWorkflowSpec`.
+- Put fields, private candidates, validation, planning, revision checks, persistence, and cancellation in `ConfigMutationService`.
+- Open `ConfigWizardController` through the existing `PageContext.open_wizard()` entry point.
+
+Provider fields must all appear in the workflow exactly once. Conditions match an earlier non-sensitive field against a set of values and may be negated. Fields are fetched once when the controller starts, and review is generated automatically after all active steps are complete.
+
+`ConfigDraft`, `ConfigDiff`, `ConfigPlan`, `ConfigApplyIntent`, and the remaining write contracts live in `groundskeeping.configurator.mutation`. Plans require an expected revision and single-use apply token before they are ready.
+
+## Move sensitive logic behind the provider
+
+In 0.3, `ReviewChange(sensitive=True)` hid values in `repr`, but `before` and `after` still held the originals. In 1.0, construction replaces both values with `<redacted>`. `ConfigDiffEntry` applies the same rule with `RedactedValue`.
+
+Sensitive `FieldSpec` validators also use a protected error boundary. If a validator returns or raises a message containing submitted input, the public error becomes `<label> is invalid.`
+
+Do not recover real values from review or exception text. Validation and any transformation that needs the submitted value belong inside the mutation provider's private candidate lifecycle.
+
+## Verify the migrated provider
+
+Run `assert_mutation_service_conformance()` with hooks for invalid input, revision conflict, warnings, blocked plans, rejection, failure, unavailability, unsupported operations, and cancellation. Then retain provider-specific tests for candidate construction and persistence behavior.
+
+See [Configuration](configuration.md#test-a-provider-before-integrating-its-screen) for the scenario map and [API reference](api/configurator.md) for exact signatures.

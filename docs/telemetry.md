@@ -1,19 +1,22 @@
 # Telemetry
 
-Telemetry has simple data contracts, a sampling runtime, and optional Textual widgets.
+Groundskeeping separates telemetry collection from presentation. Headless sources return normalized snapshots; optional Textual widgets render those snapshots without knowing which vendor or library produced them.
 
-## The headless core
+## Decide where a metric belongs
 
-`groundskeeping.contracts.telemetry` contains source protocols, availability, normalized
-metrics, and snapshots. `groundskeeping.telemetry` contains the sampling runtime and provider
-implementations. Both layers remain free of Textual imports so collectors can be tested and
-reused outside a running app.
+| Metric | Owner | Example |
+|---|---|---|
+| Reusable infrastructure measurement | Groundskeeping contract/provider | Accelerator utilisation, accelerator memory |
+| Application workflow state | Consuming application | Queue depth, pipeline progress, records processed |
+| Domain interpretation or recommendation | Consuming application | Whether throughput is acceptable for a particular workload |
 
-The runtime/provider layer does not import Textual. That keeps telemetry usable in tests,
-workers, and small command-line checks.
+Keep collectors that depend on application sessions or domain services in the application. Adapt their output to normalized `TelemetryMetric` and `TelemetrySnapshot` values at the page boundary.
 
-Sources are async. `TelemetryRuntime` fans out across every registered source, so a page can
-probe availability once and then sample on a timer.
+## Sample through the headless runtime
+
+`groundskeeping.contracts.telemetry` contains source protocols, availability, metrics, and snapshots. `groundskeeping.telemetry` contains the sampling runtime and reusable providers. Neither layer imports Textual, so collection remains usable in tests, workers, and command-line checks.
+
+Sources are asynchronous. `TelemetryRuntime` can probe all registered sources for availability and then sample them concurrently.
 
 ```python
 from groundskeeping.contracts import SourceAvailability, TelemetrySnapshot
@@ -26,22 +29,12 @@ availability: dict[str, SourceAvailability] = await runtime.probe_all()
 snapshots: tuple[TelemetrySnapshot, ...] = await runtime.sample_all()
 ```
 
-`probe_all` reports which sources are usable and what each can measure; `sample_all` returns
-normalized metrics keyed by strings such as `accelerator.utilisation` and
-`workload.throughput`.
+Probe before displaying a source so the page can distinguish unsupported capability from a temporary sampling failure. Sample on a cadence appropriate to the cost and volatility of the measurement; the runtime does not impose a refresh interval.
 
-## Widgets
+## Bind widgets to meaning, not vendors
 
-`groundskeeping.widgets.telemetry` renders snapshots. Bind widgets to metric keys and
-capabilities, not concrete provider classes.
+`groundskeeping.widgets.telemetry` renders normalized snapshots. Bind a widget to metric keys and source capabilities rather than a concrete provider class.
 
-A GPU card, for example, cares about accelerator utilisation and memory metrics. It should not
-need to know whether the source is NVIDIA, Apple Silicon, or something added later.
+An accelerator card, for example, can use `accelerator.utilisation` and memory metrics whether the source is NVIDIA, Apple Silicon, or a future provider. Vendor-specific setup and failure messages can remain with the source or consuming application while the widget stays reusable.
 
-## Ownership
-
-Groundskeeping owns the infrastructure telemetry contracts and the reusable widgets that
-render normalized models.
-
-Applications own domain telemetry: queue depth, pipeline progress, database state, workload
-throughput, and tuning interpretation.
+If a metric needs units, freshness, or availability context to be interpreted safely, include that context in the normalized model or nearby page detail. Avoid turning a missing measurement into a zero value; “not sampled” and “measured as zero” are different states.

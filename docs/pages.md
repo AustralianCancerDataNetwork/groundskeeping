@@ -1,95 +1,107 @@
-# Pages and the Workbench
+# Pages and the workbench
 
-Pages are ordinary Textual widgets owned by the application using Groundskeeping. The shell
-mounts them once, activates and deactivates them as the operator moves between tabs, and
-preserves page-local state.
+This guide is for developers building an application with Groundskeeping. For help using an existing app, see [Using a Groundskeeping app](operator-guide.md).
 
-A page receives a narrow [`PageContext`][groundskeeping.contracts.pages.PageContext]. It does
-not receive the whole app.
+A page is an application-owned Textual widget placed inside the shared workbench. Groundskeeping mounts each page once, preserves its local state, and activates or deactivates it as the operator moves between tabs.
 
-## The workbench surface
+![The shared workbench with navigation, results, and detail panes](static/images/demo-layout-example.png)
 
-The default page surface is the workbench:
+## Design the page around a question
 
-- flat section navigation or a hierarchical catalogue on the left;
-- rows or tree content on the upper right; and
-- selected detail on the lower right.
+Start with the question the operator is trying to answer, then choose the smallest view that makes the answer easy to scan. A setup page, for example, should answer “Is this environment ready for the work I am about to run?” rather than expose every property of a service object.
 
-Use `SectionNavigation` for peer areas such as Database, Embeddings, and Runtime. Use
-`CatalogueNavigation` when hierarchy is the point, such as a provider with nested models or an
-evaluation run with nested artefacts.
+| Information shape | Use | Good example |
+|---|---|---|
+| Peer areas | `SectionNavigation` | Database, credentials, model server, runtime |
+| Nested resources | `CatalogueNavigation` | Provider → models, run → artefacts |
+| Comparable repeated results | `TableView` | Connection checks with status and latency |
+| Rows the operator can toggle | `SelectionTableView` | Vocabularies included in a build |
+| Hierarchical readiness | `TreeView` | Environment → service → individual check |
+| No result or a useful failure | `EmptyView` | “No models configured” with a setup action |
+| Work still running | `LoadingView` | Refreshing provider inventory |
+| Facts about the highlighted row | `KeyValueView` | Endpoint, last checked, and failure reason |
+| Explanatory detail | `TextView` | Recovery guidance or policy explanation |
 
-Translate domain objects before they reach the workbench. The workbench understands
-`SectionItem`, `CatalogueItem`, `TableView`, `SelectionTableView`, `TreeView`, and friends;
-it does not need to know what a Groundworkers resource or `cava-nlp-shard` evaluation object
-is.
+Translate application objects before they reach the workbench. A page can know about a Groundworkers resource or an evaluation run; `TableView` and `TreeView` should only receive presentation-safe values.
 
-Use `OperatorAppSpec.workbench_labels` to rename shared pane chrome such as the result and
-detail panel labels. Page-owned titles still live on navigation and view contracts: for
-example, `SectionNavigation.title` names the left pane for a specific page, and
-`TableView.title` names the current result content.
+## Understand the screen layout
 
-## Routing
-
-`PageRoute` is the navigation identity for one page: a `key`, an operator-facing `label`, and
-a `purpose` line rendered beside the heading. `PageRegistry` validates that keys are unique
-and that at least one route exists, and `OperatorAppSpec.validate` additionally rejects
-duplicate page factories and unknown `default_page` keys.
-
-Validation happens at construction, not at first navigation, so a misconfigured app fails at
-startup rather than when an operator clicks a tab.
-
-## Page lifecycle
-
-| Method | When the shell calls it |
+| Screen area | Supplied by |
 |---|---|
-| `activate` | The page becomes the visible tab |
-| `deactivate` | The operator moves to a different tab |
-| `build_navigation` | Each time the page is rendered, to populate the left pane |
-| `landing_view` | Each time the page is rendered, to populate the upper-right pane |
-| `navigation_selected` | A section or catalogue item is selected |
-| `action_selected` | A command button in the current view is pressed |
-| `row_highlighted` | A result-table row is highlighted |
-| `row_selected` | A result-table row is selected |
+| Top tabs | `OperatorAppSpec.pages` through `PageRoute` and `PageRegistration` |
+| Left pane | The active page's `SectionNavigation` or `CatalogueNavigation` |
+| Upper-right pane | The active page's `SurfaceView` |
+| Lower-right pane | Optional `TextView`, `KeyValueView`, or detail `TableView` |
+| Buttons above a view | That view's `ViewAction` values |
 
-Row events return to the active page. The workbench renders generic models; the page decides
-what a highlighted row means.
+Use `OperatorAppSpec.workbench_labels` when the shared pane chrome needs application language, such as **Checks** instead of **Rows**. Page-specific titles still belong on navigation and view models.
 
-Use `SelectionTableView` when rows are controls, not just data. It renders a
-Groundskeeping-owned selection list with stable row keys, disabled row handling, and
-selection modes for single, multiple, or all-vs-specific selection. Pages that need the full
-selected-key state can implement the optional `SelectionAwareOperatorPage.selection_changed`
-hook; older pages still receive `row_selected` for compatibility.
+## Register routes at startup
 
-Detail panes can render `TextView`, `KeyValueView`, or `TableView`. Use a detail `TableView`
-when the selected item has its own repeated data, such as available LLM models for a provider.
+`PageRoute` is the stable identity of a page. Its `label` appears in navigation and its `purpose` tells the operator what the page is for.
 
-If `landing_view` raises, the shell catches the exception and renders an `EmptyView`
-explaining that the page could not be rendered. A page that cannot build its landing content
-degrades to a message instead of taking down the app.
+```python
+from groundskeeping.contracts import PageRegistration, PageRoute
 
-## Setup pages
+DATABASE_ROUTE = PageRoute(
+    key="database",
+    label="Database",
+    purpose="Inspect the connection and confirm the required schemas are ready.",
+)
 
-A setup page should answer a practical operator question: "is this environment ready for the
-work I am about to run?"
+registration = PageRegistration(
+    route=DATABASE_ROUTE,
+    factory=lambda context: DatabasePage(database_service),
+)
+```
 
-The page normally lives in the application using Groundskeeping. It can call whatever services
-that application already has for config, credentials, model providers, database checks, or
-runtime health.
+`OperatorAppSpec.validate()` rejects an empty registry, duplicate route keys, reused page factories, unknown action page keys, and an unknown `default_page`. The application therefore fails during construction rather than after an operator selects a tab.
 
-A good setup page usually has:
+## Implement the page lifecycle
 
-- a flat list of setup areas, such as config, database, runtime, model server, paths, or
-  credentials;
-- a landing `TreeView` summarising overall readiness;
-- a `TableView` for repeated checks where scanning matters;
-- `KeyValueView` detail for the selected check;
-- one or two safe verification actions; and
-- an operation policy that describes effects in the application's own vocabulary.
+A page receives a narrow [`PageContext`][groundskeeping.contracts.pages.PageContext], not the whole app.
 
-Start read-only. A **Test connection** or **Refresh status** button is often enough to prove
-the page shape before you add durable writes.
+| Method | When it is called | Typical responsibility |
+|---|---|---|
+| `activate` | The page becomes visible | Start a safe refresh or resume page-local timers. |
+| `deactivate` | The operator leaves the page | Stop page-local timers or subscriptions. |
+| `build_navigation` | The page is rendered | Return the current left-pane model. |
+| `landing_view` | The page is rendered | Return the initial result surface. |
+| `navigation_selected` | A section or catalogue item is chosen | Render its result view. |
+| `action_selected` | A visible action button is pressed | Run an action or open a wizard. |
+| `row_highlighted` | The cursor moves to a result row | Render lightweight detail. |
+| `row_selected` | A result row is activated | Perform the page-defined selection behavior. |
 
-When setup requires guided edits, expose a `ViewAction` from the current view and open a
-wizard with `PageContext.open_wizard`. The page still owns what the wizard means;
-Groundskeeping only renders the navigation, fields, review state, and final result.
+Use the context to update only the shared surfaces you need:
+
+```python
+def row_highlighted(self, row_key: str, context: PageContext) -> None:
+    check = self._checks[row_key]
+    context.surface.show_detail(
+        self.route.key,
+        KeyValueView(
+            title="Check detail",
+            rows=(
+                ("Status", check.status),
+                ("Last checked", check.checked_at.isoformat()),
+                ("Guidance", check.guidance),
+            ),
+        ),
+    )
+```
+
+If `landing_view()` raises, the shell replaces it with an explanatory `EmptyView` instead of taking down the application. Still catch expected domain failures in the page so you can give the operator specific recovery guidance.
+
+## Handle selectable tables
+
+Use `SelectionTableView` when row state is itself an input. The workbench owns toggle behavior, disabled rows, and `single`, `multiple`, or `all_or_specific` modes. Stable row keys let the page keep selection state independently of row order.
+
+Implement the optional `SelectionAwareOperatorPage.selection_changed()` hook when the page needs the complete selected-key set. Pages without the hook continue to receive `row_selected()`.
+
+## Add actions and wizards
+
+A `ViewAction` belongs to the view where its effect makes sense. Keep labels concrete—**Test connection** tells an analyst more than **Execute**—and expose only the small set of actions relevant to the current result.
+
+Use [actions](actions.md) for bounded commands. When setup needs several related answers, call `PageContext.open_wizard()`. Configuration changes should use the generic [configuration workflow](configuration.md), which already handles branch invalidation, redacted review, revision conflicts, and terminal results.
+
+Start with a read-only page and one verification action. Add durable writes after the page can clearly show current state, failures, and the effect of a successful change.
