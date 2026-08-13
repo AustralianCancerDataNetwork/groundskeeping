@@ -1,8 +1,6 @@
 # Configuration
 
-`groundskeeping.configurator` presents `oa-configurator` 1.1 stack configuration safely. It can
-build snapshots, section views, safe drafts, redacted diffs, revision-aware apply intents, and
-wizard-controller entry points.
+`groundskeeping.configurator` presents `oa-configurator` 1.x stack configuration safely. The supported range starts at oa-configurator 1.1. It can build snapshots, section views, safe drafts, redacted diffs, revision-aware apply intents, and wizard-controller entry points.
 
 Groundworkers can use this to show database configuration and launch a setup wizard. Another
 application might use the same pieces for model providers or local runtime paths.
