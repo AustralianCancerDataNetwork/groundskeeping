@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from groundskeeping.configurator import (
     ConfigDraft,
     ConfigTarget,
+    ConfigTargetKind,
     OAConfiguratorAdapter,
     RedactedValue,
 )
@@ -19,19 +20,38 @@ class Database:
 
 @dataclass
 class Stack:
-    path: str
-    active_profile: str
+    loaded_path: str
+    connections: dict[str, dict[str, str]]
     databases: dict[str, Database]
-    resources: dict[str, dict[str, str]]
-    profiles: dict[str, dict[str, str]]
-    aliases: dict[str, str]
+    providers: dict[str, dict[str, str]]
+    models: dict[str, dict[str, str]]
+    vector_stores: dict[str, dict[str, str]]
+    tools: dict[str, dict[str, str]]
+    logging: dict[str, str]
+
+
+def _stack(
+    *,
+    connections: dict[str, dict[str, str]] | None = None,
+    databases: dict[str, Database] | None = None,
+    providers: dict[str, dict[str, str]] | None = None,
+    models: dict[str, dict[str, str]] | None = None,
+) -> Stack:
+    return Stack(
+        loaded_path="/tmp/stack.toml",
+        connections=connections or {},
+        databases=databases or {},
+        providers=providers or {},
+        models=models or {},
+        vector_stores={},
+        tools={},
+        logging={},
+    )
 
 
 def test_snapshot_builds_read_only_sections_and_redacts_known_secrets() -> None:
     snapshot = OAConfiguratorAdapter().snapshot(
-        Stack(
-            path="/tmp/stack.toml",
-            active_profile="tre",
+        _stack(
             databases={
                 "metadata": Database(
                     url="postgresql://example/metadata",
@@ -39,14 +59,13 @@ def test_snapshot_builds_read_only_sections_and_redacts_known_secrets() -> None:
                     role="readonly",
                 )
             },
-            resources={"ollama": {"url": "http://ollama:11434"}},
-            profiles={"tre": {"database": "metadata"}},
-            aliases={"default-model": "snowflake-arctic-embed2"},
+            providers={"ollama": {"provider": "ollama"}},
+            models={"embed": {"provider": "ollama", "model": "nomic-embed"}},
         )
     )
 
     assert snapshot.path == "/tmp/stack.toml"
-    assert snapshot.profile == "tre"
+    assert not hasattr(snapshot, "profile")
 
     database_group = next(section for section in snapshot.sections if section.target.key == "database")
     metadata = database_group.children[0]
@@ -58,25 +77,38 @@ def test_snapshot_builds_read_only_sections_and_redacts_known_secrets() -> None:
 
 def test_adapter_can_render_snapshot_as_tree_view() -> None:
     snapshot = OAConfiguratorAdapter().snapshot(
-        Stack(
-            path="/tmp/stack.toml",
-            active_profile="local",
-            databases={},
-            resources={"model-server": {"kind": "ollama"}},
-            profiles={},
-            aliases={},
+        _stack(
+            connections={"metadata": {"dialect": "sqlite"}},
         )
     )
 
     view = OAConfiguratorAdapter().as_tree_view(snapshot)
 
     assert view.title == "Stack configuration"
-    assert view.rows[0].label == "Resources"
+    assert view.rows[0].label == "Connections"
+    assert view.message is not None
+    assert "profile" not in view.message
+
+
+def test_target_kinds_are_the_oa_configurator_1_x_sections() -> None:
+    assert tuple(ConfigTargetKind) == (
+        ConfigTargetKind.CONNECTION,
+        ConfigTargetKind.DATABASE,
+        ConfigTargetKind.PROVIDER,
+        ConfigTargetKind.MODEL,
+        ConfigTargetKind.VECTOR_STORE,
+        ConfigTargetKind.TOOL,
+        ConfigTargetKind.LOGGING,
+    )
 
 
 def test_diff_redacts_sensitive_values() -> None:
     adapter = OAConfiguratorAdapter()
-    target = ConfigTarget(kind="database", key="metadata", title="metadata")
+    target = ConfigTarget(
+        kind=ConfigTargetKind.DATABASE,
+        key="metadata",
+        title="metadata",
+    )
     diff = adapter.diff(
         target,
         original_fields={"url": "postgresql://old", "password": "old-secret"},
@@ -92,7 +124,11 @@ def test_diff_redacts_sensitive_values() -> None:
 
 
 def test_config_draft_only_tracks_safe_changed_field_presence() -> None:
-    target = ConfigTarget(kind="database", key="metadata", title="metadata")
+    target = ConfigTarget(
+        kind=ConfigTargetKind.DATABASE,
+        key="metadata",
+        title="metadata",
+    )
     draft = ConfigDraft(
         target=target,
         changed_fields=frozenset({"url", "password"}),

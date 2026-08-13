@@ -12,6 +12,7 @@ from groundskeeping.configurator.models import (
     ConfigResourceAdapter,
     ConfigSectionView,
     ConfigTarget,
+    ConfigTargetKind,
     ConfiguratorSnapshot,
     EffectRef,
     RedactedValue,

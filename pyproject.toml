@@ -8,7 +8,7 @@ authors = [
     { name = "UNSW CAVA platform tooling" },
 ]
 dependencies = [
-    "oa-configurator>=0.1.2,<0.3",
+    "oa-configurator>=1.1,<2",
     "textual>=8.2,<9",
 ]
 

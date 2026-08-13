@@ -1,10 +1,10 @@
 # Configuration
 
-`groundskeeping.configurator` presents `oa-configurator` stack configuration safely. It can
+`groundskeeping.configurator` presents `oa-configurator` 1.1 stack configuration safely. It can
 build snapshots, section views, safe drafts, redacted diffs, revision-aware apply intents, and
 wizard-controller entry points.
 
-Groundworkers can use this to show database resources and launch a setup wizard. Another
+Groundworkers can use this to show database configuration and launch a setup wizard. Another
 application might use the same pieces for model providers or local runtime paths.
 
 ## Inspection
@@ -21,9 +21,13 @@ snapshot = adapter.snapshot(stack_config, config_path="stack.toml")
 tree_view = adapter.as_tree_view(snapshot)
 ```
 
-`snapshot` groups databases, resources, profiles, aliases, and package configs into
-`ConfigSectionView` trees. `as_tree_view` converts a snapshot into a `TreeView` the workbench
-can render directly.
+`snapshot` groups connections, databases, providers, models, vector stores, tools, and logging
+into `ConfigSectionView` trees. `ConfigTargetKind` provides one stable identifier for each of
+those views. `as_tree_view` converts a snapshot into a `TreeView` the workbench can render
+directly.
+
+`ConfiguratorSnapshot.path` records the source of the inspected configuration for display. It
+does not grant permission to write that path or ask groundskeeping to persist a change.
 
 ## Redaction
 

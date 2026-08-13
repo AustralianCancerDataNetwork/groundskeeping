@@ -12,6 +12,7 @@ from groundskeeping.configurator import (
     ConfigApplyIntent,
     ConfigDraft,
     ConfigTarget,
+    ConfigTargetKind,
     OAConfiguratorAdapter,
 )
 from groundskeeping.contracts import (
@@ -337,7 +338,11 @@ def test_wizard_choice_field_selects_via_mouse() -> None:
 
 
 def test_config_draft_and_apply_intent_are_safe_and_revision_aware() -> None:
-    target = ConfigTarget(kind="database", key="metadata", title="metadata")
+    target = ConfigTarget(
+        kind=ConfigTargetKind.DATABASE,
+        key="metadata",
+        title="metadata",
+    )
     draft = ConfigDraft(
         target=target,
         changed_fields=frozenset({"password", "url"}),

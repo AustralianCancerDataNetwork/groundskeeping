@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Protocol
 
 from groundskeeping.contracts.actions import FieldSpec, ValidationIssue
@@ -11,6 +12,18 @@ from groundskeeping.contracts.views import SemanticStatus
 from groundskeeping.contracts.wizards import WizardController
 
 EffectRef = str
+
+
+class ConfigTargetKind(StrEnum):
+    """Stable kinds a configuration provider may expose for inspection."""
+
+    CONNECTION = "connection"
+    DATABASE = "database"
+    PROVIDER = "provider"
+    MODEL = "model"
+    VECTOR_STORE = "vector_store"
+    TOOL = "tool"
+    LOGGING = "logging"
 
 
 @dataclass(frozen=True)
@@ -27,7 +40,7 @@ class RedactedValue:
 class ConfigTarget:
     """One selectable configuration target."""
 
-    kind: str
+    kind: ConfigTargetKind
     key: str
     title: str
     status: SemanticStatus = SemanticStatus.INFO
@@ -45,10 +58,13 @@ class ConfigSectionView:
 
 @dataclass(frozen=True)
 class ConfiguratorSnapshot:
-    """Read-only snapshot of an effective `oa-configurator` stack."""
+    """Read-only snapshot of an effective `oa-configurator` stack.
+
+    ``path`` records where the inspected configuration came from. It is display
+    metadata only and must not be interpreted as an instruction to write there.
+    """
 
     title: str
-    profile: str | None
     path: str | None
     sections: tuple[ConfigSectionView, ...]
 

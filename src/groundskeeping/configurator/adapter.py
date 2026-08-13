@@ -13,6 +13,7 @@ from groundskeeping.configurator.models import (
     ConfigResourceAdapter,
     ConfigSectionView,
     ConfigTarget,
+    ConfigTargetKind,
     ConfiguratorSnapshot,
     RedactedValue,
 )
@@ -40,18 +41,45 @@ class OAConfiguratorAdapter:
         package_configs: Iterable[object] = (),
         title: str = "Stack configuration",
     ) -> ConfiguratorSnapshot:
-        profile = self._string_attr(stack_config, "active_profile", "profile")
+        package_configs = tuple(package_configs)
         sections = (
-            self._mapping_section("database", "Databases", getattr(stack_config, "databases", None)),
-            self._mapping_section("resource", "Resources", getattr(stack_config, "resources", None)),
-            self._mapping_section("profile", "Profiles", getattr(stack_config, "profiles", None)),
-            self._mapping_section("alias", "Aliases", getattr(stack_config, "aliases", None)),
-            self._package_section(tuple(package_configs)),
+            self._mapping_section(
+                ConfigTargetKind.CONNECTION,
+                "Connections",
+                getattr(stack_config, "connections", None),
+            ),
+            self._mapping_section(
+                ConfigTargetKind.DATABASE,
+                "Databases",
+                getattr(stack_config, "databases", None),
+            ),
+            self._mapping_section(
+                ConfigTargetKind.PROVIDER,
+                "Providers",
+                getattr(stack_config, "providers", None),
+            ),
+            self._mapping_section(
+                ConfigTargetKind.MODEL,
+                "Models",
+                getattr(stack_config, "models", None),
+            ),
+            self._mapping_section(
+                ConfigTargetKind.VECTOR_STORE,
+                "Vector stores",
+                getattr(stack_config, "vector_stores", None),
+            ),
+            self._tool_section(getattr(stack_config, "tools", None), package_configs),
+            self._singleton_section(
+                ConfigTargetKind.LOGGING,
+                "Logging",
+                getattr(stack_config, "logging", None),
+            ),
         )
         return ConfiguratorSnapshot(
             title=title,
-            profile=profile,
-            path=str(config_path) if config_path is not None else self._string_attr(stack_config, "path"),
+            path=str(config_path)
+            if config_path is not None
+            else self._string_attr(stack_config, "loaded_path"),
             sections=tuple(section for section in sections if section is not None),
         )
 
@@ -60,8 +88,6 @@ class OAConfiguratorAdapter:
         details = []
         if snapshot.path:
             details.append(f"path: {snapshot.path}")
-        if snapshot.profile:
-            details.append(f"profile: {snapshot.profile}")
         return TreeView(
             title=snapshot.title,
             message="; ".join(details) if details else "read-only inspection",
@@ -115,7 +141,7 @@ class OAConfiguratorAdapter:
 
     def _mapping_section(
         self,
-        kind: str,
+        kind: ConfigTargetKind,
         title: str,
         values: object,
     ) -> ConfigSectionView | None:
@@ -130,28 +156,39 @@ class OAConfiguratorAdapter:
             for key, value in sorted(mapping.items(), key=lambda item: str(item[0]))
         )
         return ConfigSectionView(
-            target=ConfigTarget(kind=f"{kind}-group", key=kind, title=title),
+            target=ConfigTarget(kind=kind, key=kind.value, title=title),
             fields={"count": len(children)},
             children=children,
         )
 
-    def _package_section(self, package_configs: tuple[object, ...]) -> ConfigSectionView | None:
-        if not package_configs:
-            return None
-        children = []
+    def _tool_section(
+        self,
+        values: object,
+        package_configs: tuple[object, ...],
+    ) -> ConfigSectionView | None:
+        tools = dict(self._as_mapping(values))
         for package_config in package_configs:
-            key = self._string_attr(package_config, "package_key", "package_name", "name")
-            title = key or type(package_config).__name__
-            children.append(
-                ConfigSectionView(
-                    target=ConfigTarget(kind="package", key=title, title=title),
-                    fields=self._safe_fields(package_config),
-                )
+            key = self._string_attr(
+                package_config,
+                "tool_name",
+                "package_key",
+                "package_name",
+                "name",
             )
+            tools[key or type(package_config).__name__] = package_config
+        return self._mapping_section(ConfigTargetKind.TOOL, "Tools", tools)
+
+    def _singleton_section(
+        self,
+        kind: ConfigTargetKind,
+        title: str,
+        value: object,
+    ) -> ConfigSectionView | None:
+        if value is None:
+            return None
         return ConfigSectionView(
-            target=ConfigTarget(kind="package-group", key="packages", title="Packages"),
-            fields={"count": len(children)},
-            children=tuple(children),
+            target=ConfigTarget(kind=kind, key=kind.value, title=title),
+            fields=self._safe_fields(value),
         )
 
     def _section_to_node(self, section: ConfigSectionView) -> TreeNode:
