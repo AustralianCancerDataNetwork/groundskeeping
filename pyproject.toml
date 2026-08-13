@@ -9,6 +9,7 @@ authors = [
 ]
 dependencies = [
     "oa-configurator>=1.1,<2",
+    "pydantic>=2.7,<3",
     "textual>=8.2,<9",
 ]
 

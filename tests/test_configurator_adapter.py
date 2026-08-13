@@ -1,92 +1,268 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import asyncio
+from pathlib import Path
+from typing import Annotated, ClassVar
+
+from oa_configurator import (
+    CDMDatabaseConfig,
+    ConnectionConfig,
+    GenericDatabaseConfig,
+    LoggingConfig,
+    ModelConfig,
+    PackageConfigBase,
+    ProviderConfig,
+    RefTo,
+    Sensitive,
+    StackConfig,
+    VectorStoreConfig,
+)
+from textual.app import App, ComposeResult
+from textual.widgets import Tree
 
 from groundskeeping.configurator import (
     ConfigDraft,
+    ConfigReferenceStatus,
+    ConfigReferenceView,
     ConfigTarget,
     ConfigTargetKind,
+    ConfiguratorSnapshot,
     OAConfiguratorAdapter,
     RedactedValue,
 )
+from groundskeeping.contracts import SemanticStatus
+from groundskeeping.widgets.configurator import ConfiguratorBrowser
 
 
-@dataclass
-class Database:
-    url: str
-    password: str
-    role: str
+class KnownToolConfig(PackageConfigBase):
+    tool_name: ClassVar[str] = "known_tool"
+    cdm_db: Annotated[str, RefTo(CDMDatabaseConfig)] = "cdm"
+    api_token: Annotated[str | None, Sensitive()] = None
 
 
-@dataclass
-class Stack:
-    loaded_path: str
-    connections: dict[str, dict[str, str]]
-    databases: dict[str, Database]
-    providers: dict[str, dict[str, str]]
-    models: dict[str, dict[str, str]]
-    vector_stores: dict[str, dict[str, str]]
-    tools: dict[str, dict[str, str]]
-    logging: dict[str, str]
-
-
-def _stack(
-    *,
-    connections: dict[str, dict[str, str]] | None = None,
-    databases: dict[str, Database] | None = None,
-    providers: dict[str, dict[str, str]] | None = None,
-    models: dict[str, dict[str, str]] | None = None,
-) -> Stack:
-    return Stack(
-        loaded_path="/tmp/stack.toml",
-        connections=connections or {},
-        databases=databases or {},
-        providers=providers or {},
-        models=models or {},
-        vector_stores={},
-        tools={},
-        logging={},
-    )
-
-
-def test_snapshot_builds_read_only_sections_and_redacts_known_secrets() -> None:
-    snapshot = OAConfiguratorAdapter().snapshot(
-        _stack(
-            databases={
-                "metadata": Database(
-                    url="postgresql://example/metadata",
-                    password="super-secret",
-                    role="readonly",
-                )
+def _full_stack(*, canary: str = "secret-canary") -> StackConfig:
+    stack = StackConfig(
+        connections={
+            "primary": ConnectionConfig(
+                dialect="postgresql+psycopg",
+                host="db.example",
+                user="analyst",
+                password=canary,
+                database_name="omop",
+            ),
+            "vocab": ConnectionConfig(
+                dialect="postgresql+psycopg",
+                host="vocab.example",
+                password=f"vocab-{canary}",
+                database_name="vocab",
+            ),
+        },
+        databases={
+            "cdm": CDMDatabaseConfig(
+                connection="primary",
+                schema_name="omop",
+                vocab_connection="vocab",
+                vocab_schema="vocabulary",
+                results_schema="results",
+            ),
+            "vector_db": GenericDatabaseConfig(
+                connection="primary",
+                schema_name="embeddings",
+            ),
+        },
+        providers={
+            "local": ProviderConfig(
+                provider="ollama",
+                base_url="http://localhost:11434",
+                api_key=f"provider-{canary}",
+            )
+        },
+        models={
+            "embed": ModelConfig(
+                provider="local",
+                model="nomic-embed",
+                embeddings=True,
+                configuration={"headers": {"api_key": f"nested-{canary}"}},
+            )
+        },
+        vector_stores={
+            "vectors": VectorStoreConfig(
+                backend_type="pgvector",
+                database="vector_db",
+                configuration={"auth": {"password": f"vector-{canary}"}},
+            )
+        },
+        tools={
+            "known_tool": {"cdm_db": "cdm", "api_token": f"tool-{canary}"},
+            "unknown_tool": {
+                "endpoint": "http://service.example",
+                "options": {"credentials": {"password": f"unknown-{canary}"}},
             },
-            providers={"ollama": {"provider": "ollama"}},
-            models={"embed": {"provider": "ollama", "model": "nomic-embed"}},
-        )
+        },
+        logging=LoggingConfig(level="INFO", loggers={"sqlalchemy.engine": "WARNING"}),
     )
-
-    assert snapshot.path == "/tmp/stack.toml"
-    assert not hasattr(snapshot, "profile")
-
-    database_group = next(section for section in snapshot.sections if section.target.key == "database")
-    metadata = database_group.children[0]
-
-    assert metadata.fields["url"] == "postgresql://example/metadata"
-    assert isinstance(metadata.fields["password"], RedactedValue)
-    assert "super-secret" not in repr(snapshot)
+    stack.bind_loaded_path(Path("/tmp/stack.toml"))
+    return stack
 
 
-def test_adapter_can_render_snapshot_as_tree_view() -> None:
+def _section(snapshot: ConfiguratorSnapshot, kind: ConfigTargetKind):
+    return next(section for section in snapshot.sections if section.target.kind is kind)
+
+
+def _child(snapshot: ConfiguratorSnapshot, kind: ConfigTargetKind, key: str):
+    return next(child for child in _section(snapshot, kind).children if child.target.key == key)
+
+
+def test_snapshot_renders_all_sections_in_stable_order() -> None:
     snapshot = OAConfiguratorAdapter().snapshot(
-        _stack(
-            connections={"metadata": {"dialect": "sqlite"}},
-        )
+        _full_stack(),
+        package_configs=(KnownToolConfig(cdm_db="cdm", api_token="typed-secret"),),
     )
 
+    assert snapshot.path == str(Path("/tmp/stack.toml").resolve())
+    assert tuple(section.target.kind for section in snapshot.sections) == tuple(
+        ConfigTargetKind
+    )
+    assert tuple(section.target.title for section in snapshot.sections) == (
+        "Connections",
+        "Databases",
+        "Providers",
+        "Models",
+        "Vector stores",
+        "Tools",
+        "Logging",
+    )
+
+
+def test_empty_sections_and_default_logging_remain_visible() -> None:
+    snapshot = OAConfiguratorAdapter().snapshot(StackConfig.for_session())
+
+    assert len(snapshot.sections) == 7
+    assert all(
+        section.target.status is SemanticStatus.IDLE
+        for section in snapshot.sections[:-1]
+    )
+    logging = _section(snapshot, ConfigTargetKind.LOGGING)
+    assert logging.target.status is SemanticStatus.IDLE
+    assert logging.notes == ("Using default logging settings.",)
+
+
+def test_database_views_follow_the_concrete_database_kind() -> None:
+    snapshot = OAConfiguratorAdapter().snapshot(_full_stack())
+    generic = _child(snapshot, ConfigTargetKind.DATABASE, "vector_db")
+    cdm = _child(snapshot, ConfigTargetKind.DATABASE, "cdm")
+
+    assert generic.fields["kind"] == "generic"
+    assert "vocab_connection" not in generic.fields
+    assert cdm.fields["kind"] == "cdm"
+    assert cdm.fields["vocab_schema"] == "vocabulary"
+    vocab = cdm.fields["vocab_connection"]
+    assert isinstance(vocab, ConfigReferenceView)
+    assert vocab.section is ConfigTargetKind.CONNECTION
+    assert vocab.name == "vocab"
+    assert vocab.status is ConfigReferenceStatus.RESOLVED
+
+
+def test_missing_reference_is_reported_without_hiding_the_entry() -> None:
+    stack = StackConfig.for_session()
+    stack.models["broken"] = ModelConfig(provider="missing", model="chat")
+
+    snapshot = OAConfiguratorAdapter().snapshot(stack)
+    model = _child(snapshot, ConfigTargetKind.MODEL, "broken")
+    reference = model.fields["provider"]
+
+    assert model.target.status is SemanticStatus.ERROR
+    assert isinstance(reference, ConfigReferenceView)
+    assert reference.status is ConfigReferenceStatus.MISSING
+    assert reference.section is ConfigTargetKind.PROVIDER
+    assert reference.name == "missing"
+    assert "missing provider" in model.notes[0]
+
+
+def test_wrong_database_kind_is_reported() -> None:
+    stack = StackConfig.for_session(
+        connections={"db": ConnectionConfig(dialect="sqlite", database_name=":memory:")},
+        databases={"cdm": CDMDatabaseConfig(connection="db")},
+    )
+    stack.vector_stores["vectors"] = VectorStoreConfig(
+        backend_type="pgvector",
+        database="cdm",
+    )
+
+    snapshot = OAConfiguratorAdapter().snapshot(stack)
+    vector_store = _child(snapshot, ConfigTargetKind.VECTOR_STORE, "vectors")
+    reference = vector_store.fields["database"]
+
+    assert vector_store.target.status is SemanticStatus.ERROR
+    assert isinstance(reference, ConfigReferenceView)
+    assert reference.status is ConfigReferenceStatus.WRONG_KIND
+    assert reference.expected_type == "GenericDatabaseConfig"
+    assert reference.actual_type == "CDMDatabaseConfig"
+
+
+def test_known_and_unknown_tools_are_distinguished() -> None:
+    snapshot = OAConfiguratorAdapter().snapshot(
+        _full_stack(),
+        package_configs=(KnownToolConfig(cdm_db="cdm", api_token="typed-secret"),),
+    )
+    known = _child(snapshot, ConfigTargetKind.TOOL, "known_tool")
+    unknown = _child(snapshot, ConfigTargetKind.TOOL, "unknown_tool")
+
+    assert known.target.status is SemanticStatus.OK
+    assert isinstance(known.fields["api_token"], RedactedValue)
+    assert isinstance(known.fields["cdm_db"], ConfigReferenceView)
+    assert known.notes == ()
+    assert unknown.target.status is SemanticStatus.WARNING
+    assert unknown.fields["options"] == "1 entries"
+    assert unknown.notes == (
+        "Package schema unavailable; reference status is unknown.",
+    )
+
+
+def test_secrets_never_enter_snapshot_tree_or_rendered_widget() -> None:
+    async def run() -> None:
+        canary = "never-render-this-canary"
+        snapshot = OAConfiguratorAdapter().snapshot(
+            _full_stack(canary=canary),
+            package_configs=(
+                KnownToolConfig(cdm_db="cdm", api_token=f"typed-{canary}"),
+            ),
+        )
+        tree_view = OAConfiguratorAdapter().as_tree_view(snapshot)
+
+        assert canary not in repr(snapshot)
+        assert canary not in repr(tree_view)
+
+        class BrowserApp(App[None]):
+            def compose(self) -> ComposeResult:
+                yield ConfiguratorBrowser(snapshot)
+
+        app = BrowserApp()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            tree = app.query_one(Tree)
+            pending = [tree.root]
+            rendered_labels: list[str] = []
+            while pending:
+                node = pending.pop()
+                rendered_labels.append(str(node.label))
+                pending.extend(node.children)
+
+            assert canary not in "\n".join(rendered_labels)
+
+    asyncio.run(run())
+
+
+def test_config_path_override_is_read_only_display_metadata(tmp_path: Path) -> None:
+    explicit = tmp_path / "inspected.toml"
+    snapshot = OAConfiguratorAdapter().snapshot(
+        StackConfig.for_session(),
+        config_path=explicit,
+    )
     view = OAConfiguratorAdapter().as_tree_view(snapshot)
 
-    assert view.title == "Stack configuration"
-    assert view.rows[0].label == "Connections"
-    assert view.message is not None
+    assert snapshot.path == str(explicit)
+    assert view.message == f"path: {explicit}"
     assert "profile" not in view.message
 
 

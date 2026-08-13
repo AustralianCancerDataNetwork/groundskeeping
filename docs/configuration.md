@@ -1,42 +1,69 @@
-# Configuration
+# Configuration inspection
 
-`groundskeeping.configurator` presents `oa-configurator` 1.x stack configuration safely. The supported range starts at oa-configurator 1.1. It can build snapshots, section views, safe drafts, redacted diffs, revision-aware apply intents, and wizard-controller entry points.
+`groundskeeping.configurator` turns an `oa-configurator` 1.x stack into presentation-safe views for an operator interface. Groundskeeping supports oa-configurator 1.1 and later releases in the 1.x series.
 
-Groundworkers can use this to show database configuration and launch a setup wizard. Another
-application might use the same pieces for model providers or local runtime paths.
+## What an analyst sees
 
-## Inspection
+The configuration browser presents the seven current parts of a stack in a stable order:
 
-[`OAConfiguratorAdapter`][groundskeeping.configurator.adapter.OAConfiguratorAdapter] is
-structural: tests and demos can pass fakes, while real applications pass `StackConfig` and
-`PackageConfigBase` instances from `oa-configurator`.
+1. connections;
+2. databases;
+3. providers;
+4. models;
+5. vector stores;
+6. package-specific tools; and
+7. logging.
+
+Empty sections remain visible, so an analyst can distinguish “not configured” from a section the application forgot to inspect. Default logging is marked as such. The source path may be shown to help the analyst identify which configuration is open, but it is display metadata only and does not make the file writable through groundskeeping.
+
+References are shown as the destination section and name, together with one of three states:
+
+- **resolved** means the named entry exists with the required type;
+- **missing** means no entry with that name exists in the destination section; and
+- **wrong kind** means an entry exists, but its concrete type cannot be used by that field—for example, a vector store pointing to a CDM database instead of a generic database.
+
+The current stack model has no profile, resource-alias, or active-profile layer. Applications pass the effective `StackConfig` they want the operator to inspect.
+
+## Use it in an application
+
+Pass the current `StackConfig` to `snapshot()`, then render the returned snapshot directly or convert it to the shared `TreeView`:
 
 ```python
 from groundskeeping.configurator import OAConfiguratorAdapter
 
 adapter = OAConfiguratorAdapter()
-snapshot = adapter.snapshot(stack_config, config_path="stack.toml")
+snapshot = adapter.snapshot(stack_config)
 tree_view = adapter.as_tree_view(snapshot)
 ```
 
-`snapshot` groups connections, databases, providers, models, vector stores, tools, and logging
-into `ConfigSectionView` trees. `ConfigTargetKind` provides one stable identifier for each of
-those views. `as_tree_view` converts a snapshot into a `TreeView` the workbench can render
-directly.
+For a stack loaded from disk, `snapshot.path` comes from `StackConfig.loaded_path`. An application inspecting a candidate from another source can provide an explicit display path:
 
-`ConfiguratorSnapshot.path` records the source of the inspected configuration for display. It
-does not grant permission to write that path or ask groundskeeping to persist a change.
+```python
+snapshot = adapter.snapshot(candidate, config_path="/review/proposed.toml")
+```
 
-## Redaction
+The adapter walks the public fields on oa-configurator's concrete models. A generic database therefore shows only generic database fields, while a CDM database also shows its vocabulary connection and vocabulary/results schemas.
 
-Field names in `{"password", "secret", "token", "api_key"}` are replaced with `RedactedValue`
-before they leave the adapter. Non-scalar values are summarised — `"3 entries"`, `"5 items"`,
-or the type name — rather than expanded, so a nested credential structure cannot leak through
-a rendered section.
+### Give tool sections a schema
 
-`diff` builds a redacted structural diff for confirmation surfaces. An entry is marked
-sensitive when the field is named in `sensitive_fields` or when either side is already a
-`RedactedValue`; both sides are then replaced before the diff is returned.
+`StackConfig.tools` contains untyped dictionaries because package schemas are discovered at runtime. If your application has resolved package configuration instances, pass them to the adapter so their field metadata and `RefTo` declarations can be inspected:
+
+```python
+snapshot = adapter.snapshot(
+    stack_config,
+    package_configs=(my_package_config,),
+)
+```
+
+Without a matching package instance, the tool remains visible but is marked **Package schema unavailable**. Groundskeeping redacts conservatively and shows its ordinary values, but does not claim that references are valid when it does not know which fields are references.
+
+## Redaction guarantees
+
+For typed models, fields marked `Sensitive` by oa-configurator are replaced with `RedactedValue` before a `ConfigSectionView` is created. For untyped tool dictionaries and nested free-form configuration, conservative secret names such as `password`, `api_key`, `secret`, and `token` are redacted recursively. Collections are summarized only after this redaction pass.
+
+Snapshots, tree nodes, widget labels, notes, diffs, and repr output therefore contain redaction markers rather than raw known secrets. Applications should still avoid putting credentials under misleading, non-secret key names in free-form dictionaries; without schema metadata or a recognizable key, groundskeeping cannot infer that an arbitrary value is sensitive.
+
+`diff()` applies the same presentation boundary to confirmation views. Name sensitive fields explicitly when the values do not already carry a `RedactedValue`:
 
 ```python
 diff = adapter.diff(
@@ -47,26 +74,10 @@ diff = adapter.diff(
 )
 ```
 
-## What it does not do
+## Ownership boundary
 
-It does not write TOML. Persistence belongs to `oa-configurator` and to the application using
-Groundskeeping. That separation protects comments, secrets, external edits, and local safety
-rules.
+Groundskeeping inspects and presents configuration; it does not interpret package policy or write TOML. Candidate construction, oa-configurator validation, persistence, revision checks, and application restart policy stay with the application and its configuration provider.
 
-Editable candidates still belong to application-owned controllers. `ConfigDraft` records the
-safe target and changed-field presence, not raw field values. `ConfigApplyIntent` carries the
-safe target, opaque apply token, expected revision, diff, and effects needed by a public
-mutation API.
+`ConfigDraft` records only the target and the presence of changed fields, never submitted values. `ConfigApplyIntent` carries an opaque apply token, expected revision, redacted diff, and presentation-safe effects. This keeps the UI state useful without moving real candidate objects or secrets into groundskeeping.
 
-## Extending
-
-Applications can add `ConfigResourceAdapter` implementations for resource types that need
-better labels, choices, validation, verification, or post-apply effects.
-
-`NativeConfigResourceAdapter` is the fallback for ordinary configuration sections. It is
-intentionally plain: it offers display fields and validates nothing beyond the model layer
-that `oa-configurator` will run during a real apply.
-
-Resource adapters can also expose a `WizardController` for setup flows. Groundskeeping renders
-the controller in a modal wizard; the adapter remains responsible for validation, branching,
-stale-revision checks, and the final apply call.
+Applications can implement `ConfigResourceAdapter` when a target needs domain-specific labels, fields, validation, verification, or post-apply effects. `NativeConfigResourceAdapter` remains the plain fallback for targets without richer application behavior.
