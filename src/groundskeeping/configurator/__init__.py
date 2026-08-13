@@ -9,6 +9,8 @@ from groundskeeping.configurator.models import (
     ConfigDiff,
     ConfigDiffEntry,
     ConfigDraft,
+    ConfigReferenceStatus,
+    ConfigReferenceView,
     ConfigResourceAdapter,
     ConfigSectionView,
     ConfigTarget,

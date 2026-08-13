@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
+from typing import Any, cast
 
+from pydantic import BaseModel, Field
 from textual.widget import Widget
 
 from groundskeeping.app import OperatorApp, OperatorAppSpec
@@ -53,21 +55,49 @@ from groundskeeping.contracts import (
 from groundskeeping.telemetry.providers import FakeTelemetrySource
 
 
-@dataclass
-class _DemoDatabase:
+class _DemoConnection(BaseModel):
     url: str
     password: str
-    role: str
+    access: str
+
+
+class _DemoDatabase(BaseModel):
+    kind: str = "generic"
+    connection: str
+    schema_name: str | None = None
+
+
+class _DemoProvider(BaseModel):
+    provider: str
+    base_url: str
+    api_key: str | None = None
+
+
+class _DemoModel(BaseModel):
+    provider: str
+    model: str
+
+
+class _DemoVectorStore(BaseModel):
+    backend_type: str
+    database: str
+
+
+class _DemoLogging(BaseModel):
+    level: str | None = None
+    loggers: dict[str, str] = Field(default_factory=dict)
 
 
 @dataclass
 class _DemoStackConfig:
-    path: str
-    active_profile: str
+    loaded_path: str
+    connections: dict[str, _DemoConnection]
     databases: dict[str, _DemoDatabase]
-    resources: dict[str, dict[str, str]]
-    profiles: dict[str, dict[str, str]]
-    aliases: dict[str, str]
+    providers: dict[str, _DemoProvider]
+    models: dict[str, _DemoModel]
+    vector_stores: dict[str, _DemoVectorStore]
+    tools: dict[str, dict[str, object]]
+    logging: _DemoLogging
 
 
 class _DemoPage(Widget):
@@ -229,21 +259,37 @@ class ConfigPage(_DemoPage):
         super().__init__()
         self._revision = "demo-config-0"
         self._apply_count = 0
+        self._selected_database = "metadata"
         self._stack = _DemoStackConfig(
-            path="/demo/stack.toml",
-            active_profile="tre",
-            databases={
-                "metadata": _DemoDatabase(
+            loaded_path="/demo/stack.toml",
+            connections={
+                "metadata_connection": _DemoConnection(
                     url="postgresql://metadata.local/demo",
                     password="not-rendered",
-                    role="readonly",
+                    access="readonly",
                 )
             },
-            resources={
-                "ollama": {"url": "http://ollama:11434", "kind": "model-server"}
+            databases={
+                "metadata": _DemoDatabase(
+                    connection="metadata_connection",
+                    schema_name="metadata",
+                )
             },
-            profiles={"tre": {"database": "metadata"}},
-            aliases={"default-model": "snowflake-arctic-embed2"},
+            providers={
+                "local": _DemoProvider(
+                    provider="ollama",
+                    base_url="http://ollama:11434",
+                )
+            },
+            models={"embed": _DemoModel(provider="local", model="nomic-embed")},
+            vector_stores={
+                "vectors": _DemoVectorStore(
+                    backend_type="pgvector",
+                    database="metadata",
+                )
+            },
+            tools={"groundskeeping_demo": {"selected_database": "metadata"}},
+            logging=_DemoLogging(),
         )
         self._snapshot = self._build_snapshot()
 
@@ -253,11 +299,11 @@ class ConfigPage(_DemoPage):
 
     @property
     def active_database(self) -> str:
-        return self._stack.profiles[self._stack.active_profile]["database"]
+        return self._selected_database
 
     def _build_snapshot(self):
         return OAConfiguratorAdapter().snapshot(
-            self._stack, title="Demo stack configuration"
+            cast(Any, self._stack), title="Demo stack configuration"
         )
 
     def build_navigation(self, context: PageContext) -> SectionNavigation:
@@ -294,16 +340,22 @@ class ConfigPage(_DemoPage):
         strategy = str(candidate["strategy"])
         if strategy == "create":
             key = str(candidate["database_key"])
-            self._stack.databases[key] = _DemoDatabase(
+            connection_key = f"{key}_connection"
+            self._stack.connections[connection_key] = _DemoConnection(
                 url=str(candidate["url"]),
                 password=str(candidate["password"]),
-                role=str(candidate["role"]),
+                access=str(candidate["role"]),
             )
-            self._stack.profiles[self._stack.active_profile]["database"] = key
+            self._stack.databases[key] = _DemoDatabase(
+                connection=connection_key,
+                schema_name=key,
+            )
+            self._selected_database = key
         else:
-            self._stack.profiles[self._stack.active_profile]["database"] = str(
-                candidate["target"]
-            )
+            self._selected_database = str(candidate["target"])
+        self._stack.tools["groundskeeping_demo"]["selected_database"] = (
+            self._selected_database
+        )
         self._apply_count += 1
         self._revision = f"demo-config-{self._apply_count}"
         self._snapshot = self._build_snapshot()
@@ -430,7 +482,7 @@ class _DemoConfigWizardController:
                 Choice(
                     "reuse",
                     "Reuse existing database",
-                    "Select a configured database and make it active.",
+                    "Select a configured database for this demo session.",
                 ),
                 Choice(
                     "create",
@@ -454,11 +506,11 @@ class _DemoConfigWizardController:
                         for key in sorted(self._page._stack.databases)
                     ),
                     default=self._page.active_database,
-                    help="Choose the database entry the active profile should use.",
+                    help="Choose the database entry this demo session should use.",
                 ),
                 FieldSpec(
                     key="make_default",
-                    label="Use for active profile",
+                    label="Use for this session",
                     kind=FieldKind.BOOLEAN,
                     default=True,
                     help="Demo-only boolean field used to prove typed inputs.",
@@ -476,7 +528,7 @@ class _DemoConfigWizardController:
                     label="Database key",
                     kind=FieldKind.TEXT,
                     placeholder="metadata",
-                    help="Unique key used by the active profile.",
+                    help="Unique key for the new database entry.",
                     validator=_validate_database_key,
                 ),
                 FieldSpec(
@@ -526,7 +578,7 @@ class _DemoConfigWizardController:
         if strategy == "reuse":
             changes.append(
                 ReviewChange(
-                    "active database",
+                    "selected database",
                     self._page.active_database,
                     self._candidate.get("target"),
                 )
@@ -547,7 +599,7 @@ class _DemoConfigWizardController:
             review=WizardReview(
                 changes=tuple(changes),
                 effects=(
-                    "Update the active profile database target.",
+                    "Update the database selected for this demo session.",
                     f"Carry revision token {self._expected_revision}.",
                 ),
                 warnings=(

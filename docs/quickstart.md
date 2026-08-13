@@ -6,7 +6,7 @@
 uv add groundskeeping
 ```
 
-`groundskeeping` requires Python 3.12 or newer and pulls in `textual` and `oa-configurator`.
+`groundskeeping` requires Python 3.12 or newer and pulls in `textual` and oa-configurator 1.1 or later within the 1.x series.
 
 ## Run the demo
 
@@ -14,8 +14,7 @@ uv add groundskeeping
 uv run groundskeeping
 ```
 
-The demo shows the shell without depending on Groundworkers or `cava-nlp-shard`. It includes
-overview, configuration, telemetry, an action button, and a small setup wizard.
+The demo shows the shell without depending on Groundworkers or `cava-nlp-shard`. Its configuration page uses the oa-configurator 1.x section layout—connections, databases, providers, models, vector stores, tools, and logging—and includes a small setup wizard.
 
 The demo source is the shortest complete example of the app shape; read
 `src/groundskeeping/demo.py` alongside this guide.

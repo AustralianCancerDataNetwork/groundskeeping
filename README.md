@@ -121,14 +121,11 @@ retries, leases, and durable records inside the application.
 
 ## Configuration
 
-`groundskeeping.configurator` presents `oa-configurator` 1.x stack configuration safely. Groundskeeping requires oa-configurator 1.1 or later within that major version. Its stable inspection targets are connections, databases, providers, models, vector stores, tools, and logging. It can build snapshots, section views, safe drafts, redacted diffs, and apply intents.
+`groundskeeping.configurator` presents `oa-configurator` 1.x stack configuration safely. Groundskeeping requires oa-configurator 1.1 or later within that major version. Analysts see connections, databases, providers, models, vector stores, tools, and logging, including missing and wrong-kind references. Application developers can turn a `StackConfig` into immutable section or tree views and provide typed package instances when tool references should also be inspected.
 
-It does not write TOML. Persistence belongs to `oa-configurator` and to the application using
-Groundskeeping. That separation protects comments, secrets, external edits, and local safety
-rules.
+Sensitive typed fields and conservatively recognized secrets in free-form configuration are redacted before they enter view models. Unknown tool schemas are identified instead of being treated as reference-valid.
 
-Applications can add `ConfigResourceAdapter` implementations for resource types that need
-better labels, choices, validation, verification, or post-apply effects.
+Groundskeeping does not write TOML. Candidate construction, validation, persistence, and application policy stay with oa-configurator and the consuming application. Applications can add `ConfigResourceAdapter` implementations for targets that need richer labels, choices, verification, or effects.
 
 ## Telemetry
 

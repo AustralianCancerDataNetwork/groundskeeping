@@ -26,6 +26,31 @@ class ConfigTargetKind(StrEnum):
     LOGGING = "logging"
 
 
+class ConfigReferenceStatus(StrEnum):
+    """Whether a named configuration reference resolves in the inspected stack."""
+
+    RESOLVED = "resolved"
+    MISSING = "missing"
+    WRONG_KIND = "wrong kind"
+
+
+@dataclass(frozen=True)
+class ConfigReferenceView:
+    """Presentation-safe description of one ``RefTo`` field."""
+
+    section: ConfigTargetKind
+    name: str
+    status: ConfigReferenceStatus
+    expected_type: str
+    actual_type: str | None = None
+
+    def __str__(self) -> str:
+        reference = f"{self.section.value}:{self.name}"
+        if self.status is ConfigReferenceStatus.WRONG_KIND and self.actual_type:
+            return f"{reference} ({self.status.value}: {self.actual_type})"
+        return f"{reference} ({self.status.value})"
+
+
 @dataclass(frozen=True)
 class RedactedValue:
     """Marker used when a known secret must not enter ordinary view models."""
