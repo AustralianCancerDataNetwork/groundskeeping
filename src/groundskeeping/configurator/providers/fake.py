@@ -181,7 +181,7 @@ class FakeConfigMutationService:
         self._plan_number = 0
         self._sessions: dict[str, _FakeSession] = {}
         self._apply_tokens: dict[str, str] = {}
-        self._durable: dict[str, Mapping[str, object]] = {}
+        self._durable: dict[str, dict[str, object]] = {}
         self._history: list[FakeMutationEvent] = []
 
     @property
@@ -193,8 +193,13 @@ class FakeConfigMutationService:
         return tuple(self._history)
 
     @property
-    def durable(self) -> Mapping[str, Mapping[str, object]]:
-        return dict(self._durable)
+    def durable(self) -> dict[str, dict[str, object]]:
+        """Return an isolated snapshot of the fake provider's persisted values."""
+
+        return {
+            target_key: dict(values)
+            for target_key, values in self._durable.items()
+        }
 
     def advance_revision(self) -> None:
         """Simulate another writer changing the configuration."""
@@ -421,6 +426,11 @@ class FakeConfigMutationService:
         session = self._session(session_token)
         session.apply_token = None
         self._history.append(FakeMutationEvent("apply"))
+        if intent.target != session.target or intent.operation != session.operation:
+            return ConfigApplyResult(
+                ConfigApplyStatus.REJECTED,
+                "The apply plan does not match the requested target or operation.",
+            )
         if (
             intent.expected_revision != self.revision
             or self.scenario is FakeMutationScenario.CONFLICTED

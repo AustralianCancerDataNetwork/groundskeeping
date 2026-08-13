@@ -3,6 +3,9 @@ from __future__ import annotations
 import pytest
 
 from groundskeeping.configurator import (
+    ConfigApplyIntent,
+    ConfigApplyStatus,
+    ConfigDraft,
     ConfigTarget,
     ConfigTargetKind,
     MutationOperation,
@@ -154,3 +157,89 @@ def test_fake_history_never_records_submitted_values() -> None:
     service.submit(draft, "create-database", {"password": canary})
 
     assert canary not in repr(service.history)
+
+
+def test_durable_returns_an_isolated_snapshot() -> None:
+    service = FakeConfigMutationService()
+    target = _target()
+    draft = service.begin(target, MutationOperation.CREATE)
+    service.submit(draft, "strategy", {"strategy": "reuse"})
+    staged = service.submit(
+        draft, "reuse-database", {"selected_database": "metadata"}
+    )
+    draft = ConfigDraft(
+        target=draft.target,
+        operation=draft.operation,
+        session_token=draft.session_token,
+        changed_fields=staged.changed_fields,
+        expected_revision=draft.expected_revision,
+    )
+    plan = service.plan(draft)
+    assert plan.apply_token is not None
+    result = service.apply(
+        ConfigApplyIntent(
+            target=target,
+            operation=MutationOperation.CREATE,
+            apply_token=plan.apply_token,
+            expected_revision=plan.expected_revision,
+        )
+    )
+    assert result.status is ConfigApplyStatus.APPLIED
+
+    snapshot = service.durable
+    snapshot[target.key]["selected_database"] = "tampered"
+    snapshot[target.key]["added_by_caller"] = True
+
+    assert service.durable[target.key] == {
+        "strategy": "reuse",
+        "selected_database": "metadata",
+    }
+
+
+@pytest.mark.parametrize("mismatch", ("target", "operation"))
+def test_apply_rejects_intent_that_does_not_match_its_session(
+    mismatch: str,
+) -> None:
+    service = FakeConfigMutationService()
+    target = _target()
+    draft = service.begin(target, MutationOperation.CREATE)
+    service.submit(draft, "strategy", {"strategy": "reuse"})
+    service.submit(draft, "reuse-database", {"selected_database": "metadata"})
+    plan = service.plan(draft)
+    assert plan.apply_token is not None
+
+    intent = ConfigApplyIntent(
+        target=(
+            ConfigTarget(
+                kind=ConfigTargetKind.DATABASE,
+                key="other",
+                title="Other database",
+            )
+            if mismatch == "target"
+            else target
+        ),
+        operation=(
+            MutationOperation.UPDATE
+            if mismatch == "operation"
+            else MutationOperation.CREATE
+        ),
+        apply_token=plan.apply_token,
+        expected_revision=plan.expected_revision,
+    )
+
+    result = service.apply(intent)
+
+    assert result.status is ConfigApplyStatus.REJECTED
+    assert "target or operation" in result.summary
+    assert service.durable == {}
+    assert (
+        service.apply(
+            ConfigApplyIntent(
+                target=target,
+                operation=MutationOperation.CREATE,
+                apply_token=plan.apply_token,
+                expected_revision=plan.expected_revision,
+            )
+        ).status
+        is ConfigApplyStatus.REJECTED
+    )
