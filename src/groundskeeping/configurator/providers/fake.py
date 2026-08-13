@@ -97,19 +97,65 @@ def fake_database_workflow(
                 key="reuse-database",
                 title="Existing database",
                 field_keys=("selected_database",),
-                when=(ConfigBranchCondition("strategy", "reuse"),),
+                when=(
+                    ConfigBranchCondition("strategy", frozenset({"reuse"})),
+                ),
             ),
             ConfigWorkflowStep(
                 key="create-database",
                 title="New database",
                 field_keys=("database_name", "connection_url", "password"),
-                when=(ConfigBranchCondition("strategy", "create"),),
+                when=(
+                    ConfigBranchCondition("strategy", frozenset({"create"})),
+                ),
             ),
             ConfigWorkflowStep(
                 key="sharing",
                 title="Shared references",
                 field_keys=("shared_reference",),
                 purpose="Record whether other configuration entries use this database.",
+            ),
+        ),
+    )
+
+
+def fake_dialect_database_workflow(
+    *, target: ConfigTarget | None = None
+) -> ConfigWorkflowSpec:
+    """Model shared identity and non-SQLite server fields in one workflow."""
+
+    resolved_target = target or ConfigTarget(
+        kind=ConfigTargetKind.CONNECTION,
+        key="primary",
+        title="Primary connection",
+    )
+    return ConfigWorkflowSpec(
+        key="dialect-database-create",
+        target=resolved_target,
+        operation=MutationOperation.CREATE,
+        title="Create database connection",
+        purpose="Collect shared database identity and dialect-specific connection fields.",
+        steps=(
+            ConfigWorkflowStep(
+                key="dialect",
+                title="Database dialect",
+                field_keys=("dialect",),
+                kind=ConfigWorkflowStepKind.CHOICE,
+            ),
+            ConfigWorkflowStep(
+                key="database-identity",
+                title="Database identity",
+                field_keys=("database_name",),
+            ),
+            ConfigWorkflowStep(
+                key="server-connection",
+                title="Server connection",
+                field_keys=("host", "port", "user", "password"),
+                when=(
+                    ConfigBranchCondition(
+                        "dialect", frozenset({"sqlite"}), negated=True
+                    ),
+                ),
             ),
         ),
     )
@@ -165,6 +211,9 @@ class FakeConfigMutationService:
             operation=operation,
             supported=supported,
             reason=None if supported else f"{operation.value.title()} is not supported.",
+            can_test=True,
+            can_preview=True,
+            can_inspect_impact=True,
         )
 
     def fields(
@@ -319,18 +368,24 @@ class FakeConfigMutationService:
         )
         effects = [
             EffectRef(
-                kind=session.operation.value,
-                target=session.target,
-                detail="configuration entry",
+                impact_kind=session.operation.value,
+                source_target=session.target,
+                label="configuration entry",
             )
         ]
         if candidate.get("shared_reference"):
             effects.append(
                 EffectRef(
-                    kind="shared-reference",
-                    target=session.target,
-                    field_key="shared_reference",
-                    detail="another entry may observe this change",
+                    impact_kind="shared-reference",
+                    source_target=ConfigTarget(
+                        kind=ConfigTargetKind.TOOL,
+                        key="groundskeeping_demo",
+                        title="Groundskeeping demo",
+                    ),
+                    label="another entry may observe this change",
+                    destination_target=session.target,
+                    field_key="database",
+                    status=SemanticStatus.WARNING,
                 )
             )
 
@@ -352,6 +407,7 @@ class FakeConfigMutationService:
             issues=tuple(issues),
             warnings=warnings,
             apply_token=apply_token,
+            expected_revision=self.revision,
         )
 
     def apply(self, intent: ConfigApplyIntent) -> ConfigApplyResult:
@@ -436,3 +492,51 @@ class FakeConfigMutationService:
             raise UnavailableMutationService(
                 "Configuration changes are temporarily unavailable."
             )
+
+
+class FakeDialectConfigMutationService(FakeConfigMutationService):
+    """Fake provider for shared database identity and server-only fields."""
+
+    def fields(
+        self, target: ConfigTarget, operation: MutationOperation
+    ) -> tuple[FieldSpec, ...]:
+        self._ensure_available()
+        return (
+            FieldSpec(
+                key="dialect",
+                label="Database dialect",
+                kind=FieldKind.CHOICE,
+                default="sqlite",
+                choices=(
+                    ChoiceOption("sqlite", "SQLite"),
+                    ChoiceOption("postgresql+psycopg", "PostgreSQL"),
+                    ChoiceOption("mssql+pyodbc", "Microsoft SQL Server"),
+                    ChoiceOption("oracle+oracledb", "Oracle"),
+                    ChoiceOption("duckdb", "DuckDB"),
+                ),
+            ),
+            FieldSpec(
+                key="database_name",
+                label="Database name or SQLite path",
+                help="Used by every dialect; for SQLite, enter the database file path.",
+            ),
+            FieldSpec(key="host", label="Host"),
+            FieldSpec(key="port", label="Port", kind=FieldKind.INTEGER),
+            FieldSpec(key="user", label="User"),
+            FieldSpec(key="password", label="Password", kind=FieldKind.SECRET),
+        )
+
+    def _candidate_issues(
+        self, values: Mapping[str, object]
+    ) -> tuple[ValidationIssue, ...]:
+        missing = [key for key in ("dialect", "database_name") if not values.get(key)]
+        if values.get("dialect") != "sqlite":
+            missing.extend(
+                key
+                for key in ("host", "port", "user", "password")
+                if not values.get(key)
+            )
+        return tuple(
+            ValidationIssue("This field is required.", field_key=key)
+            for key in missing
+        )

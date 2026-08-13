@@ -61,6 +61,7 @@ plugins:
 nav:
   - Home: index.md
   - Getting Started: quickstart.md
+  - Migrating to 1.0: migration-1.0.md
   - Ownership Boundary: ownership.md
   - User Guide:
       - Pages and the Workbench: pages.md

@@ -99,9 +99,15 @@ class FieldSpec:
             return ParsedField(self.key, None, "<redacted>" if self.masks_value else None)
 
         parsed = self._parse_value(value)
-        issue = self.validator(parsed) if self.validator is not None else None
+        try:
+            issue = self.validator(parsed) if self.validator is not None else None
+        except Exception:
+            if self.masks_value:
+                raise ValueError(f"{self.label} is invalid.") from None
+            raise
         if issue is not None:
-            raise ValueError(issue.message)
+            message = f"{self.label} is invalid." if self.masks_value else issue.message
+            raise ValueError(message)
         return ParsedField(
             key=self.key,
             value=parsed,

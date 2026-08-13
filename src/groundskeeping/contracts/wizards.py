@@ -5,10 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from groundskeeping.contracts.actions import FieldSpec, ValidationIssue
 from groundskeeping.contracts.views import SemanticStatus
+
+if TYPE_CHECKING:
+    from groundskeeping.configurator.mutation import EffectRef
 
 
 class WizardStepKind(StrEnum):
@@ -85,7 +88,7 @@ class WizardReview:
     """Presentation-safe review data. Real candidates stay in the controller."""
 
     changes: tuple[ReviewChange, ...] = ()
-    effects: tuple[str, ...] = ()
+    effects: tuple[EffectRef | str, ...] = ()
     warnings: tuple[str, ...] = ()
     ready_to_apply: bool = True
 

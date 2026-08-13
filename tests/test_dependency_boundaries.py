@@ -63,11 +63,10 @@ def test_generic_configuration_workflow_has_no_textual_or_oa_imports() -> None:
     configurator_root = (
         Path(__file__).parents[1] / "src" / "groundskeeping" / "configurator"
     )
-    generic_paths = (
-        configurator_root / "mutation.py",
-        configurator_root / "controller.py",
-        configurator_root / "conformance.py",
-        configurator_root / "providers" / "fake.py",
+    generic_paths = tuple(
+        path
+        for path in configurator_root.rglob("*.py")
+        if path.name not in {"adapter.py", "models.py"}
     )
 
     for path in generic_paths:

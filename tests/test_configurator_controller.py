@@ -1,22 +1,28 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from typing import cast
 
 import pytest
 
 from groundskeeping.configurator import (
+    ConfigApplyResult,
+    ConfigApplyStatus,
     ConfigBranchCondition,
     ConfigTarget,
     ConfigTargetKind,
     ConfigWizardController,
     ConfigWorkflowSpec,
     ConfigWorkflowStep,
+    EffectRef,
     MutationOperation,
 )
 from groundskeeping.configurator.providers.fake import (
     FakeConfigMutationService,
+    FakeDialectConfigMutationService,
     FakeMutationScenario,
     fake_database_workflow,
+    fake_dialect_database_workflow,
 )
 from groundskeeping.contracts import (
     ChoiceStep,
@@ -59,8 +65,12 @@ def test_workflow_rejects_duplicate_steps_and_branch_fields() -> None:
                         "Name",
                         ("database_name",),
                         when=(
-                            ConfigBranchCondition("strategy", "create"),
-                            ConfigBranchCondition("strategy", "reuse"),
+                            ConfigBranchCondition(
+                                "strategy", frozenset({"create"})
+                            ),
+                            ConfigBranchCondition(
+                                "strategy", frozenset({"reuse"})
+                            ),
                         ),
                     ),
                 ),
@@ -97,7 +107,11 @@ def test_workflow_rejects_unknown_and_late_branch_fields() -> None:
                     "name",
                     "Name",
                     ("database_name",),
-                    when=(ConfigBranchCondition("strategy", "create"),),
+                    when=(
+                        ConfigBranchCondition(
+                            "strategy", frozenset({"create"})
+                        ),
+                    ),
                 ),
                 ConfigWorkflowStep("strategy", "Strategy", ("strategy",)),
             ),
@@ -106,6 +120,52 @@ def test_workflow_rejects_unknown_and_late_branch_fields() -> None:
     )
     with pytest.raises(WizardDefinitionError, match="earlier step"):
         late.start()
+
+
+def test_workflow_rejects_provider_fields_it_cannot_render() -> None:
+    workflow = fake_database_workflow()
+    controller = ConfigWizardController(
+        ConfigWorkflowSpec(
+            key=workflow.key,
+            target=workflow.target,
+            operation=workflow.operation,
+            title=workflow.title,
+            purpose=workflow.purpose,
+            steps=workflow.steps[:-1],
+        ),
+        FakeConfigMutationService(),
+    )
+
+    with pytest.raises(WizardDefinitionError, match="absent from"):
+        controller.start()
+
+
+def test_dialect_workflow_handles_shared_and_non_sqlite_fields() -> None:
+    sqlite = ConfigWizardController(
+        fake_dialect_database_workflow(), FakeDialectConfigMutationService()
+    )
+    assert sqlite.start().step.key == "dialect"
+    identity = sqlite.submit({"dialect": "sqlite"}).snapshot
+    assert identity.step.key == "database-identity"
+    sqlite_review = sqlite.submit({"database_name": "/tmp/demo.db"}).snapshot
+    assert isinstance(sqlite_review.step, ReviewStep)
+
+    server = ConfigWizardController(
+        fake_dialect_database_workflow(), FakeDialectConfigMutationService()
+    )
+    server.start()
+    assert server.submit({"dialect": "mssql+pyodbc"}).snapshot.step.key == (
+        "database-identity"
+    )
+    server_step = server.submit({"database_name": "analytics"}).snapshot
+    assert isinstance(server_step.step, FormStep)
+    assert server_step.step.key == "server-connection"
+    assert tuple(field.key for field in server_step.step.fields) == (
+        "host",
+        "port",
+        "user",
+        "password",
+    )
 
 
 def _controller(
@@ -143,7 +203,15 @@ def test_controller_runs_a_branching_create_flow_and_applies() -> None:
 
     assert isinstance(review.step, ReviewStep)
     assert review.can_apply
-    assert any("shared-reference" in effect for effect in review.step.review.effects)
+    effect = next(
+        effect
+        for effect in review.step.review.effects
+        if isinstance(effect, EffectRef) and effect.impact_kind == "shared-reference"
+    )
+    assert effect.source_target.kind is ConfigTargetKind.TOOL
+    assert effect.destination_target is not None
+    assert effect.destination_target.kind is ConfigTargetKind.DATABASE
+    assert effect.destination_target.key == "metadata"
 
     result = controller.apply()
 
@@ -344,3 +412,43 @@ def test_provider_exceptions_are_sanitized() -> None:
 
     assert canary not in repr(transition)
     assert transition.issues[0].message == "The provider could not validate this step."
+
+
+def test_provider_exception_logging_keeps_traceback_but_not_message(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    canary = "logged-provider-secret"
+
+    class ExplodingService(FakeConfigMutationService):
+        def submit(self, *args, **kwargs):
+            raise RuntimeError(canary)
+
+    controller = ConfigWizardController(
+        fake_database_workflow(), ExplodingService()
+    )
+    controller.start()
+    controller.submit({"strategy": "create"})
+
+    assert "failed during step validation" in caplog.text
+    assert "RuntimeError" in caplog.text
+    assert canary not in caplog.text
+
+
+def test_unknown_provider_apply_status_fails_safely() -> None:
+    class FutureStatusService(FakeConfigMutationService):
+        def apply(self, intent):
+            result = super().apply(intent)
+            return ConfigApplyResult(
+                status=cast(ConfigApplyStatus, "future-status"),
+                summary=result.summary,
+            )
+
+    controller = ConfigWizardController(
+        fake_database_workflow(), FutureStatusService()
+    )
+    _reach_review(controller, shared=False)
+
+    result = controller.apply()
+
+    assert result.status is WizardResultStatus.FAILED
+    assert result.summary == "The configuration provider returned an unsupported result."

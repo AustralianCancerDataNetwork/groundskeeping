@@ -99,7 +99,12 @@ workflow = ConfigWorkflowSpec(
             key="new-database",
             title="New database",
             field_keys=("database_name", "connection_url", "password"),
-            when=(ConfigBranchCondition("strategy", "create"),),
+            when=(
+                ConfigBranchCondition(
+                    "strategy",
+                    frozenset({"create"}),
+                ),
+            ),
         ),
     ),
 )
@@ -114,11 +119,23 @@ context.open_wizard(controller)
 - `fields()` provides the `FieldSpec` definitions used by the declared workflow;
 - `begin()` creates private candidate state and returns an opaque session and expected revision;
 - `submit()` validates one step, updates the private candidate, and discards invalidated branch fields;
-- `plan()` returns only a redacted diff, structured effects, warnings, issues, and a single-use apply token;
+- `plan()` returns only a redacted diff, structured effects, warnings, issues, the revision it planned against, and a single-use apply token;
 - `apply()` consumes that token before returning applied, conflicted, rejected, or failed; and
 - `cancel()` invalidates the session and any prepared token without persisting.
 
-Plan readiness is derived from the plan: an error issue always blocks apply, and a ready plan always has an apply token. Warnings may accompany a ready plan. Apply tokens and expected revisions are opaque provider values; applications should not parse or construct them in UI code.
+`MutationCapabilities` also advertises whether the provider can test the target, prepare a preview, and inspect reference impact. These flags let an application offer useful controls without inferring support from target kind. Groundskeeping does not synthesize a test or impact implementation when the provider reports it unavailable.
+
+Plan readiness is derived from the plan: an error issue always blocks apply, and a ready plan always has an apply token and expected revision. Warnings may accompany a ready plan. Apply tokens and expected revisions are opaque provider values; applications should not parse or construct them in UI code.
+
+`EffectRef` remains structured through `WizardReview`: it includes the impact kind, source target and field, optional destination target, label, and status. The Textual screen produces a readable label from that object, while other consumers can group effects, style their severity, or navigate to either endpoint without parsing prose.
+
+### Workflow shape and limits
+
+The workflow language is intentionally static. `fields()` is called once when the controller starts, every returned provider field must appear in exactly one declared step, and its label, default, choices, required state, and sensitivity do not change by branch. This catches provider/workflow version skew before the analyst reaches an unfixable plan error.
+
+A condition matches an earlier non-sensitive field against a `frozenset` of values. Set `negated=True` for “anything except these values.” Multiple conditions on a step are ANDed. This supports a dialect journey with a shared **Database name or SQLite path** field and a server-details step shown for every non-SQLite dialect, including dialects added to the provider's choice list later. Use separate stable field keys when two branches genuinely need different labels or validation; dynamic field re-querying is not part of this contract.
+
+Configuration Review is automatic after the final active step. The standalone Review button remains disabled during editing because a provider plan must include every active step; Back is available from the generated review if the analyst wants to revise an answer.
 
 ## Secret boundary
 
@@ -132,10 +149,12 @@ Free-form data still needs honest field names or schema metadata. Groundskeeping
 
 `FakeConfigMutationService` provides deterministic create, update, validation, warning, conflict, rejection, failure, token-reuse, and cancellation scenarios without writing a file. The bundled demo uses it with `fake_database_workflow()` so an app developer can see the intended composition without first implementing persistence.
 
-External providers can run `assert_mutation_service_conformance()` from `groundskeeping.configurator.conformance` with a target and valid step submissions. The helper verifies capabilities, field coverage, begin/stage/plan/apply, single-use apply tokens, and cancellation invalidation. Provider-specific tests should additionally inject validation, conflict, rejection, failure, and secret canaries.
+External providers run `assert_mutation_service_conformance()` from `groundskeeping.configurator.conformance` with a service factory, target, and valid step submissions. `MutationConformanceHooks` lets their test suite inject an invalid submission, perform an out-of-band write after planning, and prepare warning, blocked-plan, rejection, failure, unavailable, and unsupported scenarios. The same reusable runner then verifies issue locations, readiness, conflict semantics, every terminal apply status, single-use tokens, cancellation invalidation, and secret-canary absence against the real provider boundary.
 
 ## Ownership boundary
 
 Groundskeeping owns wizard mechanics, safe presentation state, declarative branch recalculation, and portable lifecycle results. It does not write TOML or decide what a valid database, provider, or model looks like.
 
 The consuming application and its mutation provider own candidate construction, oa-configurator validation, reference policy, verification, persistence, revision comparison, and restart behavior. Real candidate objects and raw submitted values stay behind that provider boundary.
+
+Cancellation is deliberately not a `ConfigApplyStatus`. `cancel()` invalidates the draft and token without calling `apply()` and returns `WizardResultStatus.CANCELLED`; `ConfigApplyResult` covers only applied, conflicted, rejected, and failed apply attempts.

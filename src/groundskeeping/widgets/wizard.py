@@ -170,7 +170,12 @@ class WizardScreen(ModalScreen[WizardResult]):
                 )
             await body.mount(table)
             for effect in step.review.effects:
-                await body.mount(Static(f"Effect: {effect}", classes="wizard-field-help"))
+                effect_class = "wizard-field-help"
+                if not isinstance(effect, str):
+                    effect_class = f"wizard-effect wizard-effect-{effect.status.value}"
+                await body.mount(
+                    Static(f"Effect: {effect}", classes=effect_class)
+                )
             for warning in step.review.warnings:
                 await body.mount(Static(f"Warning: {warning}", classes="wizard-warning"))
 

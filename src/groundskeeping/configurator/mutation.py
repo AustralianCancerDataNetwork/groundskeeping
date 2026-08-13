@@ -33,22 +33,33 @@ class MutationCapabilities:
     operation: MutationOperation
     supported: bool
     reason: str | None = None
+    can_test: bool = False
+    can_preview: bool = False
+    can_inspect_impact: bool = False
 
 
 @dataclass(frozen=True)
 class EffectRef:
-    """A structural reference to something a configuration change affects."""
+    """A structural, presentation-safe impact between configuration targets."""
 
-    kind: str
-    target: ConfigTarget
+    impact_kind: str
+    source_target: ConfigTarget
+    label: str
+    destination_target: ConfigTarget | None = None
     field_key: str | None = None
-    detail: str | None = None
+    status: SemanticStatus = SemanticStatus.INFO
 
     def __str__(self) -> str:
-        subject = f"{self.target.kind.value}:{self.target.key}"
+        subject = f"{self.source_target.kind.value}:{self.source_target.key}"
         if self.field_key:
             subject = f"{subject}.{self.field_key}"
-        return f"{self.kind}: {subject}" + (f" — {self.detail}" if self.detail else "")
+        destination = ""
+        if self.destination_target is not None:
+            destination = (
+                f" → {self.destination_target.kind.value}:"
+                f"{self.destination_target.key}"
+            )
+        return f"{self.impact_kind}: {subject}{destination} — {self.label}"
 
 
 @dataclass(frozen=True)
@@ -159,13 +170,18 @@ class ConfigPlan:
     issues: tuple[ValidationIssue, ...] = ()
     warnings: tuple[str, ...] = ()
     apply_token: str | None = None
+    expected_revision: str | None = None
 
     @property
     def ready(self) -> bool:
         has_error = any(
             issue.status is SemanticStatus.ERROR for issue in self.issues
         )
-        return self.apply_token is not None and not has_error
+        return (
+            self.apply_token is not None
+            and self.expected_revision is not None
+            and not has_error
+        )
 
 
 @dataclass(frozen=True)

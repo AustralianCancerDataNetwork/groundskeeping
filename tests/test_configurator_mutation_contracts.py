@@ -76,6 +76,7 @@ def test_plan_requires_an_apply_token_and_no_error_issues() -> None:
         operation=MutationOperation.CREATE,
         diff=diff,
         apply_token="opaque-plan",
+        expected_revision="revision-1",
     )
     blocked = ConfigPlan(
         target=_target(),
@@ -83,6 +84,7 @@ def test_plan_requires_an_apply_token_and_no_error_issues() -> None:
         diff=diff,
         issues=(ValidationIssue("Blocked."),),
         apply_token="must-not-make-this-ready",
+        expected_revision="revision-1",
     )
     warning = ConfigPlan(
         target=_target(),
@@ -92,6 +94,7 @@ def test_plan_requires_an_apply_token_and_no_error_issues() -> None:
             ValidationIssue("Check this.", status=SemanticStatus.WARNING),
         ),
         apply_token="opaque-warning-plan",
+        expected_revision="revision-1",
     )
 
     assert ready.ready
@@ -101,16 +104,21 @@ def test_plan_requires_an_apply_token_and_no_error_issues() -> None:
 
 def test_effect_references_are_structural() -> None:
     effect = EffectRef(
-        kind="shared-reference",
-        target=_target(),
+        impact_kind="shared-reference",
+        source_target=ConfigTarget(
+            ConfigTargetKind.TOOL, "consumer", "Consumer"
+        ),
+        label="used by another entry",
+        destination_target=_target(),
         field_key="database",
-        detail="used by another entry",
     )
 
-    assert effect.target.kind is ConfigTargetKind.DATABASE
+    assert effect.source_target.kind is ConfigTargetKind.TOOL
+    assert effect.destination_target == _target()
     assert effect.field_key == "database"
     assert str(effect) == (
-        "shared-reference: database:metadata.database — used by another entry"
+        "shared-reference: tool:consumer.database → database:metadata — "
+        "used by another entry"
     )
 
 
@@ -147,7 +155,7 @@ def test_fake_apply_tokens_are_single_use_for_every_outcome(
         target=target,
         operation=MutationOperation.CREATE,
         apply_token=plan.apply_token,
-        expected_revision=draft.expected_revision,
+        expected_revision=plan.expected_revision,
     )
 
     assert service.apply(intent).status is expected
@@ -169,7 +177,7 @@ def test_cancel_invalidates_a_prepared_plan_without_applying() -> None:
             target=target,
             operation=MutationOperation.CREATE,
             apply_token=plan.apply_token,
-            expected_revision=draft.expected_revision,
+            expected_revision=plan.expected_revision,
         )
     )
 

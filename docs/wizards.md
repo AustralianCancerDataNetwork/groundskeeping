@@ -10,9 +10,9 @@ For general application workflows, an application can implement `WizardControlle
 
 The application declares the words and shape of the workflow with `ConfigWorkflowSpec`. The mutation provider supplies `FieldSpec` values and owns real candidate state. `ConfigWizardController` joins the two and emits render-safe `WizardSnapshot` values for `WizardScreen`.
 
-This separation is useful when configuration rules evolve. A provider can add a field, change validation, or produce a richer effect without teaching the Textual screen about oa-configurator or application policy. The workflow needs an update only when the actual step grouping or branch experience changes.
+This separation is useful when configuration rules evolve. A provider can change validation or produce a richer effect without teaching the Textual screen about oa-configurator or application policy. Adding or removing a provider field requires the workflow to place that field explicitly, so a package mismatch fails at startup instead of producing a plan error the analyst cannot fix.
 
-Conditions are simple equality checks against an earlier, non-sensitive field. A branch cannot depend on a secret, and each field appears in exactly one step. Groundskeeping validates the declaration when the controller starts and reports duplicate, missing, late, or unsuitable field keys as definition errors.
+Conditions test whether an earlier, non-sensitive field is in a declared set of values and may be negated for “anything except.” Conditions on one step are ANDed. A branch cannot depend on a secret, and each field appears in exactly one step. Fields are fetched once at startup and do not change labels, defaults, choices, or required state by branch. Groundskeeping reports duplicate, missing, late, omitted, or unsuitable field keys as definition errors.
 
 ## What happens to submitted values
 
@@ -22,7 +22,9 @@ Secrets take a shorter path. The screen collects the value, the controller parse
 
 ## Review and apply
 
-The provider prepares the review. A `ConfigPlan` contains a redacted diff, structured effects, warnings, validation issues, and an opaque apply token. An error blocks apply; warnings do not. The screen never reconstructs a candidate from displayed values.
+The provider prepares the review. A `ConfigPlan` contains a redacted diff, structured source/destination effects, warnings, validation issues, an opaque apply token, and the expected revision established by planning. An error blocks apply; warnings do not. The screen never reconstructs a candidate from displayed values.
+
+Configuration review begins automatically after the final active step. Review is not a shortcut around incomplete steps; from the review, Back returns to the last active step.
 
 Applying consumes the token before work begins. The result distinguishes:
 
@@ -31,7 +33,7 @@ Applying consumes the token before work begins. The result distinguishes:
 - **rejected**, which means the provider understood the request but refused it; and
 - **failed**, which means the operation itself could not be completed.
 
-Cancel asks the provider to invalidate the session and prepared token without applying. Conflict, rejection, failure, success, and cancel all prevent the same apply token from being used again.
+Cancel asks the provider to invalidate the session and prepared token without applying. It is a wizard result rather than an apply status. Conflict, rejection, failure, success, and cancel all prevent the same apply token from being used again.
 
 ## Open a wizard
 

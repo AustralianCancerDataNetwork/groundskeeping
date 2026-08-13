@@ -9,6 +9,7 @@ candidate object crosses this module.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from enum import StrEnum
@@ -49,10 +50,15 @@ class ConfigWorkflowStepKind(StrEnum):
 
 @dataclass(frozen=True)
 class ConfigBranchCondition:
-    """Show a step when an earlier, non-sensitive field equals ``value``."""
+    """Show a step when an earlier field is in, or outside, a set of values."""
 
     field_key: str
-    value: object
+    values: frozenset[object]
+    negated: bool = False
+
+    def matches(self, value: object) -> bool:
+        matched = value in self.values
+        return not matched if self.negated else matched
 
 
 @dataclass(frozen=True)
@@ -120,7 +126,8 @@ class ConfigWizardController:
         except UnavailableMutationService as exc:
             self._blocked_reason = str(exc) or "Configuration changes are unavailable."
             return self._snapshot()
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            _log_provider_failure("capability discovery", exc)
             self._blocked_reason = "The configuration provider could not start a change."
             return self._snapshot()
         if (
@@ -143,7 +150,8 @@ class ConfigWizardController:
         except UnavailableMutationService as exc:
             self._blocked_reason = str(exc) or "Configuration changes are unavailable."
             return self._snapshot()
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            _log_provider_failure("field discovery", exc)
             self._blocked_reason = "The configuration provider could not start a change."
             return self._snapshot()
         self._fields = {field.key: field for field in provider_fields}
@@ -160,7 +168,8 @@ class ConfigWizardController:
         except UnavailableMutationService as exc:
             self._blocked_reason = str(exc) or "Configuration changes are unavailable."
             return self._snapshot()
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            _log_provider_failure("session creation", exc)
             self._blocked_reason = "The configuration provider could not start a change."
             return self._snapshot()
         try:
@@ -168,7 +177,8 @@ class ConfigWizardController:
         except ValueError:
             try:
                 self.service.cancel(draft)
-            except Exception:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
+                _log_provider_failure("invalid-session cleanup", exc)
                 self._closed = True
             raise
         self._draft = draft
@@ -226,7 +236,8 @@ class ConfigWizardController:
                     parsed_values,
                     discard_fields=discard_fields,
                 )
-            except Exception:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
+                _log_provider_failure("step validation", exc)
                 self._issues = (
                     ValidationIssue("The provider could not validate this step."),
                 )
@@ -301,12 +312,20 @@ class ConfigWizardController:
                 ValidationIssue(str(exc) or "Configuration planning is unavailable."),
             )
             return WizardTransition(self._snapshot(), self._issues)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            _log_provider_failure("plan preparation", exc)
             self._issues = (
                 ValidationIssue("The provider could not prepare a configuration plan."),
             )
             return WizardTransition(self._snapshot(), self._issues)
-        self._validate_plan(plan)
+        try:
+            self._validate_plan(plan)
+        except ValueError as exc:
+            _log_provider_failure("plan validation", exc)
+            self._issues = (
+                ValidationIssue("The provider returned an unusable configuration plan."),
+            )
+            return WizardTransition(self._snapshot(), self._issues)
         self._plan = plan
         self._current_step_key = None
         self._issues = plan.issues
@@ -336,11 +355,12 @@ class ConfigWizardController:
             target=self.workflow.target,
             operation=self.workflow.operation,
             apply_token=plan.apply_token,
-            expected_revision=self._require_draft().expected_revision,
+            expected_revision=plan.expected_revision,
         )
         try:
             result = self.service.apply(intent)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            _log_provider_failure("apply", exc)
             return WizardResult(
                 WizardResultStatus.FAILED,
                 "The configuration change failed.",
@@ -351,7 +371,15 @@ class ConfigWizardController:
             ConfigApplyStatus.CONFLICTED: WizardResultStatus.CONFLICTED,
             ConfigApplyStatus.REJECTED: WizardResultStatus.REJECTED,
             ConfigApplyStatus.FAILED: WizardResultStatus.FAILED,
-        }[result.status]
+        }.get(result.status)
+        if status is None:
+            _LOGGER.error(
+                "Configuration provider returned an unsupported apply status."
+            )
+            return WizardResult(
+                WizardResultStatus.FAILED,
+                "The configuration provider returned an unsupported result.",
+            )
         if status is WizardResultStatus.APPLIED:
             self._closed = True
         return WizardResult(
@@ -366,7 +394,8 @@ class ConfigWizardController:
         if not self._closed and self._draft is not None:
             try:
                 self.service.cancel(self._draft)
-            except Exception:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
+                _log_provider_failure("cancellation", exc)
                 summary = "The wizard closed, but the provider could not confirm cancellation."
         self._closed = True
         self._plan = None
@@ -435,7 +464,7 @@ class ConfigWizardController:
             )
             if plan is not None
             else (),
-            effects=tuple(str(effect) for effect in plan.effects) if plan else (),
+            effects=plan.effects if plan else (),
             warnings=(
                 tuple(plan.warnings)
                 + tuple(
@@ -495,7 +524,10 @@ class ConfigWizardController:
         return tuple(
             step
             for step in self.workflow.steps
-            if all(values.get(condition.field_key) == condition.value for condition in step.when)
+            if all(
+                condition.matches(values.get(condition.field_key))
+                for condition in step.when
+            )
         )
 
     def _workflow_step(self, key: str) -> ConfigWorkflowStep:
@@ -522,6 +554,10 @@ class ConfigWizardController:
                     "A choice step must contain one field and use that field key as its step key."
                 )
             condition_keys = [condition.field_key for condition in step.when]
+            if any(not condition.values for condition in step.when):
+                raise WizardDefinitionError(
+                    f"Configuration step {step.key!r} has an empty branch value set."
+                )
             duplicate_conditions = sorted(
                 {
                     key
@@ -592,6 +628,11 @@ class ConfigWizardController:
                     raise WizardDefinitionError(
                         f"Branch field {condition.field_key!r} must appear in an earlier step."
                     )
+        unused = sorted(set(self._fields) - used)
+        if unused:
+            raise WizardDefinitionError(
+                f"Provider fields are absent from the configuration workflow: {unused}"
+            )
 
     def _validate_draft(self, draft: ConfigDraft) -> None:
         if draft.target != self.workflow.target or draft.operation is not self.workflow.operation:
@@ -602,6 +643,8 @@ class ConfigWizardController:
             raise ValueError("Mutation provider returned a plan for the wrong target or operation.")
         if plan.diff.target != self.workflow.target:
             raise ValueError("Mutation provider returned a diff for the wrong target.")
+        if plan.ready and plan.expected_revision is None:
+            raise ValueError("Mutation provider returned a ready plan without a revision.")
 
     def _require_draft(self) -> ConfigDraft:
         if self._draft is None:
@@ -613,3 +656,22 @@ class ConfigWizardController:
             self.start()
         if self._closed:
             raise RuntimeError("The configuration workflow is closed.")
+
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def _log_provider_failure(operation: str, exc: Exception) -> None:
+    """Record a useful traceback without logging a provider exception message.
+
+    Provider exceptions can echo submitted values. Reusing the traceback with a sanitized
+    terminal exception preserves the diagnostic call path without putting those values in
+    logs.
+    """
+
+    sanitized = RuntimeError(f"{type(exc).__name__}; provider details suppressed")
+    _LOGGER.error(
+        "Configuration provider failed during %s.",
+        operation,
+        exc_info=(RuntimeError, sanitized, exc.__traceback__),
+    )
