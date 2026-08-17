@@ -400,11 +400,16 @@ class FakeConfigMutationService:
                 )
             )
 
+        # Retire any earlier token before deciding this plan's readiness, so a session
+        # whose candidate becomes blocked is left with nothing to apply. Invalidating
+        # only on the ready branch would let the superseded token outlive the plan that
+        # minted it and bypass the newer, blocked one.
         has_error = any(issue.status is SemanticStatus.ERROR for issue in issues)
+        if session.apply_token is not None:
+            self._apply_tokens.pop(session.apply_token, None)
+            session.apply_token = None
         apply_token: str | None = None
         if not has_error:
-            if session.apply_token is not None:
-                self._apply_tokens.pop(session.apply_token, None)
             self._plan_number += 1
             apply_token = f"fake-plan-{self._plan_number}"
             session.apply_token = apply_token
@@ -436,6 +441,15 @@ class FakeConfigMutationService:
             return ConfigApplyResult(
                 ConfigApplyStatus.REJECTED,
                 "The apply plan does not match the requested target or operation.",
+            )
+        # The revision is checked against the one this session captured at begin(),
+        # not only against the current store. Trusting the caller's value would let a
+        # stale token be paired with the current revision and slip past the conflict
+        # check below with a candidate planned against an older configuration.
+        if intent.expected_revision != session.expected_revision:
+            return ConfigApplyResult(
+                ConfigApplyStatus.REJECTED,
+                "The apply plan was not prepared for that configuration revision.",
             )
         if (
             intent.expected_revision != self.revision

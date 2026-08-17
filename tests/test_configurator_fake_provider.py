@@ -215,6 +215,81 @@ def test_durable_returns_an_isolated_snapshot() -> None:
     }
 
 
+def test_a_blocked_replan_invalidates_the_token_it_supersedes() -> None:
+    service = FakeConfigMutationService()
+    target = _target()
+    draft = service.begin(target, MutationOperation.CREATE)
+    service.submit(draft, "strategy", {"strategy": "reuse"})
+    service.submit(draft, "reuse-database", {"selected_database": "metadata"})
+    ready = service.plan(draft)
+    assert ready.apply_token is not None
+
+    service.scenario = FakeMutationScenario.PLAN_ERROR
+    blocked = service.plan(draft)
+    assert not blocked.ready
+    assert blocked.apply_token is None
+
+    service.scenario = FakeMutationScenario.READY
+    result = service.apply(
+        ConfigApplyIntent(
+            target=target,
+            operation=MutationOperation.CREATE,
+            apply_token=ready.apply_token,
+            expected_revision=ready.expected_revision,
+        )
+    )
+
+    assert result.status is ConfigApplyStatus.REJECTED
+    assert service.durable == {}
+
+
+def test_apply_rejects_a_revision_the_plan_was_not_prepared_for() -> None:
+    service = FakeConfigMutationService()
+    target = _target()
+    draft = service.begin(target, MutationOperation.CREATE)
+    service.submit(draft, "strategy", {"strategy": "reuse"})
+    service.submit(draft, "reuse-database", {"selected_database": "metadata"})
+    plan = service.plan(draft)
+    assert plan.apply_token is not None
+    service.advance_revision()
+
+    result = service.apply(
+        ConfigApplyIntent(
+            target=target,
+            operation=MutationOperation.CREATE,
+            apply_token=plan.apply_token,
+            expected_revision=service.revision,
+        )
+    )
+
+    assert result.status is ConfigApplyStatus.REJECTED
+    assert "revision" in result.summary
+    assert service.durable == {}
+
+
+def test_a_moved_store_is_still_a_conflict_not_a_rejection() -> None:
+    service = FakeConfigMutationService()
+    target = _target()
+    draft = service.begin(target, MutationOperation.CREATE)
+    service.submit(draft, "strategy", {"strategy": "reuse"})
+    service.submit(draft, "reuse-database", {"selected_database": "metadata"})
+    plan = service.plan(draft)
+    assert plan.apply_token is not None
+    service.advance_revision()
+
+    result = service.apply(
+        ConfigApplyIntent(
+            target=target,
+            operation=MutationOperation.CREATE,
+            apply_token=plan.apply_token,
+            expected_revision=plan.expected_revision,
+        )
+    )
+
+    assert result.status is ConfigApplyStatus.CONFLICTED
+    assert service.durable == {}
+
+
 @pytest.mark.parametrize("mismatch", ("target", "operation"))
 def test_apply_rejects_intent_that_does_not_match_its_session(
     mismatch: str,
