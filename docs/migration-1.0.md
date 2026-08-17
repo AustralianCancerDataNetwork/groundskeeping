@@ -1,12 +1,12 @@
-# Migrating from 0.3 to 1.0
+# Migrating from 0.3 to 1.x
 
-Groundskeeping 1.0 uses the oa-configurator 1.x stack directly and replaces the provisional configuration write API with the generic mutation service and controller. This is a clean transition: there are no aliases for the removed profile/resource model and no forwarding wrappers for provisional write types.
+From Groundskeeping 0.4 onwards, this interface uses the oa-configurator 1.x stack directly and replaces the provisional configuration write API with the generic mutation service and controller. This is a clean transition: there are no aliases for the removed profile/resource model and no forwarding wrappers for provisional write types.
 
 This page is for developers maintaining an existing integration. Analysts do not need to migrate saved wizard state; a wizard session is intentionally temporary.
 
 ## Change summary
 
-| 0.3 integration | 1.0 replacement | Required action |
+| 0.3 integration | 0.4+ replacement | Required action |
 |---|---|---|
 | Provisional profile/resource inspection | `OAConfiguratorAdapter.snapshot(StackConfig)` | Pass the effective oa-configurator stack directly. |
 | Profile or active-profile presentation | No equivalent | Remove UI and code that expect profile state. |
@@ -46,7 +46,7 @@ Provider fields must all appear in the workflow exactly once. Conditions match a
 
 ## Move sensitive logic behind the provider
 
-In 0.3, `ReviewChange(sensitive=True)` hid values in `repr`, but `before` and `after` still held the originals. In 1.0, construction replaces both values with `<redacted>`. `ConfigDiffEntry` applies the same rule with `RedactedValue`.
+`ReviewChange(sensitive=True)` hides values in `repr`, `before` and `after`, with construction replacing values with `<redacted>`. `ConfigDiffEntry` applies the same rule with `RedactedValue`.
 
 Sensitive `FieldSpec` validators also use a protected error boundary. If a validator returns or raises a message containing submitted input, the public error becomes `<label> is invalid.`
 

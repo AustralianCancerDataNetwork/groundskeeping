@@ -10,7 +10,7 @@ Groundskeeping separates telemetry collection from presentation. Headless source
 | Application workflow state | Consuming application | Queue depth, pipeline progress, records processed |
 | Domain interpretation or recommendation | Consuming application | Whether throughput is acceptable for a particular workload |
 
-Keep collectors that depend on application sessions or domain services in the application. Adapt their output to normalized `TelemetryMetric` and `TelemetrySnapshot` values at the page boundary.
+Keep collectors that depend on application sessions or domain services in the application. Adapt their output to normalised `MetricValue` and `TelemetrySnapshot` values at the page boundary.
 
 ## Sample through the headless runtime
 
