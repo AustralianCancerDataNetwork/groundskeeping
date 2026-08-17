@@ -252,11 +252,18 @@ class OperatorApp(App[None]):
         if result is None:
             return
         severity: NotifySeverity = "information"
-        if result.status in {WizardResultStatus.CONFLICTED, WizardResultStatus.FAILED}:
+        if result.status in {
+            WizardResultStatus.CONFLICTED,
+            WizardResultStatus.REJECTED,
+            WizardResultStatus.FAILED,
+        }:
             severity = "error"
         elif result.status is WizardResultStatus.CANCELLED:
             severity = "warning"
-        self.notify(result.summary, severity=severity)
+        message = result.summary
+        if result.detail:
+            message = f"{message}\n{result.detail}"
+        self.notify(message, severity=severity)
         refresh_pages = set(result.refresh_pages)
         if self._active_page in refresh_pages or (result.applied and not refresh_pages):
             self._render_page(self.registry.get(self._active_page))

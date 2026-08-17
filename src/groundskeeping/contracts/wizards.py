@@ -5,10 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from groundskeeping.contracts.actions import FieldSpec, ValidationIssue
 from groundskeeping.contracts.views import SemanticStatus
+
+if TYPE_CHECKING:
+    from groundskeeping.configurator.mutation import EffectRef
 
 
 class WizardStepKind(StrEnum):
@@ -21,6 +24,7 @@ class WizardResultStatus(StrEnum):
     APPLIED = "applied"
     CANCELLED = "cancelled"
     CONFLICTED = "conflicted"
+    REJECTED = "rejected"
     FAILED = "failed"
 
 
@@ -66,12 +70,15 @@ class ReviewChange:
     after: object
     sensitive: bool = False
 
+    def __post_init__(self) -> None:
+        if self.sensitive:
+            object.__setattr__(self, "before", "<redacted>")
+            object.__setattr__(self, "after", "<redacted>")
+
     def __repr__(self) -> str:
-        before = "<redacted>" if self.sensitive else repr(self.before)
-        after = "<redacted>" if self.sensitive else repr(self.after)
         return (
             "ReviewChange("
-            f"field={self.field!r}, before={before}, after={after}, "
+            f"field={self.field!r}, before={self.before!r}, after={self.after!r}, "
             f"sensitive={self.sensitive!r})"
         )
 
@@ -81,7 +88,7 @@ class WizardReview:
     """Presentation-safe review data. Real candidates stay in the controller."""
 
     changes: tuple[ReviewChange, ...] = ()
-    effects: tuple[str, ...] = ()
+    effects: tuple[EffectRef | str, ...] = ()
     warnings: tuple[str, ...] = ()
     ready_to_apply: bool = True
 
@@ -110,6 +117,7 @@ class WizardSnapshot:
     issues: tuple[ValidationIssue, ...] = ()
     can_back: bool = False
     can_next: bool = True
+    can_review: bool = True
     can_apply: bool = False
     expected_revision: str | None = None
 

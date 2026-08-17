@@ -10,28 +10,26 @@ from pydantic import BaseModel, Field
 from textual.widget import Widget
 
 from groundskeeping.app import OperatorApp, OperatorAppSpec
-from groundskeeping.configurator import OAConfiguratorAdapter
+from groundskeeping.configurator import ConfigWizardController, OAConfiguratorAdapter
+from groundskeeping.configurator.providers.fake import (
+    FakeConfigMutationService,
+    fake_database_workflow,
+)
 from groundskeeping.contracts import (
     ActionContext,
     ActionOutcome,
     ActionRegistry,
     ActionSpec,
-    Choice,
-    ChoiceOption,
-    ChoiceStep,
     EmptyView,
     ExecutionKind,
     FieldKind,
     FieldSpec,
-    FormStep,
     KeyValueView,
     NavigationItem,
     OperatorPage,
     PageContext,
     PageRegistration,
     PageRoute,
-    ReviewChange,
-    ReviewStep,
     SectionItem,
     SectionNavigation,
     SelectionTableRow,
@@ -42,15 +40,7 @@ from groundskeeping.contracts import (
     TableView,
     TreeNode,
     TreeView,
-    ValidationIssue,
     ViewAction,
-    WizardResult,
-    WizardResultStatus,
-    WizardReview,
-    WizardSnapshot,
-    WizardSpec,
-    WizardTransition,
-    validate_wizard_steps,
 )
 from groundskeeping.telemetry.providers import FakeTelemetrySource
 
@@ -257,9 +247,7 @@ class ConfigPage(_DemoPage):
 
     def __init__(self) -> None:
         super().__init__()
-        self._revision = "demo-config-0"
-        self._apply_count = 0
-        self._selected_database = "metadata"
+        self._mutation_service = FakeConfigMutationService()
         self._stack = _DemoStackConfig(
             loaded_path="/demo/stack.toml",
             connections={
@@ -293,14 +281,6 @@ class ConfigPage(_DemoPage):
         )
         self._snapshot = self._build_snapshot()
 
-    @property
-    def revision(self) -> str:
-        return self._revision
-
-    @property
-    def active_database(self) -> str:
-        return self._selected_database
-
     def _build_snapshot(self):
         return OAConfiguratorAdapter().snapshot(
             cast(Any, self._stack), title="Demo stack configuration"
@@ -322,7 +302,10 @@ class ConfigPage(_DemoPage):
         view = OAConfiguratorAdapter().as_tree_view(self._snapshot)
         return replace(
             view,
-            message=f"{view.message}; revision: {self._revision}",
+            message=(
+                f"{view.message}; revision: {self._mutation_service.revision}; "
+                f"applied entries: {len(self._mutation_service.durable)}"
+            ),
             actions=(
                 ViewAction(
                     "config.configure",
@@ -334,314 +317,11 @@ class ConfigPage(_DemoPage):
 
     def action_selected(self, action_key: str, context: PageContext) -> None:
         if action_key == "config.configure":
-            context.open_wizard(_DemoConfigWizardController(self))
-
-    def apply_demo_config(self, candidate: Mapping[str, object]) -> None:
-        strategy = str(candidate["strategy"])
-        if strategy == "create":
-            key = str(candidate["database_key"])
-            connection_key = f"{key}_connection"
-            self._stack.connections[connection_key] = _DemoConnection(
-                url=str(candidate["url"]),
-                password=str(candidate["password"]),
-                access=str(candidate["role"]),
-            )
-            self._stack.databases[key] = _DemoDatabase(
-                connection=connection_key,
-                schema_name=key,
-            )
-            self._selected_database = key
-        else:
-            self._selected_database = str(candidate["target"])
-        self._stack.tools["groundskeeping_demo"]["selected_database"] = (
-            self._selected_database
-        )
-        self._apply_count += 1
-        self._revision = f"demo-config-{self._apply_count}"
-        self._snapshot = self._build_snapshot()
-
-
-class _DemoConfigWizardController:
-    """Tiny consumer-owned wizard proving the setup API shape."""
-
-    spec = WizardSpec(
-        key="demo.database-config",
-        title="Configure demo database",
-        purpose=(
-            "Choose an existing database target or create a new one. The controller "
-            "owns real candidate values; snapshots only carry render-safe values."
-        ),
-        apply_label="Apply config",
-    )
-
-    def __init__(self, page: ConfigPage) -> None:
-        self._page = page
-        self._expected_revision = page.revision
-        self._step_index = 0
-        self._candidate: dict[str, object] = {
-            "strategy": "reuse",
-            "target": page.active_database,
-            "make_default": True,
-        }
-        self._display_values: dict[str, object] = dict(self._candidate)
-        validate_wizard_steps(self._steps())
-
-    def start(self) -> WizardSnapshot:
-        return self._snapshot()
-
-    def submit(self, values: Mapping[str, object]) -> WizardTransition:
-        step = self._steps()[self._step_index]
-        if isinstance(step, ChoiceStep):
-            issues = self._submit_choice(step, values)
-        elif isinstance(step, FormStep):
-            issues = self._submit_form(step, values)
-        else:
-            issues = ()
-        if issues:
-            return WizardTransition(self._snapshot(issues=issues), issues)
-        self._step_index = min(self._step_index + 1, len(self._steps()) - 1)
-        return WizardTransition(self._snapshot())
-
-    def back(self) -> WizardSnapshot:
-        self._step_index = max(0, self._step_index - 1)
-        return self._snapshot()
-
-    def review(self) -> WizardTransition:
-        self._step_index = len(self._steps()) - 1
-        return WizardTransition(self._snapshot())
-
-    def apply(self) -> WizardResult:
-        if self._page.revision != self._expected_revision:
-            return WizardResult(
-                status=WizardResultStatus.CONFLICTED,
-                summary="Configuration changed before apply.",
-                detail={
-                    "expected_revision": self._expected_revision,
-                    "actual_revision": self._page.revision,
-                },
-                refresh_pages=frozenset({CONFIG_ROUTE.key}),
-            )
-        self._page.apply_demo_config(self._candidate)
-        return WizardResult(
-            status=WizardResultStatus.APPLIED,
-            summary="Demo database configuration applied.",
-            refresh_pages=frozenset({CONFIG_ROUTE.key}),
-        )
-
-    def cancel(self) -> WizardResult:
-        return WizardResult(
-            status=WizardResultStatus.CANCELLED,
-            summary="Configuration wizard cancelled.",
-        )
-
-    def _steps(self) -> tuple[ChoiceStep | FormStep | ReviewStep, ...]:
-        form = self._create_step()
-        if self._candidate.get("strategy") == "reuse":
-            form = self._reuse_step()
-        return (self._strategy_step(), form, self._review_step())
-
-    def _snapshot(
-        self, *, issues: tuple[ValidationIssue, ...] = ()
-    ) -> WizardSnapshot:
-        steps = self._steps()
-        self._step_index = min(self._step_index, len(steps) - 1)
-        step = steps[self._step_index]
-        return WizardSnapshot(
-            spec=self.spec,
-            step=step,
-            step_index=self._step_index,
-            step_count=len(steps),
-            values=self._safe_values(step),
-            issues=issues,
-            can_back=self._step_index > 0,
-            can_next=not isinstance(step, ReviewStep),
-            can_apply=isinstance(step, ReviewStep)
-            and step.review.ready_to_apply
-            and not issues,
-            expected_revision=self._expected_revision,
-        )
-
-    def _safe_values(self, step: ChoiceStep | FormStep | ReviewStep) -> Mapping[str, object]:
-        if isinstance(step, ChoiceStep):
-            return {step.key: self._display_values.get(step.key)}
-        if isinstance(step, FormStep):
-            return {
-                field.key: None
-                if field.masks_value
-                else self._display_values.get(field.key, field.default)
-                for field in step.fields
-            }
-        return {}
-
-    def _strategy_step(self) -> ChoiceStep:
-        return ChoiceStep(
-            key="strategy",
-            title="Choose setup path",
-            purpose="Reuse a known target or create a new database entry.",
-            choices=(
-                Choice(
-                    "reuse",
-                    "Reuse existing database",
-                    "Select a configured database for this demo session.",
-                ),
-                Choice(
-                    "create",
-                    "Create new database",
-                    "Collect the connection details needed for a new target.",
-                ),
-            ),
-        )
-
-    def _reuse_step(self) -> FormStep:
-        return FormStep(
-            key="reuse-database",
-            title="Select existing target",
-            fields=(
-                FieldSpec(
-                    key="target",
-                    label="Database target",
-                    kind=FieldKind.CHOICE,
-                    choices=tuple(
-                        ChoiceOption(value=key, label=key)
-                        for key in sorted(self._page._stack.databases)
-                    ),
-                    default=self._page.active_database,
-                    help="Choose the database entry this demo session should use.",
-                ),
-                FieldSpec(
-                    key="make_default",
-                    label="Use for this session",
-                    kind=FieldKind.BOOLEAN,
-                    default=True,
-                    help="Demo-only boolean field used to prove typed inputs.",
-                ),
-            ),
-        )
-
-    def _create_step(self) -> FormStep:
-        return FormStep(
-            key="create-database",
-            title="Enter connection details",
-            fields=(
-                FieldSpec(
-                    key="database_key",
-                    label="Database key",
-                    kind=FieldKind.TEXT,
-                    placeholder="metadata",
-                    help="Unique key for the new database entry.",
-                    validator=_validate_database_key,
-                ),
-                FieldSpec(
-                    key="url",
-                    label="Connection URL",
-                    kind=FieldKind.TEXT,
-                    placeholder="postgresql://host:5432/db",
-                    help="Connection string or service URL owned by the consumer.",
-                ),
-                FieldSpec(
-                    key="role",
-                    label="Role",
-                    kind=FieldKind.CHOICE,
-                    choices=(
-                        ChoiceOption("readonly", "Read only"),
-                        ChoiceOption("writer", "Writer"),
-                    ),
-                    default="readonly",
-                ),
-                FieldSpec(
-                    key="ssl",
-                    label="Require TLS",
-                    kind=FieldKind.BOOLEAN,
-                    default=True,
-                    required=False,
-                ),
-                FieldSpec(
-                    key="password",
-                    label="Password",
-                    kind=FieldKind.SECRET,
-                    placeholder="not shown in review",
-                    help="Secret values stay in the controller and are redacted in snapshots.",
-                ),
-                FieldSpec(
-                    key="notes",
-                    label="Operator notes",
-                    kind=FieldKind.MULTILINE,
-                    required=False,
-                    help="Optional free-text context for the consumer apply operation.",
-                ),
-            ),
-        )
-
-    def _review_step(self) -> ReviewStep:
-        strategy = str(self._candidate.get("strategy", "reuse"))
-        changes: list[ReviewChange] = []
-        if strategy == "reuse":
-            changes.append(
-                ReviewChange(
-                    "selected database",
-                    self._page.active_database,
-                    self._candidate.get("target"),
+            context.open_wizard(
+                ConfigWizardController(
+                    fake_database_workflow(), self._mutation_service
                 )
             )
-        else:
-            changes.extend(
-                (
-                    ReviewChange("database key", "-", self._candidate.get("database_key")),
-                    ReviewChange("url", "-", self._candidate.get("url")),
-                    ReviewChange("role", "-", self._candidate.get("role")),
-                    ReviewChange("password", "-", "configured", sensitive=True),
-                )
-            )
-        return ReviewStep(
-            key="review",
-            title="Review changes",
-            purpose="Check the render-safe summary before the consumer applies changes.",
-            review=WizardReview(
-                changes=tuple(changes),
-                effects=(
-                    "Update the database selected for this demo session.",
-                    f"Carry revision token {self._expected_revision}.",
-                ),
-                warnings=(
-                    "Real applications should run database verification off the event loop.",
-                ),
-            ),
-        )
-
-    def _submit_choice(
-        self, step: ChoiceStep, values: Mapping[str, object]
-    ) -> tuple[ValidationIssue, ...]:
-        value = values.get(step.key)
-        allowed = {choice.key for choice in step.choices}
-        if value not in allowed:
-            return (ValidationIssue("Choose a setup path.", field_key=step.key),)
-        self._candidate[step.key] = value
-        self._display_values[step.key] = value
-        return ()
-
-    def _submit_form(
-        self, step: FormStep, values: Mapping[str, object]
-    ) -> tuple[ValidationIssue, ...]:
-        issues: list[ValidationIssue] = []
-        for field in step.fields:
-            try:
-                parsed = field.parse(values.get(field.key))
-            except ValueError as exc:
-                issues.append(ValidationIssue(str(exc), field_key=field.key))
-                continue
-            self._candidate[field.key] = parsed.value
-            self._display_values[field.key] = parsed.redacted
-        return tuple(issues)
-
-
-def _validate_database_key(value: object) -> ValidationIssue | None:
-    text = str(value)
-    if not text.replace("_", "").replace("-", "").isalnum():
-        return ValidationIssue(
-            "Use letters, numbers, hyphens, or underscores only.",
-            field_key="database_key",
-        )
-    return None
 
 
 class TelemetryPage(_DemoPage):

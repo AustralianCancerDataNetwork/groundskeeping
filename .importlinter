@@ -1,0 +1,49 @@
+[importlinter]
+root_package = groundskeeping
+include_external_packages = True
+
+[importlinter:contract:no-consumer-imports]
+name = Groundskeeping never imports a consuming application
+type = forbidden
+source_modules =
+    groundskeeping
+forbidden_modules =
+    groundworkers
+    cava_nlp_shard
+
+[importlinter:contract:headless-core]
+name = Headless contracts, configuration, and telemetry do not import Textual
+type = forbidden
+source_modules =
+    groundskeeping.contracts
+    groundskeeping.configurator
+    groundskeeping.telemetry
+    groundskeeping.navigation
+forbidden_modules =
+    textual
+
+[importlinter:contract:oa-confined]
+name = oa-configurator is confined to the typed inspection adapter
+type = forbidden
+source_modules =
+    groundskeeping
+forbidden_modules =
+    oa_configurator
+ignore_imports =
+    groundskeeping.configurator.adapter -> oa_configurator
+
+[importlinter:contract:layers]
+name = The Textual shell sits above domain modules, which sit above presentation contracts
+type = layers
+layers =
+    groundskeeping.demo
+    groundskeeping.app
+    groundskeeping.widgets
+    groundskeeping.configurator : groundskeeping.telemetry : groundskeeping.navigation : groundskeeping.theme
+    groundskeeping.contracts
+ignore_imports =
+    # WizardReview.effects is typed tuple[EffectRef | str, ...], so the presentation
+    # contract names one mutation type. The import is TYPE_CHECKING-only and does not
+    # affect headless use. It is the sole exception; a second one should be argued for
+    # rather than added here.
+    groundskeeping.contracts.wizards -> groundskeeping.configurator.mutation

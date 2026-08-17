@@ -21,6 +21,7 @@ from groundskeeping.contracts import (
     SemanticStatus,
     SingleForegroundJobPolicy,
     ThreadCancellationToken,
+    ValidationIssue,
     run_action_sync,
 )
 
@@ -36,6 +37,22 @@ def test_field_spec_parses_types_and_redacts_sensitive_values() -> None:
 
     with pytest.raises(ValueError, match="at most 1024"):
         batch.parse("2048")
+
+
+def test_sensitive_field_validator_cannot_echo_submitted_value() -> None:
+    canary = "validator-secret-canary"
+    field = FieldSpec(
+        "password",
+        "Password",
+        kind=FieldKind.SECRET,
+        validator=lambda value: ValidationIssue(f"Rejected {value}"),
+    )
+
+    with pytest.raises(ValueError, match="Password is invalid") as caught:
+        field.parse(canary)
+
+    assert canary not in str(caught.value)
+    assert caught.value.__cause__ is None
 
 
 def test_action_registry_validates_unique_keys_and_page_references() -> None:

@@ -1,3 +1,23 @@
+"""Boundary rules that import-linter cannot express.
+
+Most of this file moved to `.importlinter`: no consumer imports, no Textual in the
+headless core, oa-configurator confined to the typed adapter, and the layering between
+presentation contracts, domain modules, and the Textual shell. Run `uv run lint-imports`
+for those.
+
+What remains are rules about *which part* of oa-configurator is imported. Import-linter
+squashes external packages to their top level, so every import of `oa_configurator.cli`,
+`oa_configurator._private`, and `oa_configurator` itself appears in the graph as the same
+edge; a contract cannot tell them apart. Wildcards do not help — import-linter validates
+them with "a wildcard can only replace a whole module", so `oa_configurator._*` is
+rejected outright. The `.importlinter` contract confines oa-configurator to the adapter
+file; these tests constrain what the adapter is allowed to reach for.
+
+`test_telemetry_core.py` also stays hand-rolled: it imports the package in a subprocess
+and inspects `sys.modules`, which is the only way to prove a deferred import does not
+fire at runtime. Static analysis cannot answer that.
+"""
+
 from __future__ import annotations
 
 import ast
@@ -22,38 +42,14 @@ def _oa_imports(path: Path) -> tuple[str, ...]:
     return tuple(name for name in imported if name.startswith("oa_configurator"))
 
 
-def test_package_has_no_consumer_imports() -> None:
-    combined = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in _source_files()
-    )
+def test_no_private_or_cli_oa_configurator_imports() -> None:
+    """Only oa-configurator's public, non-CLI surface is a supported dependency."""
 
-    assert "cava_nlp_shard" not in combined
-    assert "groundworkers" not in combined
-    assert "agent_stack" not in combined
-
-
-def test_telemetry_core_has_no_textual_imports() -> None:
-    telemetry_root = Path(__file__).parents[1] / "src" / "groundskeeping" / "telemetry"
-    combined = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in telemetry_root.rglob("*.py")
-    )
-
-    assert "textual" not in combined
-
-
-def test_no_private_oa_configurator_cli_imports() -> None:
     for path in _source_files():
         for name in _oa_imports(path):
-            assert name != "oa_configurator.cli"
-            assert all(not part.startswith("_") for part in name.split(".")[1:])
-
-
-def test_oa_configurator_imports_are_confined_to_typed_adapter() -> None:
-    allowed = Path("configurator/adapter.py")
-    package_root = Path(__file__).parents[1] / "src" / "groundskeeping"
-
-    for path in _source_files():
-        if _oa_imports(path):
-            assert path.relative_to(package_root) == allowed
+            assert name != "oa_configurator.cli", (
+                f"{path.name} imports the oa-configurator CLI: {name}"
+            )
+            assert all(not part.startswith("_") for part in name.split(".")[1:]), (
+                f"{path.name} imports a private oa-configurator name: {name}"
+            )

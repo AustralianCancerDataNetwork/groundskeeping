@@ -4,17 +4,10 @@ import asyncio
 from collections.abc import Mapping
 
 import pytest
-from textual.widgets import Button, Input, Select
+from textual.widgets import Button, Select
 from textual.widgets._select import SelectOverlay
 
 from groundskeeping.app import OperatorApp
-from groundskeeping.configurator import (
-    ConfigApplyIntent,
-    ConfigDraft,
-    ConfigTarget,
-    ConfigTargetKind,
-    OAConfiguratorAdapter,
-)
 from groundskeeping.contracts import (
     Choice,
     ChoiceOption,
@@ -33,7 +26,7 @@ from groundskeeping.contracts import (
     WizardTransition,
     validate_wizard_steps,
 )
-from groundskeeping.demo import ConfigPage, _DemoConfigWizardController, build_demo_spec
+from groundskeeping.demo import build_demo_spec
 from groundskeeping.widgets.wizard import WizardScreen
 
 
@@ -178,6 +171,8 @@ def test_review_changes_redact_sensitive_repr() -> None:
     assert "old-secret" not in repr(change)
     assert "new-secret" not in repr(change)
     assert "<redacted>" in repr(change)
+    assert change.before == "<redacted>"
+    assert change.after == "<redacted>"
 
 
 def test_wizard_snapshot_validates_progress_bounds() -> None:
@@ -189,82 +184,6 @@ def test_wizard_snapshot_validates_progress_bounds() -> None:
 
     with pytest.raises(ValueError, match="inside"):
         WizardSnapshot(spec, step, step_index=3, step_count=2)
-
-
-def test_demo_config_wizard_branches_validates_and_applies() -> None:
-    page = ConfigPage()
-    controller = _DemoConfigWizardController(page)
-
-    start = controller.start()
-    assert isinstance(start.step, ChoiceStep)
-    assert start.values["strategy"] == "reuse"
-
-    create = controller.submit({"strategy": "create"}).snapshot
-    assert isinstance(create.step, FormStep)
-    assert create.step.key == "create-database"
-
-    invalid = controller.submit(
-        {
-            "database_key": "bad key!",
-            "url": "",
-            "role": "writer",
-            "ssl": True,
-            "password": "",
-        }
-    )
-    assert {issue.field_key for issue in invalid.issues} == {
-        "database_key",
-        "url",
-        "password",
-    }
-    assert invalid.snapshot.step.key == "create-database"
-
-    review = controller.submit(
-        {
-            "database_key": "analytics",
-            "url": "postgresql://analytics.local/demo",
-            "role": "writer",
-            "ssl": True,
-            "password": "new-secret",
-            "notes": "created by demo",
-        }
-    ).snapshot
-
-    assert isinstance(review.step, ReviewStep)
-    assert review.can_apply
-    assert "new-secret" not in repr(review)
-
-    result = controller.apply()
-
-    assert result.status == WizardResultStatus.APPLIED
-    assert page.active_database == "analytics"
-    assert page.revision == "demo-config-1"
-
-
-def test_demo_config_wizard_supports_back_and_branch_recalculation() -> None:
-    page = ConfigPage()
-    controller = _DemoConfigWizardController(page)
-
-    assert controller.submit({"strategy": "create"}).snapshot.step.key == "create-database"
-    assert controller.back().step.key == "strategy"
-    assert controller.submit({"strategy": "reuse"}).snapshot.step.key == "reuse-database"
-
-
-def test_demo_config_wizard_reports_stale_revision_conflict() -> None:
-    page = ConfigPage()
-    controller = _DemoConfigWizardController(page)
-    page.apply_demo_config(
-        {
-            "strategy": "reuse",
-            "target": page.active_database,
-            "make_default": True,
-        }
-    )
-
-    result = controller.apply()
-
-    assert result.status == WizardResultStatus.CONFLICTED
-    assert result.refresh_pages == frozenset({"config"})
 
 
 def test_wizard_choice_field_renders_stable_select_control() -> None:
@@ -337,42 +256,6 @@ def test_wizard_choice_field_selects_via_mouse() -> None:
     asyncio.run(run())
 
 
-def test_config_draft_and_apply_intent_are_safe_and_revision_aware() -> None:
-    target = ConfigTarget(
-        kind=ConfigTargetKind.DATABASE,
-        key="metadata",
-        title="metadata",
-    )
-    draft = ConfigDraft(
-        target=target,
-        changed_fields=frozenset({"password", "url"}),
-        expected_revision="rev-1",
-    )
-
-    assert draft.changed
-    assert draft.changed_fields == frozenset({"password", "url"})
-    assert "new-secret" not in repr(draft)
-
-    diff = OAConfiguratorAdapter().diff(
-        target,
-        original_fields={"url": "postgresql://old", "password": "old-secret"},
-        candidate_fields={"url": "postgresql://new", "password": "new-secret"},
-        sensitive_fields=frozenset({"password"}),
-    )
-    intent = ConfigApplyIntent(
-        target=target,
-        apply_token="opaque-token",
-        expected_revision=draft.expected_revision,
-        diff=diff,
-        effects=("refresh:config",),
-    )
-
-    assert diff.changed
-    assert intent.apply_token == "opaque-token"
-    assert intent.expected_revision == "rev-1"
-    assert intent.effects == ("refresh:config",)
-
-
 def test_demo_app_opens_and_cancels_wizard_from_view_action() -> None:
     async def run() -> None:
         app = OperatorApp(build_demo_spec())
@@ -388,13 +271,8 @@ def test_demo_app_opens_and_cancels_wizard_from_view_action() -> None:
             await pilot.pause()
 
             assert app.screen.query_one("#wizard-frame") is not None
-            assert not app.screen.query_one("#wizard-review", Button).disabled
-
-            await pilot.click("#wizard-review")
-            await pilot.pause()
-
             assert app.screen.query_one("#wizard-review", Button).disabled
-            assert not app.screen.query_one("#wizard-apply", Button).disabled
+            assert app.screen.query_one("#wizard-apply", Button).disabled
 
             await pilot.click("#wizard-cancel")
             await pilot.pause()
@@ -426,7 +304,7 @@ def test_demo_wizard_choice_step_selects_setup_path_via_keyboard() -> None:
             await pilot.click("#wizard-next")
             await pilot.pause()
 
-            assert app.screen.query_one("#wizard-field-0", Input).placeholder == "metadata"
+            assert app.screen.query_one("#wizard-field-0", Select) is not None
             await pilot.press("escape")
             await pilot.press("q")
 
@@ -455,7 +333,7 @@ def test_demo_wizard_choice_step_selects_setup_path_via_mouse() -> None:
             await pilot.click("#wizard-next")
             await pilot.pause()
 
-            assert app.screen.query_one("#wizard-field-0", Input).placeholder == "metadata"
+            assert app.screen.query_one("#wizard-field-0", Select) is not None
             await pilot.press("escape")
             await pilot.press("q")
 

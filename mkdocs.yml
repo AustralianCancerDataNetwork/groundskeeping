@@ -60,14 +60,17 @@ plugins:
 
 nav:
   - Home: index.md
-  - Getting Started: quickstart.md
-  - Ownership Boundary: ownership.md
-  - User Guide:
-      - Pages and the Workbench: pages.md
-      - Actions and Jobs: actions.md
+  - For Analysts:
+      - Using an Operator App: operator-guide.md
       - Setup Wizards: wizards.md
       - Configuration: configuration.md
+  - For Developers:
+      - Developer Quickstart: quickstart.md
+      - Pages and the Workbench: pages.md
+      - Actions and Jobs: actions.md
       - Telemetry: telemetry.md
+      - Ownership Boundary: ownership.md
+  - Migrating to 1.0: migration-1.0.md
   - API Reference:
       - Application: api/app.md
       - Page Contracts: api/pages.md

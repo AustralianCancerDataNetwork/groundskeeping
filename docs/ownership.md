@@ -1,46 +1,45 @@
 # What belongs where
 
-Groundskeeping should stay boring and reusable. It owns the TUI frame and the small contracts
-needed to render pages, actions, wizards, configuration summaries, and telemetry. The
-application using it owns the real work.
+Groundskeeping owns a reusable interaction model. The consuming application owns the meaning of that interaction and every durable or domain-specific effect behind it.
 
-## Groundskeeping owns
+## Responsibility map
 
-- route validation and page activation;
-- mounted-page state preservation;
-- the shared workbench surface;
-- generic view models;
-- action, field, progress, cancellation, and job contracts;
-- setup wizard contracts and the reusable wizard screen;
-- in-process job gating;
-- read-only configuration inspection and draft/diff models;
-- headless infrastructure telemetry contracts; and
-- reusable widgets that render normalized models.
+| Concern | Groundskeeping | Consuming application |
+|---|---|---|
+| Application frame | Route validation, page activation, mounted-page state, workbench layout | Branding, production page set, environment-specific help |
+| Presentation | Generic navigation, result, detail, status, and selection models | Domain presenters and wording that helps the operator decide what to do |
+| Actions | Fields, parsing, redaction, progress, cancellation, result contracts | Runners, operation safety policy, model calls, database access |
+| Jobs | In-process job gating and current progress | Durable records, queues, retries, leases, restart recovery |
+| Wizards | Portable step contracts and reusable modal screen | General workflow meaning and application services |
+| Configuration | oa-configurator inspection, generic controller, safe snapshots, branch recalculation | Field definitions, private candidates, validation, reference policy, persistence, restart behavior |
+| Telemetry | Headless infrastructure contracts, sampling runtime, reusable widgets | Domain telemetry, domain interpretation, application-state collectors |
 
-## Applications own
+For example, Groundskeeping can render and run a database setup workflow. The consuming application decides what a valid database is, supplies the fields, keeps the candidate private, identifies shared-reference effects, compares revisions, and saves the final configuration. `ConfigWorkflowSpec` arranges those provider-owned fields without becoming another persistence layer.
 
-- every production page;
-- domain presenters, controllers, and services;
-- queue semantics and durable records;
-- YAML or other application configuration formats;
-- resource-specific `oa-configurator` adapters;
-- model calls, database access, and runtime execution;
-- domain telemetry and tuning algorithms;
-- operation safety policy; and
-- application branding and help text.
+## A practical placement test
 
-For example, Groundskeeping can render a database setup wizard. Groundworkers decides what a
-"database" means, how to validate a candidate connection, whether an edit affects shared
-resources, and how the final config is saved.
+Ask these questions before adding behavior to Groundskeeping:
 
-## Why the boundary is enforced
+1. Can two unrelated applications use it without importing either application's models or services?
+2. Is it primarily interaction, presentation, redaction, or portable lifecycle behavior?
+3. Can the contract describe the work without knowing a source system, queue implementation, deployment layout, or business rule?
 
-Two tests hold the line:
+If the answer to any of these is no, the behavior probably belongs in the consuming application. Adapt its safe result into a Groundskeeping contract at the boundary.
 
-- `test_dependency_boundaries.py` checks that the shared package does not reach into
-  application packages.
-- `test_telemetry_core.py` checks that telemetry runtime code never imports Textual, so
-  collectors stay usable in worker and test processes that do not construct an application.
+## How the boundary is enforced
 
-The package top level also avoids importing Textual, so headless contracts, configuration
-inspection, and telemetry sampling can be imported without a running app.
+Four [import-linter](https://import-linter.readthedocs.io/) contracts in `.importlinter` hold the structure. Run them with `uv run lint-imports`; CI runs them as their own job, so a boundary breach fails the build before the tests do.
+
+| Contract | Rule |
+|---|---|
+| `no-consumer-imports` | Nothing in the package imports a consuming application. |
+| `headless-core` | `contracts`, `configurator`, `telemetry`, and `navigation` do not import Textual, so they can be used without constructing an app. |
+| `oa-confined` | Only the typed inspection adapter imports oa-configurator; the provider-neutral workflow contracts do not depend on it. |
+| `layers` | The Textual shell sits above the domain modules, which sit above the presentation contracts. `contracts` may not import `configurator`, `widgets`, or `app`. |
+
+The layers contract carries one recorded exception, written into `.importlinter` with its reason: `WizardReview.effects` is typed `tuple[EffectRef | str, ...]`, so `contracts.wizards` names a `configurator` type under `TYPE_CHECKING`. It is the only upward reference in the package and costs nothing at runtime. Type-only imports are otherwise checked like any other, so a second one has to be argued for rather than added quietly.
+
+Two rules stay in tests because a contract cannot express them:
+
+- `test_dependency_boundaries.py` rejects private and CLI oa-configurator imports. Import-linter squashes external packages to their top level, so it cannot distinguish `oa_configurator.cli` from `oa_configurator`.
+- `test_telemetry_core.py` imports the package in a subprocess and checks `sys.modules`. Only a runtime check can prove a deferred import does not fire.
