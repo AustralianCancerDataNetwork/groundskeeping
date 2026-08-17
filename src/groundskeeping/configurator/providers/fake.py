@@ -28,6 +28,7 @@ from groundskeeping.configurator.mutation import (
     EffectRef,
     MutationCapabilities,
     MutationOperation,
+    MutationOperationUnsupported,
     UnavailableMutationService,
     build_config_diff,
 )
@@ -172,7 +173,16 @@ class FakeConfigMutationService:
         supported_operations: frozenset[MutationOperation] = frozenset(
             {MutationOperation.CREATE, MutationOperation.UPDATE}
         ),
+        stored: Mapping[str, Mapping[str, object]] | None = None,
     ) -> None:
+        """Create an isolated fake.
+
+        ``stored`` seeds already-persisted values per target key, so an ``UPDATE``
+        journey can start from a realistic base. Seed it with the same field keys the
+        provider stages, or the diff will report the difference between two shapes
+        rather than between two configurations.
+        """
+
         self.scenario = scenario
         self.available = available
         self.supported_operations = supported_operations
@@ -181,7 +191,10 @@ class FakeConfigMutationService:
         self._plan_number = 0
         self._sessions: dict[str, _FakeSession] = {}
         self._apply_tokens: dict[str, str] = {}
-        self._durable: dict[str, dict[str, object]] = {}
+        self._durable: dict[str, dict[str, object]] = {
+            target_key: dict(values)
+            for target_key, values in (stored or {}).items()
+        }
         self._history: list[FakeMutationEvent] = []
 
     @property
@@ -273,7 +286,9 @@ class FakeConfigMutationService:
         self._ensure_available()
         capabilities = self.capabilities(target, operation)
         if not capabilities.supported:
-            raise ValueError(capabilities.reason)
+            raise MutationOperationUnsupported(
+                capabilities.reason or f"{operation.value.title()} is not supported."
+            )
         self._session_number += 1
         token = f"fake-session-{self._session_number}"
         self._sessions[token] = _FakeSession(
@@ -351,17 +366,11 @@ class FakeConfigMutationService:
         if self.scenario is FakeMutationScenario.WARNING:
             warnings = ("The target is currently used by a running demo workload.",)
 
+        # Both sides come from the same store of staged field keys, so an unchanged
+        # journey diffs to nothing. Projecting the base any other way would surface
+        # fields this workflow never collects as changes the operator has to approve.
         candidate = dict(session.values)
-        before: Mapping[str, object] = (
-            {
-                "database_name": "metadata",
-                "connection_url": "postgresql://old/metadata",
-                "password": True,
-                "shared_reference": False,
-            }
-            if session.operation is MutationOperation.UPDATE
-            else {}
-        )
+        before: Mapping[str, object] = dict(self._durable.get(session.target.key, {}))
         diff = build_config_diff(
             session.target,
             before,

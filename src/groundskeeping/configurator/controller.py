@@ -22,6 +22,7 @@ from groundskeeping.configurator.mutation import (
     ConfigMutationService,
     ConfigPlan,
     MutationOperation,
+    MutationOperationUnsupported,
     UnavailableMutationService,
 )
 from groundskeeping.contracts.actions import FieldKind, FieldSpec, ValidationIssue
@@ -147,6 +148,13 @@ class ConfigWizardController:
             draft = self.service.begin(
                 self.workflow.target, self.workflow.operation
             )
+        except MutationOperationUnsupported as exc:
+            # A capability answer can go stale between the check above and this call,
+            # so a refusal here is a normal outcome, not a provider defect.
+            self._blocked_reason = str(exc) or (
+                f"{self.workflow.operation.value.title()} is not supported for this target."
+            )
+            return self._snapshot()
         except UnavailableMutationService as exc:
             self._blocked_reason = str(exc) or "Configuration changes are unavailable."
             return self._snapshot()
@@ -256,6 +264,7 @@ class ConfigWizardController:
             return WizardTransition(self._snapshot(), self._issues)
         if not result.changed_fields <= self._fields.keys():
             raise ValueError("Mutation provider returned undeclared changed fields.")
+        self._apply_future_fields(current, result.future_fields)
 
         for field_key in discard_fields:
             self._display_values.pop(field_key, None)
@@ -640,6 +649,74 @@ class ConfigWizardController:
             raise WizardDefinitionError(
                 f"Provider fields are absent from the configuration workflow: {unused}"
             )
+
+    def _apply_future_fields(
+        self,
+        current: ConfigWorkflowStep,
+        updates: Sequence[FieldSpec],
+    ) -> None:
+        if not updates:
+            return
+        keys = [field.key for field in updates]
+        duplicates = sorted({key for key in keys if keys.count(key) > 1})
+        if duplicates:
+            raise WizardDefinitionError(
+                f"Provider future-field keys must be unique: {duplicates}"
+            )
+
+        step_index = {
+            field_key: index
+            for index, step in enumerate(self.workflow.steps)
+            for field_key in step.field_keys
+        }
+        current_index = self.workflow.steps.index(current)
+        replacement = dict(self._fields)
+        for update in updates:
+            original = self._fields.get(update.key)
+            if original is None:
+                raise WizardDefinitionError(
+                    f"Provider refreshed unknown field {update.key!r}."
+                )
+            if step_index[update.key] <= current_index:
+                raise WizardDefinitionError(
+                    f"Provider may refresh only fields in later workflow steps: {update.key!r}."
+                )
+            owning_step = self.workflow.steps[step_index[update.key]]
+            if owning_step.key in self._completed_steps:
+                raise WizardDefinitionError(
+                    f"Provider may not refresh completed field {update.key!r}."
+                )
+            if update.validator is not None:
+                raise WizardDefinitionError(
+                    "Provider field refresh cannot include validation callbacks."
+                )
+            if update.kind is not original.kind:
+                raise WizardDefinitionError(
+                    f"Provider field refresh cannot change kind for {update.key!r}."
+                )
+            if original.masks_value and not update.masks_value:
+                raise WizardDefinitionError(
+                    f"Provider field refresh cannot weaken sensitivity for {update.key!r}."
+                )
+            if update.masks_value and update.default is not None:
+                raise WizardDefinitionError(
+                    f"Provider field refresh cannot expose a secret default for {update.key!r}."
+                )
+            replacement[update.key] = update
+
+        previous = self._fields
+        self._fields = replacement
+        try:
+            self._validate_provider_fields(tuple(replacement.values()))
+        except Exception:
+            self._fields = previous
+            raise
+
+        for update in updates:
+            if update.default is None or update.masks_value:
+                self._display_values.pop(update.key, None)
+            else:
+                self._display_values[update.key] = update.default
 
     def _validate_draft(self, draft: ConfigDraft) -> None:
         if draft.target != self.workflow.target or draft.operation is not self.workflow.operation:

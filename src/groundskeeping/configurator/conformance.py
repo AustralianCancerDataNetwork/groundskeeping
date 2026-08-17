@@ -13,6 +13,7 @@ from groundskeeping.configurator.mutation import (
     ConfigMutationService,
     ConfigStepResult,
     MutationOperation,
+    MutationOperationUnsupported,
     UnavailableMutationService,
 )
 from groundskeeping.contracts.views import SemanticStatus
@@ -77,10 +78,17 @@ def assert_mutation_service_conformance(
     """Exercise supported lifecycle behavior against isolated provider instances.
 
     The core assertions cover capability discovery, begin/fields/stage/plan/apply,
-    single-use tokens, and cancellation. Supplying hooks additionally proves validation,
-    warning/non-ready planning, stale revision conflict, rejection, operational failure,
-    unavailability, and unsupported-operation behavior. Values remain transient method
-    arguments and are never included in conformance errors.
+    single-use tokens, diff projection symmetry, and cancellation. Supplying hooks
+    additionally proves validation, warning/non-ready planning, stale revision conflict,
+    rejection, operational failure, unavailability, and unsupported-operation behavior.
+    Values remain transient method arguments and are never included in conformance
+    errors.
+
+    ``submissions`` must reach a valid candidate; they are staged twice against the same
+    provider instance so the suite can require that restaging applied values reports no
+    change. A provider that stops supporting ``operation`` once the entry exists — a
+    create-only provider, most commonly — is not asked that question, so run the suite
+    for ``UPDATE`` as well as ``CREATE`` when the provider supports both.
     """
 
     hooks = hooks or MutationConformanceHooks()
@@ -117,6 +125,9 @@ def assert_mutation_service_conformance(
         "An apply token was accepted more than once.",
     )
     _assert_canary_absent(secret_canary, capabilities, draft, plan, result, reused)
+    _assert_projection_symmetry(
+        service, target, operation, submissions, secret_canary
+    )
 
     cancelled_service = service_factory()
     cancelled = _stage_candidate(
@@ -219,6 +230,57 @@ def assert_mutation_service_conformance(
             not unsupported.supported,
             "The declared unsupported operation was advertised as supported.",
         )
+        try:
+            unsupported_service.begin(target, hooks.unsupported_operation)
+        except MutationOperationUnsupported:
+            pass
+        except Exception as exc:  # noqa: BLE001
+            # The exception message may echo provider internals, so name only its type.
+            raise MutationConformanceError(
+                f"begin() refused an unsupported operation with {type(exc).__name__} "
+                "instead of MutationOperationUnsupported. A host cannot tell that "
+                "refusal from a provider defect, so it cannot choose between showing "
+                "the operator guidance and surfacing a bug."
+            ) from None
+        else:
+            raise MutationConformanceError(
+                "begin() opened a session for an operation that capabilities() "
+                "reported as unsupported."
+            )
+
+
+def _assert_projection_symmetry(
+    service: ConfigMutationService,
+    target: ConfigTarget,
+    operation: MutationOperation,
+    submissions: Sequence[tuple[str, Mapping[str, object]]],
+    secret_canary: str | None,
+) -> None:
+    """Require that restaging the currently stored values plans no change.
+
+    This runs against the instance that has just applied ``submissions``, so the stored
+    configuration and the candidate now hold the same values. A diff between them can
+    only come from the two sides being projected differently.
+
+    Providers that stop supporting ``operation`` once the entry exists are skipped
+    rather than failed; the caller is told to run ``UPDATE`` as well.
+    """
+
+    if not service.capabilities(target, operation).supported:
+        return
+    draft = _stage_candidate(service, target, operation, submissions)
+    plan = service.plan(draft)
+    _require(
+        not plan.diff.changed,
+        "Restaging the values that were just applied produced a non-empty diff. The "
+        "stored base and the candidate are not projected the same way — usually one "
+        "side materialises package defaults and the other omits them. Unrelated "
+        "defaults will reach the operator as changes to approve, burying the fields "
+        "the journey actually touched. Flatten both sides through the same call with "
+        "the same options before calling build_config_diff.",
+    )
+    _assert_canary_absent(secret_canary, draft, plan)
+    service.cancel(draft)
 
 
 def _assert_hooked_apply(

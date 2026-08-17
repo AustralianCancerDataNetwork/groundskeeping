@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict, replace
 from typing import cast
 
@@ -9,28 +10,79 @@ from groundskeeping.configurator import (
     ConfigApplyResult,
     ConfigApplyStatus,
     ConfigBranchCondition,
+    ConfigStepResult,
     ConfigTarget,
     ConfigTargetKind,
     ConfigWizardController,
     ConfigWorkflowSpec,
     ConfigWorkflowStep,
     EffectRef,
-    MutationOperation,
-)
-from groundskeeping.configurator.providers.fake import (
     FakeConfigMutationService,
     FakeDialectConfigMutationService,
     FakeMutationScenario,
+    MutationOperation,
+    MutationOperationUnsupported,
     fake_database_workflow,
     fake_dialect_database_workflow,
 )
 from groundskeeping.contracts import (
+    ChoiceOption,
     ChoiceStep,
+    FieldKind,
+    FieldSpec,
     FormStep,
     ReviewStep,
     WizardDefinitionError,
     WizardResultStatus,
 )
+
+
+class RefreshingFieldService(FakeConfigMutationService):
+    def __init__(self, future_fields: tuple[FieldSpec, ...]) -> None:
+        super().__init__()
+        self.future_fields = future_fields
+
+    def fields(self, draft):
+        super().fields(draft)
+        return (
+            FieldSpec("endpoint", "Provider endpoint"),
+            FieldSpec(
+                "model",
+                "Model",
+                kind=FieldKind.CHOICE,
+                choices=(ChoiceOption("pending", "Complete the endpoint first"),),
+                disabled=True,
+            ),
+        )
+
+    def submit(self, draft, step_key, values, *, discard_fields=frozenset()):
+        result = super().submit(
+            draft,
+            step_key,
+            values,
+            discard_fields=discard_fields,
+        )
+        return ConfigStepResult(
+            issues=result.issues,
+            changed_fields=result.changed_fields,
+            future_fields=self.future_fields if step_key == "endpoint" else (),
+        )
+
+
+def _refreshing_controller(future_fields: tuple[FieldSpec, ...]):
+    target = ConfigTarget(ConfigTargetKind.PROVIDER, "embedding", "Embedding provider")
+    workflow = ConfigWorkflowSpec(
+        "provider-model",
+        target,
+        MutationOperation.CREATE,
+        "Configure a model",
+        "Discover models after accepting the provider endpoint.",
+        (
+            ConfigWorkflowStep("endpoint", "Provider endpoint", ("endpoint",)),
+            ConfigWorkflowStep("model", "Model", ("model",)),
+        ),
+    )
+    return ConfigWizardController(workflow, RefreshingFieldService(future_fields))
 
 
 def test_workflow_rejects_duplicate_steps_and_branch_fields() -> None:
@@ -166,6 +218,94 @@ def test_dialect_workflow_handles_shared_and_non_sqlite_fields() -> None:
         "user",
         "password",
     )
+
+
+def test_provider_can_refresh_a_future_field_after_discovery() -> None:
+    controller = _refreshing_controller(
+        (
+            FieldSpec(
+                "model",
+                "Model",
+                kind=FieldKind.CHOICE,
+                choices=(
+                    ChoiceOption("embed-small", "Embed small"),
+                    ChoiceOption("embed-large", "Embed large"),
+                ),
+                default="embed-small",
+                help="Models reported by the accepted endpoint.",
+            ),
+        )
+    )
+
+    assert controller.start().step.key == "endpoint"
+    refreshed = controller.submit({"endpoint": "http://models.example"}).snapshot
+
+    assert isinstance(refreshed.step, FormStep)
+    assert refreshed.step.key == "model"
+    field = refreshed.step.fields[0]
+    assert field.disabled is False
+    assert tuple(choice.value for choice in field.choices) == (
+        "embed-small",
+        "embed-large",
+    )
+    assert refreshed.values == {"model": "embed-small"}
+
+
+def test_provider_cannot_refresh_current_or_change_future_field_kind() -> None:
+    current = _refreshing_controller((FieldSpec("endpoint", "Changed endpoint"),))
+    current.start()
+    with pytest.raises(WizardDefinitionError, match="later workflow steps"):
+        current.submit({"endpoint": "http://models.example"})
+
+    changed_kind = _refreshing_controller((FieldSpec("model", "Model"),))
+    changed_kind.start()
+    with pytest.raises(WizardDefinitionError, match="cannot change kind"):
+        changed_kind.submit({"endpoint": "http://models.example"})
+
+
+def test_provider_field_refresh_rejects_callbacks_and_weakened_sensitivity() -> None:
+    callback = _refreshing_controller(
+        (
+            FieldSpec(
+                "model",
+                "Model",
+                kind=FieldKind.CHOICE,
+                choices=(ChoiceOption("embed", "Embed"),),
+                validator=lambda _value: None,
+            ),
+        )
+    )
+    callback.start()
+    with pytest.raises(WizardDefinitionError, match="callbacks"):
+        callback.submit({"endpoint": "http://models.example"})
+
+    class SensitiveRefreshingService(RefreshingFieldService):
+        def fields(self, draft):
+            super().fields(draft)
+            return (
+                FieldSpec("endpoint", "Provider endpoint"),
+                FieldSpec("model", "Model", sensitive=True),
+            )
+
+    target = ConfigTarget(ConfigTargetKind.PROVIDER, "embedding", "Embedding provider")
+    workflow = ConfigWorkflowSpec(
+        "provider-secret",
+        target,
+        MutationOperation.CREATE,
+        "Configure a model",
+        "Keep secret fields secret.",
+        (
+            ConfigWorkflowStep("endpoint", "Provider endpoint", ("endpoint",)),
+            ConfigWorkflowStep("model", "Model", ("model",)),
+        ),
+    )
+    weakened = ConfigWizardController(
+        workflow,
+        SensitiveRefreshingService((FieldSpec("model", "Model"),)),
+    )
+    weakened.start()
+    with pytest.raises(WizardDefinitionError, match="weaken sensitivity"):
+        weakened.submit({"endpoint": "http://models.example"})
 
 
 def _controller(
@@ -384,6 +524,28 @@ def test_unavailable_and_unsupported_starts_are_legible() -> None:
     assert isinstance(unsupported.step, ReviewStep)
     assert "not supported" in unsupported.issues[0].message
     assert not unsupported.can_apply
+
+
+def test_a_refusal_from_begin_blocks_with_the_provider_reason(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    class LateRefusalService(FakeConfigMutationService):
+        """Advertise the operation, then refuse it, as a stale capability answer does."""
+
+        def begin(self, target, operation):
+            raise MutationOperationUnsupported(
+                "The configuration file is open read-only."
+            )
+
+    with caplog.at_level(logging.ERROR):
+        blocked = ConfigWizardController(
+            fake_database_workflow(), LateRefusalService()
+        ).start()
+
+    assert isinstance(blocked.step, ReviewStep)
+    assert blocked.issues[0].message == "The configuration file is open read-only."
+    assert not blocked.can_apply
+    assert not caplog.records
 
 
 def test_cancel_invalidates_the_session_without_durable_mutation() -> None:

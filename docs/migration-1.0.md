@@ -14,6 +14,8 @@ This page is for developers maintaining an existing integration. Analysts do not
 | String effects | Structured `EffectRef` values | Supply source, optional destination, field, label, kind, and status. |
 | Cancellation represented with apply outcomes | `ConfigMutationService.cancel()` and `WizardResultStatus.CANCELLED` | Keep cancellation separate from actual apply attempts. |
 | Sensitive `ReviewChange` values retained but hidden by `repr` | Values replaced with `<redacted>` during construction | Move any logic that needs the real value behind the provider boundary. |
+| Apply outcome chosen by whichever status read closest | Documented `ConfigApplyStatus` semantics | Re-check the classification. A write that was attempted and errored is `FAILED`; only a request that was refused before any write is `REJECTED`. |
+| Host resolves create versus update itself | `resolve_operation(service, target)` | Replace the local capability check, or keep pinning an operation deliberately. |
 
 ## Update inspection
 
@@ -52,6 +54,6 @@ Do not recover real values from review or exception text. Validation and any tra
 
 ## Verify the migrated provider
 
-Run `assert_mutation_service_conformance()` with hooks for invalid input, revision conflict, warnings, blocked plans, rejection, failure, unavailability, unsupported operations, and cancellation. Then retain provider-specific tests for candidate construction and persistence behavior.
+Import `assert_mutation_service_conformance()` and `MutationConformanceHooks` from `groundskeeping.configurator` and run them as a committed test, with hooks for invalid input, revision conflict, warnings, blocked plans, rejection, failure, unavailability, and unsupported operations. Run it once per operation the provider supports. Then retain provider-specific tests for candidate construction and persistence behavior.
 
-See [Configuration](configuration.md#test-a-provider-before-integrating-its-screen) for the scenario map and [API reference](api/configurator.md) for exact signatures.
+See [Verify your provider](wizards.md#verify-your-provider) for a runnable example, [Configuration](configuration.md#test-a-provider-before-integrating-its-screen) for the scenario map, and [API reference](api/configurator.md) for exact signatures.

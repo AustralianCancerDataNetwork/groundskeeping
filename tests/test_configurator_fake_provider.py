@@ -8,15 +8,12 @@ from groundskeeping.configurator import (
     ConfigDraft,
     ConfigTarget,
     ConfigTargetKind,
-    MutationOperation,
-)
-from groundskeeping.configurator.conformance import (
-    MutationConformanceHooks,
-    assert_mutation_service_conformance,
-)
-from groundskeeping.configurator.providers.fake import (
     FakeConfigMutationService,
     FakeMutationScenario,
+    MutationConformanceHooks,
+    MutationOperation,
+    MutationOperationUnsupported,
+    assert_mutation_service_conformance,
 )
 from groundskeeping.contracts import SemanticStatus
 
@@ -100,6 +97,31 @@ def _invalid_submission(service, draft):
         "create-database",
         {"database_name": "reserved", "connection_url": "not-a-url"},
     )
+
+
+def test_fake_diffs_a_seeded_base_against_the_same_projection() -> None:
+    stored = {
+        "strategy": "reuse",
+        "selected_database": "metadata",
+    }
+    service = FakeConfigMutationService(stored={"metadata": stored})
+    draft = service.begin(_target(), MutationOperation.UPDATE)
+    service.submit(draft, "strategy", {"strategy": "reuse"})
+    service.submit(draft, "reuse-database", {"selected_database": "analytics"})
+
+    plan = service.plan(draft)
+
+    assert [entry.field for entry in plan.diff.entries] == ["selected_database"]
+    assert stored == {"strategy": "reuse", "selected_database": "metadata"}
+
+
+def test_fake_refuses_an_unsupported_operation_with_the_typed_exception() -> None:
+    service = FakeConfigMutationService(
+        supported_operations=frozenset({MutationOperation.CREATE})
+    )
+
+    with pytest.raises(MutationOperationUnsupported, match="not supported"):
+        service.begin(_target(), MutationOperation.UPDATE)
 
 
 def test_fake_supports_create_and_update_capabilities() -> None:

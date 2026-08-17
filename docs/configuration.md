@@ -203,7 +203,9 @@ The inspection and write paths use different protections.
 
 `FakeConfigMutationService` demonstrates create, update, validation, warning, conflict, rejection, failure, token reuse prevention, and cancellation without writing a file. The bundled demo pairs it with `fake_database_workflow()`.
 
-External providers should run `assert_mutation_service_conformance()` in their own test suite. Supply a service factory, target, valid step submissions, and `MutationConformanceHooks` for behaviors the generic runner cannot trigger itself.
+External providers should run `assert_mutation_service_conformance()` in their own test suite. It is exported from `groundskeeping.configurator`, alongside `MutationConformanceHooks` and the fake providers. Supply a service factory, target, valid step submissions, and hooks for behaviors the generic runner cannot trigger itself. [Verify your provider](wizards.md#verify-your-provider) has a runnable example and the full hook map.
+
+Without hooks the runner already checks capability discovery, the begin/fields/submit/plan/apply sequence, single-use apply tokens, cancellation, and that restaging applied values plans no change. Hooks add the rest:
 
 | Hooked scenario | What conformance verifies |
 |---|---|
@@ -211,7 +213,7 @@ External providers should run `assert_mutation_service_conformance()` in their o
 | Out-of-band revision change | Conflict result and consumed token |
 | Warning or blocked plan | Correct readiness and token behavior |
 | Rejection or failure | Terminal status and token invalidation |
-| Unavailable or unsupported operation | Accurate capability boundary |
+| Unavailable or unsupported operation | Accurate capability boundary, and a typed `MutationOperationUnsupported` from `begin()` |
 | Cancellation | Session and prepared token invalidation |
 
 The conformance runner complements provider-specific tests for candidate construction, oa-configurator validation, atomic persistence, file permissions, and application recovery instructions.
