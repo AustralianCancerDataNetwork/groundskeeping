@@ -28,6 +28,18 @@ If the answer to any of these is no, the behavior probably belongs in the consum
 
 ## How the boundary is enforced
 
-`test_dependency_boundaries.py` walks the package and rejects imports from consuming applications. oa-configurator imports are confined to the typed inspection adapter; provider-neutral workflow contracts do not depend on it.
+Four [import-linter](https://import-linter.readthedocs.io/) contracts in `.importlinter` hold the structure. Run them with `uv run lint-imports`; CI runs them as their own job, so a boundary breach fails the build before the tests do.
 
-`test_telemetry_core.py` checks that telemetry runtime code does not import Textual. The package top level also avoids importing Textual, so headless contracts, configuration workflows, and sampling can be used without constructing an app.
+| Contract | Rule |
+|---|---|
+| `no-consumer-imports` | Nothing in the package imports a consuming application. |
+| `headless-core` | `contracts`, `configurator`, `telemetry`, and `navigation` do not import Textual, so they can be used without constructing an app. |
+| `oa-confined` | Only the typed inspection adapter imports oa-configurator; the provider-neutral workflow contracts do not depend on it. |
+| `layers` | The Textual shell sits above the domain modules, which sit above the presentation contracts. `contracts` may not import `configurator`, `widgets`, or `app`. |
+
+The layers contract carries one recorded exception, written into `.importlinter` with its reason: `WizardReview.effects` is typed `tuple[EffectRef | str, ...]`, so `contracts.wizards` names a `configurator` type under `TYPE_CHECKING`. It is the only upward reference in the package and costs nothing at runtime. Type-only imports are otherwise checked like any other, so a second one has to be argued for rather than added quietly.
+
+Two rules stay in tests because a contract cannot express them:
+
+- `test_dependency_boundaries.py` rejects private and CLI oa-configurator imports. Import-linter squashes external packages to their top level, so it cannot distinguish `oa_configurator.cli` from `oa_configurator`.
+- `test_telemetry_core.py` imports the package in a subprocess and checks `sys.modules`. Only a runtime check can prove a deferred import does not fire.
