@@ -158,7 +158,7 @@ The server step means “any dialect except SQLite,” so a new server dialect a
 
 ### Work within the static workflow limits
 
-`fields()` is called once when the controller starts. Every returned field must appear in exactly one declared step, and its label, default, choices, required state, and sensitivity remain fixed for that session. Each condition must refer to an earlier non-sensitive field; conditions on one step are ANDed.
+The controller calls `begin()` first, then passes that draft to `fields()`. Field defaults and choices must therefore describe the same configuration revision as the provider's private candidate. `fields()` is called once during this initial session setup. Every returned field must appear in exactly one declared step, and its label, default, choices, required state, and sensitivity remain fixed for that session. Each condition must refer to an earlier non-sensitive field; conditions on one step are ANDed.
 
 These constraints catch provider/workflow version skew before the analyst reaches an impossible review. Dynamic field re-querying is intentionally outside the contract.
 
@@ -170,17 +170,17 @@ Review starts automatically after the final active step. There is no editing-sta
 
 | Method | Provider responsibility | Safe return value |
 |---|---|---|
-| `capabilities()` | Report whether this target and operation are available and which optional features exist. | `MutationCapabilities` |
-| `fields()` | Describe every input used by the workflow. | `tuple[FieldSpec, ...]` |
+| `capabilities()` | Report whether this target and operation are supported. | `MutationCapabilities` |
 | `begin()` | Create private candidate state and capture the current revision. | `ConfigDraft` with opaque session token |
+| `fields()` | Describe every input using defaults and choices from that draft's revision. | `tuple[FieldSpec, ...]` |
 | `submit()` | Validate one step, update the candidate, and discard inactive branch fields. | Issues and the complete changed-field set |
 | `plan()` | Validate the complete candidate and calculate changes and impacts. | Redacted `ConfigPlan` with expected revision and single-use apply token |
 | `apply()` | Consume the token, compare revisions, and persist if still valid. | Applied, conflicted, rejected, or failed result |
 | `cancel()` | Invalidate the candidate session and prepared token. | No candidate or secret data |
 
-`MutationCapabilities.can_test`, `can_preview`, and `can_inspect_impact` let the application offer controls based on real provider support. Do not infer these features from the target kind, and do not synthesize them when the provider says they are unavailable.
+Connection tests and other operational checks remain ordinary application actions rather than mutation capabilities. Preview is intrinsic to the generic write flow, and a provider includes structured `effects` when it can determine them reliably.
 
-A plan is ready only when it has an apply token, an expected revision, and no error issues. Warnings can accompany a ready plan. Treat revisions and tokens as opaque values: UI code must not parse or construct them.
+A plan is ready only when it has an apply token, the same expected revision captured by its draft, and no error issues. Warnings can accompany a ready plan. Treat revisions and tokens as opaque values: UI code must not parse or construct them.
 
 `EffectRef` remains structured through `WizardReview`. Its impact kind, source target and field, optional destination target, label, and status let a TUI style effects while another client groups or navigates them. Consumers should not parse the human-readable string representation to recover those endpoints.
 

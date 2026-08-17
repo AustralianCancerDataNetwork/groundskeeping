@@ -68,6 +68,8 @@ Secret fields are cleared from the screen after you submit a step. Going Back do
 
 An apply attempt cannot be repeated with the same review token, regardless of its result. This prevents an old plan from being applied after the environment has changed.
 
+Every apply result closes the wizard. If the change conflicts, is rejected, or fails, the application can refresh the affected page before you begin a new attempt. Your previous wizard session is not reused.
+
 ## Know which configuration is open
 
 The configuration browser may show the path from which the stack was loaded. Use it to confirm that you are inspecting the intended environment. The path is descriptive: its presence does not mean the current app can write to that file.

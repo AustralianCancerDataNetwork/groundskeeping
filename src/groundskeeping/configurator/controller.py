@@ -144,24 +144,6 @@ class ConfigWizardController:
             return self._snapshot()
 
         try:
-            provider_fields = self.service.fields(
-                self.workflow.target, self.workflow.operation
-            )
-        except UnavailableMutationService as exc:
-            self._blocked_reason = str(exc) or "Configuration changes are unavailable."
-            return self._snapshot()
-        except Exception as exc:  # noqa: BLE001
-            _log_provider_failure("field discovery", exc)
-            self._blocked_reason = "The configuration provider could not start a change."
-            return self._snapshot()
-        self._fields = {field.key: field for field in provider_fields}
-        self._validate_provider_fields(provider_fields)
-        self._display_values = {
-            field.key: field.default
-            for field in provider_fields
-            if field.default is not None and not field.masks_value
-        }
-        try:
             draft = self.service.begin(
                 self.workflow.target, self.workflow.operation
             )
@@ -181,6 +163,28 @@ class ConfigWizardController:
                 _log_provider_failure("invalid-session cleanup", exc)
                 self._closed = True
             raise
+        try:
+            provider_fields = self.service.fields(draft)
+        except UnavailableMutationService as exc:
+            self._discard_start_draft(draft)
+            self._blocked_reason = str(exc) or "Configuration changes are unavailable."
+            return self._snapshot()
+        except Exception as exc:  # noqa: BLE001
+            self._discard_start_draft(draft)
+            _log_provider_failure("field discovery", exc)
+            self._blocked_reason = "The configuration provider could not start a change."
+            return self._snapshot()
+        try:
+            self._fields = {field.key: field for field in provider_fields}
+            self._validate_provider_fields(provider_fields)
+        except Exception:
+            self._discard_start_draft(draft)
+            raise
+        self._display_values = {
+            field.key: field.default
+            for field in provider_fields
+            if field.default is not None and not field.masks_value
+        }
         self._draft = draft
         active = self._active_steps(self._display_values)
         if active:
@@ -361,6 +365,7 @@ class ConfigWizardController:
             result = self.service.apply(intent)
         except Exception as exc:  # noqa: BLE001
             _log_provider_failure("apply", exc)
+            self._close_after_apply(clean_up_provider=True)
             return WizardResult(
                 WizardResultStatus.FAILED,
                 "The configuration change failed.",
@@ -376,12 +381,14 @@ class ConfigWizardController:
             _LOGGER.error(
                 "Configuration provider returned an unsupported apply status."
             )
+            self._close_after_apply(clean_up_provider=True)
             return WizardResult(
                 WizardResultStatus.FAILED,
                 "The configuration provider returned an unsupported result.",
             )
-        if status is WizardResultStatus.APPLIED:
-            self._closed = True
+        self._close_after_apply(
+            clean_up_provider=status is not WizardResultStatus.APPLIED
+        )
         return WizardResult(
             status=status,
             summary=result.summary,
@@ -637,6 +644,8 @@ class ConfigWizardController:
     def _validate_draft(self, draft: ConfigDraft) -> None:
         if draft.target != self.workflow.target or draft.operation is not self.workflow.operation:
             raise ValueError("Mutation provider returned a draft for the wrong target or operation.")
+        if draft.expected_revision is None:
+            raise ValueError("Mutation provider returned a draft without a revision.")
 
     def _validate_plan(self, plan: ConfigPlan) -> None:
         if plan.target != self.workflow.target or plan.operation is not self.workflow.operation:
@@ -645,6 +654,24 @@ class ConfigWizardController:
             raise ValueError("Mutation provider returned a diff for the wrong target.")
         if plan.ready and plan.expected_revision is None:
             raise ValueError("Mutation provider returned a ready plan without a revision.")
+        if plan.ready and plan.expected_revision != self._require_draft().expected_revision:
+            raise ValueError("Mutation provider returned a plan for a different revision.")
+
+    def _discard_start_draft(self, draft: ConfigDraft) -> None:
+        try:
+            self.service.cancel(draft)
+        except Exception as exc:  # noqa: BLE001
+            _log_provider_failure("start-session cleanup", exc)
+
+    def _close_after_apply(self, *, clean_up_provider: bool) -> None:
+        if clean_up_provider and self._draft is not None:
+            try:
+                self.service.cancel(self._draft)
+            except Exception as exc:  # noqa: BLE001
+                _log_provider_failure("terminal apply cleanup", exc)
+        self._closed = True
+        self._plan = None
+        self._apply_consumed = True
 
     def _require_draft(self) -> ConfigDraft:
         if self._draft is None:

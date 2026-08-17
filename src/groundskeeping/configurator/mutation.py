@@ -33,9 +33,6 @@ class MutationCapabilities:
     operation: MutationOperation
     supported: bool
     reason: str | None = None
-    can_test: bool = False
-    can_preview: bool = False
-    can_inspect_impact: bool = False
 
 
 @dataclass(frozen=True)
@@ -228,13 +225,11 @@ class ConfigMutationService(Protocol):
         self, target: ConfigTarget, operation: MutationOperation
     ) -> MutationCapabilities: ...
 
-    def fields(
-        self, target: ConfigTarget, operation: MutationOperation
-    ) -> tuple[FieldSpec, ...]: ...
-
     def begin(
         self, target: ConfigTarget, operation: MutationOperation
     ) -> ConfigDraft: ...
+
+    def fields(self, draft: ConfigDraft) -> tuple[FieldSpec, ...]: ...
 
     def submit(
         self,

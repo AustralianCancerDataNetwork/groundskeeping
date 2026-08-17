@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from typing import cast
 
 import pytest
@@ -197,6 +197,14 @@ def _reach_review(
     return controller.submit({"shared_reference": shared}).snapshot
 
 
+def test_controller_binds_fields_to_the_started_session() -> None:
+    controller, service = _controller()
+
+    controller.start()
+
+    assert tuple(event.action for event in service.history[:2]) == ("begin", "fields")
+
+
 def test_controller_runs_a_branching_create_flow_and_applies() -> None:
     controller, service = _controller()
     review = _reach_review(controller)
@@ -321,13 +329,14 @@ def test_controller_maps_non_success_apply_outcomes(
     scenario: FakeMutationScenario,
     expected: WizardResultStatus,
 ) -> None:
-    controller, _ = _controller(scenario=scenario)
+    controller, service = _controller(scenario=scenario)
     _reach_review(controller, shared=False)
 
     result = controller.apply()
 
     assert result.status is expected
     assert not result.applied
+    assert service.history[-1].action == "cancel"
 
 
 def test_revision_change_is_a_conflict_not_an_operational_failure() -> None:
@@ -339,6 +348,22 @@ def test_revision_change_is_a_conflict_not_an_operational_failure() -> None:
 
     assert result.status is WizardResultStatus.CONFLICTED
     assert "Reload" in str(result.detail)
+
+
+def test_plan_must_use_the_revision_captured_by_the_draft() -> None:
+    class WrongRevisionService(FakeConfigMutationService):
+        def plan(self, draft):
+            return replace(super().plan(draft), expected_revision="another-revision")
+
+    controller = ConfigWizardController(
+        fake_database_workflow(), WrongRevisionService()
+    )
+
+    result = _reach_review(controller, shared=False)
+
+    assert result.issues[0].message == (
+        "The provider returned an unusable configuration plan."
+    )
 
 
 def test_unavailable_and_unsupported_starts_are_legible() -> None:

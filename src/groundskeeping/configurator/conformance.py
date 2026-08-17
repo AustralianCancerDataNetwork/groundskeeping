@@ -76,7 +76,7 @@ def assert_mutation_service_conformance(
 ) -> None:
     """Exercise supported lifecycle behavior against isolated provider instances.
 
-    The core assertions cover capability discovery, fields, begin/stage/plan/apply,
+    The core assertions cover capability discovery, begin/fields/stage/plan/apply,
     single-use tokens, and cancellation. Supplying hooks additionally proves validation,
     warning/non-ready planning, stale revision conflict, rejection, operational failure,
     unavailability, and unsupported-operation behavior. Values remain transient method
@@ -92,17 +92,15 @@ def assert_mutation_service_conformance(
         "Capabilities returned the wrong operation.",
     )
     _require(capabilities.supported, "The conformance operation is unsupported.")
-    fields = {field.key for field in service.fields(target, operation)}
-    draft = _stage_candidate(service, target, operation, submissions, fields)
+    draft = _stage_candidate(service, target, operation, submissions)
     plan = service.plan(draft)
     _require(plan.target == target, "Plan returned the wrong target.")
     _require(plan.operation is operation, "Plan returned the wrong operation.")
+    _require(
+        plan.expected_revision == draft.expected_revision,
+        "Plan revision does not match the revision captured by the draft.",
+    )
     _require(plan.ready, "A valid candidate did not produce a ready plan.")
-    if capabilities.can_inspect_impact:
-        _require(
-            bool(plan.effects),
-            "Impact inspection was advertised but the plan returned no effects.",
-        )
     apply_token = _apply_token(plan.apply_token)
     result = service.apply(
         _intent(target, operation, apply_token, plan.expected_revision)
@@ -122,7 +120,7 @@ def assert_mutation_service_conformance(
 
     cancelled_service = service_factory()
     cancelled = _stage_candidate(
-        cancelled_service, target, operation, submissions, fields
+        cancelled_service, target, operation, submissions
     )
     cancelled_plan = cancelled_service.plan(cancelled)
     cancelled_token = _apply_token(cancelled_plan.apply_token)
@@ -159,7 +157,6 @@ def assert_mutation_service_conformance(
         target,
         operation,
         submissions,
-        fields,
         hooks.advance_revision,
         ConfigApplyStatus.CONFLICTED,
         secret_canary,
@@ -169,7 +166,6 @@ def assert_mutation_service_conformance(
         target,
         operation,
         submissions,
-        fields,
         hooks.prepare_rejection,
         ConfigApplyStatus.REJECTED,
         secret_canary,
@@ -179,7 +175,6 @@ def assert_mutation_service_conformance(
         target,
         operation,
         submissions,
-        fields,
         hooks.prepare_failure,
         ConfigApplyStatus.FAILED,
         secret_canary,
@@ -189,7 +184,6 @@ def assert_mutation_service_conformance(
         target,
         operation,
         submissions,
-        fields,
         hooks.prepare_warning,
         expect_ready=True,
         secret_canary=secret_canary,
@@ -199,7 +193,6 @@ def assert_mutation_service_conformance(
         target,
         operation,
         submissions,
-        fields,
         hooks.prepare_plan_error,
         expect_ready=False,
         secret_canary=secret_canary,
@@ -233,7 +226,6 @@ def _assert_hooked_apply(
     target: ConfigTarget,
     operation: MutationOperation,
     submissions: Sequence[tuple[str, Mapping[str, object]]],
-    fields: set[str],
     hook: MutationServiceHook | None,
     expected: ConfigApplyStatus,
     secret_canary: str | None,
@@ -241,8 +233,12 @@ def _assert_hooked_apply(
     if hook is None:
         return
     service = service_factory()
-    draft = _stage_candidate(service, target, operation, submissions, fields)
+    draft = _stage_candidate(service, target, operation, submissions)
     plan = service.plan(draft)
+    _require(
+        plan.expected_revision == draft.expected_revision,
+        "Plan revision does not match the revision captured by the draft.",
+    )
     token = _apply_token(plan.apply_token)
     hook(service)
     result = service.apply(
@@ -265,7 +261,6 @@ def _assert_hooked_plan(
     target: ConfigTarget,
     operation: MutationOperation,
     submissions: Sequence[tuple[str, Mapping[str, object]]],
-    fields: set[str],
     hook: MutationServiceHook | None,
     *,
     expect_ready: bool,
@@ -274,9 +269,13 @@ def _assert_hooked_plan(
     if hook is None:
         return
     service = service_factory()
-    draft = _stage_candidate(service, target, operation, submissions, fields)
+    draft = _stage_candidate(service, target, operation, submissions)
     hook(service)
     plan = service.plan(draft)
+    _require(
+        plan.expected_revision == draft.expected_revision,
+        "Plan revision does not match the revision captured by the draft.",
+    )
     _require(plan.ready is expect_ready, "Provider returned unexpected plan readiness.")
     if expect_ready:
         _require(bool(plan.warnings), "Warning scenario returned no warnings.")
@@ -295,11 +294,12 @@ def _stage_candidate(
     target: ConfigTarget,
     operation: MutationOperation,
     submissions: Sequence[tuple[str, Mapping[str, object]]],
-    fields: set[str],
 ) -> ConfigDraft:
     draft = service.begin(target, operation)
     _require(draft.target == target, "Draft returned the wrong target.")
     _require(draft.operation is operation, "Draft returned the wrong operation.")
+    _require(draft.expected_revision is not None, "Draft returned no revision.")
+    fields = {field.key for field in service.fields(draft)}
     for step_key, values in submissions:
         _require(set(values) <= fields, "A submission uses an undeclared field.")
         result = service.submit(draft, step_key, values)

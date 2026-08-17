@@ -216,15 +216,12 @@ class FakeConfigMutationService:
             operation=operation,
             supported=supported,
             reason=None if supported else f"{operation.value.title()} is not supported.",
-            can_test=True,
-            can_preview=True,
-            can_inspect_impact=True,
         )
 
-    def fields(
-        self, target: ConfigTarget, operation: MutationOperation
-    ) -> tuple[FieldSpec, ...]:
+    def fields(self, draft: ConfigDraft) -> tuple[FieldSpec, ...]:
         self._ensure_available()
+        self._session_for_draft(draft)
+        self._history.append(FakeMutationEvent("fields"))
         return (
             FieldSpec(
                 key="strategy",
@@ -412,7 +409,7 @@ class FakeConfigMutationService:
             issues=tuple(issues),
             warnings=warnings,
             apply_token=apply_token,
-            expected_revision=self.revision,
+            expected_revision=session.expected_revision,
         )
 
     def apply(self, intent: ConfigApplyIntent) -> ConfigApplyResult:
@@ -497,6 +494,12 @@ class FakeConfigMutationService:
         except KeyError:
             raise ValueError("The mutation session is no longer valid.") from None
 
+    def _session_for_draft(self, draft: ConfigDraft) -> _FakeSession:
+        session = self._session(draft.session_token)
+        if draft.target != session.target or draft.operation != session.operation:
+            raise ValueError("The mutation draft does not match its session.")
+        return session
+
     def _ensure_available(self) -> None:
         if not self.available:
             raise UnavailableMutationService(
@@ -507,10 +510,10 @@ class FakeConfigMutationService:
 class FakeDialectConfigMutationService(FakeConfigMutationService):
     """Fake provider for shared database identity and server-only fields."""
 
-    def fields(
-        self, target: ConfigTarget, operation: MutationOperation
-    ) -> tuple[FieldSpec, ...]:
+    def fields(self, draft: ConfigDraft) -> tuple[FieldSpec, ...]:
         self._ensure_available()
+        self._session_for_draft(draft)
+        self._history.append(FakeMutationEvent("fields"))
         return (
             FieldSpec(
                 key="dialect",

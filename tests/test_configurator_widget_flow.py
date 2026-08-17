@@ -11,6 +11,7 @@ from groundskeeping.configurator.providers.fake import (
     FakeMutationScenario,
     fake_database_workflow,
 )
+from groundskeeping.contracts import WizardResultStatus
 from groundskeeping.demo import build_demo_spec
 from groundskeeping.widgets.wizard import WizardScreen
 
@@ -65,26 +66,26 @@ def test_generic_configuration_flow_renders_and_clears_secret_input() -> None:
     asyncio.run(run())
 
 
-def test_rejected_apply_remains_open_with_safe_guidance() -> None:
+def test_rejected_apply_closes_with_the_original_terminal_result() -> None:
     async def run() -> None:
         controller = ConfigWizardController(
             fake_database_workflow(),
             FakeConfigMutationService(scenario=FakeMutationScenario.REJECTED),
         )
         app = OperatorApp(build_demo_spec())
+        results = []
 
         async with app.run_test(size=(120, 40)) as pilot:
-            app.push_screen(WizardScreen(controller))
+            app.push_screen(WizardScreen(controller), callback=results.append)
             await pilot.pause()
             await _fill_create_flow(app, pilot, password="rejected-widget-secret")
             await pilot.click("#wizard-apply")
             await pilot.pause()
 
-            assert app.screen.query_one("#wizard-frame") is not None
-            assert app.screen.query_one("#wizard-apply", Button).disabled
-            assert "rejected" in app.export_screenshot().lower()
+            assert app.screen.id == "_default"
+            assert results[0].status is WizardResultStatus.REJECTED
+            assert "rejected" in results[0].summary.lower()
             assert "rejected-widget-secret" not in app.export_screenshot()
-            await pilot.press("escape")
             await pilot.press("q")
 
     asyncio.run(run())

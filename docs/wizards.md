@@ -60,7 +60,7 @@ Secrets take a shorter path: the screen collects a value, the controller parses 
 
 Configuration review starts automatically after the final active step. `ConfigPlan` carries a redacted diff, structured source/destination effects, warnings, issues, the expected revision, and an opaque single-use apply token. Errors block apply; warnings do not.
 
-Applying consumes the token before persistence begins. This makes applied, conflicted, rejected, and failed attempts terminal and prevents stale review replay. Cancellation calls the provider's `cancel()` method and returns `WizardResultStatus.CANCELLED`; it is separate from `ConfigApplyStatus` because no apply attempt occurred.
+Applying consumes the token before persistence begins. Applied, conflicted, rejected, and failed attempts close the wizard with the original result so the host application can refresh affected pages and present accurate guidance. A non-success result also invalidates the provider session rather than leaving a stale candidate behind. Cancellation calls the provider's `cancel()` method and returns `WizardResultStatus.CANCELLED`; it is separate from `ConfigApplyStatus` because no apply attempt occurred.
 
 Open the controller through the page context:
 

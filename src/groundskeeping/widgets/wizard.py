@@ -26,7 +26,6 @@ from groundskeeping.contracts.wizards import (
     ReviewStep,
     WizardController,
     WizardResult,
-    WizardResultStatus,
     WizardSnapshot,
 )
 
@@ -74,14 +73,6 @@ class WizardScreen(ModalScreen[WizardResult]):
             return
         if event.button.id == "wizard-apply":
             result = self._controller.apply()
-            if result.status in {
-                WizardResultStatus.CONFLICTED,
-                WizardResultStatus.REJECTED,
-                WizardResultStatus.FAILED,
-            }:
-                self._show_result_issue(result)
-                event.button.disabled = True
-                return
             self.dismiss(result)
             return
         if event.button.id == "wizard-cancel":
@@ -262,10 +253,6 @@ class WizardScreen(ModalScreen[WizardResult]):
         self.query_one("#wizard-errors", Static).update(
             "\n".join(f"{issue.field_key or 'step'}: {issue.message}" for issue in snapshot.issues)
         )
-
-    def _show_result_issue(self, result: WizardResult) -> None:
-        detail = "" if result.detail is None else f"\n{result.detail}"
-        self.query_one("#wizard-errors", Static).update(f"{result.summary}{detail}")
 
     def _focus_first_issue(self, snapshot: WizardSnapshot) -> None:
         for issue in snapshot.issues:

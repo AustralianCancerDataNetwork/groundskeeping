@@ -107,9 +107,6 @@ def test_fake_supports_create_and_update_capabilities() -> None:
 
     capabilities = service.capabilities(_target(), MutationOperation.CREATE)
     assert capabilities.supported
-    assert capabilities.can_test
-    assert capabilities.can_preview
-    assert capabilities.can_inspect_impact
     assert service.capabilities(_target(), MutationOperation.UPDATE).supported
 
 

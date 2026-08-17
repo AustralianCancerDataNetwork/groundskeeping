@@ -38,7 +38,7 @@ ConfigWorkflowSpec + ConfigMutationService → ConfigWizardController → Wizard
 - Put fields, private candidates, validation, planning, revision checks, persistence, and cancellation in `ConfigMutationService`.
 - Open `ConfigWizardController` through the existing `PageContext.open_wizard()` entry point.
 
-Provider fields must all appear in the workflow exactly once. Conditions match an earlier non-sensitive field against a set of values and may be negated. Fields are fetched once when the controller starts, and review is generated automatically after all active steps are complete.
+Provider fields must all appear in the workflow exactly once. Conditions match an earlier non-sensitive field against a set of values and may be negated. The controller begins a revision-bound draft before fetching fields from it, and review is generated automatically after all active steps are complete.
 
 `ConfigDraft`, `ConfigDiff`, `ConfigPlan`, `ConfigApplyIntent`, and the remaining write contracts live in `groundskeeping.configurator.mutation`. Plans require an expected revision and single-use apply token before they are ready.
 
