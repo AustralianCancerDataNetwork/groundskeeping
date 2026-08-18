@@ -81,6 +81,6 @@ Configuration sections remain visible when empty, so **not configured** is diffe
 | Resolved | The named destination exists and has the required type. |
 | Missing | No configuration entry has that name. |
 | Wrong kind | The name exists, but it cannot be used by this field. |
-| Package schema unavailable | A tool is visible, but the application could not load enough type information to validate all of its fields or references. |
+| No schema available | A tool section is visible, but no installed package declares what belongs in it. Its keys are counted and its values are hidden. |
 
 If you need exact recovery steps, file locations, credential sources, or restart instructions, use the documentation for the application you are running. Groundskeeping provides the shared interaction model; the application owns those environment-specific details.

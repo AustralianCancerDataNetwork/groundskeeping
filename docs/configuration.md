@@ -17,7 +17,7 @@ References connect one setting to another, such as a vector store selecting a da
 | Resolved | The named entry exists with the required type. | A vector store points to a generic database. |
 | Missing | No entry has that name. | A model names a provider that is not configured. |
 | Wrong kind | The name exists, but its type cannot be used here. | A vector store points to a CDM database where a generic database is required. |
-| Package schema unavailable | A tool is visible, but its package-specific types were not available for inspection. | Groundskeeping can show a conservative summary but cannot validate every tool reference. |
+| No schema available | A tool section is visible, but no installed package declares what belongs in it. | A tool section names a package that is not installed. Its keys are counted and its values are hidden. |
 
 ### Make a guided change
 
@@ -65,9 +65,11 @@ snapshot = adapter.snapshot(
 
 The adapter walks public fields on oa-configurator's concrete models. A generic database therefore shows its common fields, while a CDM database also shows its vocabulary connection and vocabulary/results schemas.
 
-### Supply package schemas for tools
+### Tool sections are typed from the registry
 
-`StackConfig.tools` contains dictionaries because package schemas are discovered at runtime. If the application has resolved package configuration instances, pass them to the adapter so sensitivity metadata and `RefTo` declarations can be inspected.
+`StackConfig.tools` holds plain dictionaries, so a tool section is only as inspectable as the schema behind it. The adapter resolves that schema itself: it reads the `omop.config` entry-point group, loads each registered `PackageConfigBase`, and validates the matching section against it. `Sensitive()` markers and `RefTo` declarations are then inspected exactly as they are on the core models, with nothing passed in.
+
+Pass `package_configs` when the application already holds a resolved instance. An explicit instance wins over the registry, which matters when it carries values that validating the section afresh would not reproduce.
 
 ```python
 snapshot = adapter.snapshot(
@@ -76,7 +78,14 @@ snapshot = adapter.snapshot(
 )
 ```
 
-Without a matching instance, the tool remains visible and is marked **Package schema unavailable**. Do not treat that state as evidence that its references are valid.
+A section with no usable schema is rendered by shape alone: a key count, a `WARNING` status, and a note naming the reason. Its values are not displayed. This covers a package that registers nothing, one that fails to import, and a section name that matches nothing installed. Without a schema there is no way to tell a credential from a hostname, so nothing is shown rather than guessed at.
+
+To make your package's section inspectable, register its config class under the `omop.config` entry-point group and mark its secrets with `Sensitive()`:
+
+```toml
+[project.entry-points."omop.config"]
+my_package = "my_package.config:MyPackageConfig"
+```
 
 ## For developers: add a write flow
 
