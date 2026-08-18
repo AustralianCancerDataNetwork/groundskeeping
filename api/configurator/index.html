@@ -5215,9 +5215,13 @@
 
         <p>Build safe, read-only views from an oa-configurator 1.x stack.</p>
 <p>Core sections are read from the public <code>StackConfig</code> and concrete pydantic models.
-A caller may additionally provide resolved <code>PackageConfigBase</code> instances so tool
-fields can receive the same typed sensitivity and reference inspection. Editable
-candidates and persistence remain outside groundskeeping.</p>
+<code>[tools.*]</code> sections are typed from the <code>omop.config</code> entry-point registry, so a
+package that registers a <code>PackageConfigBase</code> gets the same sensitivity and reference
+inspection without the caller doing anything. A caller may still pass resolved
+instances, which win over the registry. Editable candidates and persistence remain
+outside groundskeeping.</p>
+<p>A section with no usable schema is rendered by shape only -- see
+:meth:<code>_untyped_entry</code> for why that is the safe reading rather than the cautious one.</p>
 
 
 
