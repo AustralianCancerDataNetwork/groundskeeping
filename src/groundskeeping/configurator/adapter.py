@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from enum import Enum
+from importlib.metadata import entry_points
 from pathlib import Path
 
 from oa_configurator import (
@@ -15,10 +16,11 @@ from oa_configurator import (
     PackageConfigBase,
     ProviderConfig,
     RefTo,
-    Sensitive,
     StackConfig,
     VectorStoreConfig,
+    is_sensitive,
     mismatched_kind_refs,
+    safe_endpoint,
     unresolved_refs,
 )
 from pydantic import BaseModel
@@ -34,9 +36,25 @@ from groundskeeping.configurator.models import (
 )
 from groundskeeping.contracts.views import SemanticStatus, TreeNode, TreeView
 
-_SECRET_FIELD_NAMES = frozenset(
-    {"api_key", "credential", "key", "passwd", "password", "secret", "token"}
-)
+_CONFIG_ENTRY_POINT_GROUP = "omop.config"
+"""Entry-point group every stack package registers its ``PackageConfigBase`` under.
+
+Consulting it is what lets a ``[tools.*]`` section be rendered from its own schema.
+Sensitivity is then read off the ``Sensitive()`` markers on that schema rather than
+guessed at from field names, which is a guess this module used to make and no longer
+makes anywhere.
+"""
+_ENDPOINT_FIELDS: dict[type[BaseModel], frozenset[str]] = {
+    ProviderConfig: frozenset({"base_url"}),
+}
+"""Fields holding a free-form endpoint URL, masked with ``safe_endpoint`` on display.
+
+``ProviderConfig`` rejects userinfo at validation and declares ``api_key``
+``Sensitive()``, but nothing stops a credential riding in the query string
+(``?api_key=...``), and that URL is an ordinary non-sensitive field. Keyed by model
+type so this stays a statement about one known schema, rather than a guess about what
+any field named ``base_url`` might contain.
+"""
 _REFERENCE_TARGET_KINDS: dict[type[BaseModel], ConfigTargetKind] = {
     ConnectionConfig: ConfigTargetKind.CONNECTION,
     GenericDatabaseConfig: ConfigTargetKind.DATABASE,
@@ -51,9 +69,14 @@ class OAConfiguratorAdapter:
     """Build safe, read-only views from an oa-configurator 1.x stack.
 
     Core sections are read from the public ``StackConfig`` and concrete pydantic models.
-    A caller may additionally provide resolved ``PackageConfigBase`` instances so tool
-    fields can receive the same typed sensitivity and reference inspection. Editable
-    candidates and persistence remain outside groundskeeping.
+    ``[tools.*]`` sections are typed from the ``omop.config`` entry-point registry, so a
+    package that registers a ``PackageConfigBase`` gets the same sensitivity and reference
+    inspection without the caller doing anything. A caller may still pass resolved
+    instances, which win over the registry. Editable candidates and persistence remain
+    outside groundskeeping.
+
+    A section with no usable schema is rendered by shape only -- see
+    :meth:`_untyped_entry` for why that is the safe reading rather than the cautious one.
     """
 
     def snapshot(
@@ -64,6 +87,7 @@ class OAConfiguratorAdapter:
         package_configs: Iterable[PackageConfigBase] = (),
         title: str = "Stack configuration",
     ) -> ConfiguratorSnapshot:
+        typed, unavailable = self._resolve_package_configs(stack_config, package_configs)
         sections = (
             self._mapping_section(
                 ConfigTargetKind.CONNECTION,
@@ -95,7 +119,7 @@ class OAConfiguratorAdapter:
                 stack_config.vector_stores,
                 stack_config,
             ),
-            self._tool_section(stack_config, tuple(package_configs)),
+            self._tool_section(stack_config, typed, unavailable),
             self._logging_section(stack_config.logging, stack_config),
         )
         return ConfiguratorSnapshot(
@@ -142,15 +166,93 @@ class OAConfiguratorAdapter:
             children=children,
         )
 
+    def _resolve_package_configs(
+        self,
+        stack_config: StackConfig,
+        package_configs: Iterable[PackageConfigBase],
+    ) -> tuple[dict[str, PackageConfigBase], dict[str, str]]:
+        """Type the ``[tools.*]`` sections that have a schema available.
+
+        Returns the typed instances by tool name, and a reason-by-tool-name for the
+        sections whose registered class could not be used at all.
+
+        The registry types the sections that are *present*; it does not add sections
+        of its own. A package being installed says nothing about whether the config
+        being inspected mentions it, and inventing an entry for every registered
+        package would make the view a report on the environment rather than on the
+        file. Passing an instance explicitly is still how a caller asks for a section
+        the file does not have.
+
+        Explicitly-passed instances also win outright: a caller may hold an
+        already-resolved config carrying values that validating the section afresh
+        would not reproduce. Everything else is validated out of its own section, the
+        same way ``Resolver.resolve_package_config`` does it, absent section included.
+
+        Nothing here is allowed to raise. A registered package can fail to import
+        (missing extra, broken install, import-time error) or carry a section that no
+        longer validates, and this view is most useful precisely when an environment
+        is half-broken. Letting one bad entry point escape would take every other
+        section on the screen down with it.
+        """
+        explicit = {type(package).tool_name: package for package in package_configs}
+        registry = self._registered_config_classes()
+        typed: dict[str, PackageConfigBase] = {}
+        unavailable: dict[str, str] = {}
+        for key in set(stack_config.tools) | set(explicit):
+            package = explicit.get(key)
+            if package is not None:
+                typed[key] = package
+                continue
+            registered = registry.get(key)
+            if registered is None:
+                continue
+            if isinstance(registered, str):
+                unavailable[key] = registered
+                continue
+            try:
+                section = stack_config.tools.get(key, {})
+                typed[key] = registered.model_validate(section)
+            except Exception as exc:  # noqa: BLE001 - a bad section must not break the view
+                unavailable[key] = f"{type(exc).__name__}: {exc}"
+        return typed, unavailable
+
+    def _registered_config_classes(
+        self,
+    ) -> dict[str, type[PackageConfigBase] | str]:
+        """Map tool name to the config class registered for it.
+
+        An entry that fails to load maps to its failure text instead of a class, so
+        the caller can report an unreadable section rather than silently lose it.
+        Such an entry is keyed by its entry-point name, the two agreeing by
+        convention; a loadable one is keyed by the ``tool_name`` the class itself
+        declares, which is what the TOML section is actually named after.
+
+        A distribution with unreadable metadata can take out the whole enumeration,
+        which is why even that is caught.
+        """
+        try:
+            found = tuple(entry_points(group=_CONFIG_ENTRY_POINT_GROUP))
+        except Exception:  # noqa: BLE001 - broken metadata is not worth a traceback here
+            return {}
+        registered: dict[str, type[PackageConfigBase] | str] = {}
+        for entry_point in found:
+            try:
+                config_class = entry_point.load()
+            except Exception as exc:  # noqa: BLE001 - see _resolve_package_configs
+                registered[entry_point.name] = f"{type(exc).__name__}: {exc}"
+                continue
+            registered[getattr(config_class, "tool_name", entry_point.name)] = config_class
+        return registered
+
     def _tool_section(
         self,
         stack_config: StackConfig,
-        package_configs: tuple[PackageConfigBase, ...],
+        typed: Mapping[str, PackageConfigBase],
+        unavailable: Mapping[str, str],
     ) -> ConfigSectionView:
-        known = {type(package).tool_name: package for package in package_configs}
         children = []
-        for key in sorted(set(stack_config.tools) | set(known)):
-            package = known.get(key)
+        for key in sorted(set(stack_config.tools) | set(typed) | set(unavailable)):
+            package = typed.get(key)
             if package is not None:
                 children.append(
                     self._typed_entry(
@@ -162,17 +264,10 @@ class OAConfiguratorAdapter:
                 )
                 continue
             children.append(
-                ConfigSectionView(
-                    target=ConfigTarget(
-                        kind=ConfigTargetKind.TOOL,
-                        key=key,
-                        title=key,
-                        status=SemanticStatus.WARNING,
-                    ),
-                    fields=self._safe_untyped_fields(stack_config.tools[key]),
-                    notes=(
-                        "Package schema unavailable; reference status is unknown.",
-                    ),
+                self._untyped_entry(
+                    key,
+                    stack_config.tools.get(key, {}),
+                    unavailable.get(key),
                 )
             )
         child_tuple = tuple(children)
@@ -243,8 +338,11 @@ class OAConfiguratorAdapter:
         notes: list[str] = []
         for name, info in type(value).model_fields.items():
             item = getattr(value, name)
-            if self._is_sensitive_field(name, info.metadata):
+            if is_sensitive(info):
                 fields[name] = RedactedValue()
+                continue
+            if name in _ENDPOINT_FIELDS.get(type(value), frozenset()):
+                fields[name] = safe_endpoint(item)
                 continue
             ref = next((marker for marker in info.metadata if isinstance(marker, RefTo)), None)
             if ref is not None and item is not None:
@@ -300,17 +398,36 @@ class OAConfiguratorAdapter:
             expected_type=expected_type,
         )
 
-    def _safe_untyped_fields(self, value: Mapping[str, object]) -> Mapping[str, object]:
-        return {
-            str(name): self._display_value(
-                item,
-                sensitive=self._is_sensitive_name(str(name)),
-            )
-            for name, item in value.items()
-        }
+    def _untyped_entry(
+        self,
+        key: str,
+        section: Mapping[str, object],
+        failure: str | None,
+    ) -> ConfigSectionView:
+        """
+        Render the shape of a section with no usable schema, never its values.
+        """
+        notes = [
+            f"No config class could be loaded for this section ({failure})."
+            if failure is not None
+            else "No config class is registered for this section.",
+            "Values are hidden. Register a PackageConfigBase under the "
+            f"{_CONFIG_ENTRY_POINT_GROUP!r} entry-point group and mark secrets with "
+            "Sensitive() to inspect them.",
+        ]
+        return ConfigSectionView(
+            target=ConfigTarget(
+                kind=ConfigTargetKind.TOOL,
+                key=key,
+                title=key,
+                status=SemanticStatus.WARNING,
+            ),
+            fields={"keys": len(section)},
+            notes=tuple(notes),
+        )
 
-    def _display_value(self, value: object, *, sensitive: bool = False) -> object:
-        safe = self._redact_nested(value, sensitive=sensitive)
+    def _display_value(self, value: object) -> object:
+        safe = self._redact_nested(value)
         if self._looks_scalar(safe):
             return safe
         return self._summarize(safe)
@@ -322,18 +439,12 @@ class OAConfiguratorAdapter:
             return {
                 name: self._redact_nested(
                     getattr(value, name),
-                    sensitive=self._is_sensitive_field(name, info.metadata),
+                    sensitive=is_sensitive(info),
                 )
                 for name, info in type(value).model_fields.items()
             }
         if isinstance(value, Mapping):
-            return {
-                str(name): self._redact_nested(
-                    item,
-                    sensitive=self._is_sensitive_name(str(name)),
-                )
-                for name, item in value.items()
-            }
+            return {str(name): self._redact_nested(item) for name, item in value.items()}
         if isinstance(value, Sequence) and not isinstance(value, str | bytes | bytearray):
             return tuple(self._redact_nested(item) for item in value)
         if isinstance(value, set | frozenset):
@@ -343,15 +454,6 @@ class OAConfiguratorAdapter:
         if isinstance(value, Path):
             return str(value)
         return value
-
-    def _is_sensitive_field(self, name: str, metadata: Sequence[object]) -> bool:
-        return any(isinstance(marker, Sensitive) for marker in metadata) or self._is_sensitive_name(name)
-
-    def _is_sensitive_name(self, name: str) -> bool:
-        normalized = name.lower().replace("-", "_")
-        return normalized in _SECRET_FIELD_NAMES or normalized.endswith(
-            ("_password", "_secret", "_token", "_api_key")
-        )
 
     def _group_status(self, children: tuple[ConfigSectionView, ...]) -> SemanticStatus:
         statuses = {child.target.status for child in children}
