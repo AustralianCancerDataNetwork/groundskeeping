@@ -411,9 +411,9 @@ class OAConfiguratorAdapter:
             f"No config class could be loaded for this section ({failure})."
             if failure is not None
             else "No config class is registered for this section.",
-            "Values are hidden. Register a PackageConfigBase under the "
+            ("Values are hidden. Register a PackageConfigBase under the "
             f"{_CONFIG_ENTRY_POINT_GROUP!r} entry-point group and mark secrets with "
-            "Sensitive() to inspect them.",
+            "Sensitive() to inspect them."),
         ]
         return ConfigSectionView(
             target=ConfigTarget(

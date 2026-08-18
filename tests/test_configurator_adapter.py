@@ -23,7 +23,6 @@ from oa_configurator import (
 from textual.app import App, ComposeResult
 from textual.widgets import Tree
 
-from groundskeeping.configurator import adapter as adapter_module
 from groundskeeping.configurator import (
     ConfigReferenceStatus,
     ConfigReferenceView,
@@ -32,6 +31,7 @@ from groundskeeping.configurator import (
     OAConfiguratorAdapter,
     RedactedValue,
 )
+from groundskeeping.configurator import adapter as adapter_module
 from groundskeeping.contracts import SemanticStatus
 from groundskeeping.widgets.configurator import ConfiguratorBrowser
 
