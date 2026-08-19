@@ -311,7 +311,7 @@ requires-dist = [
     { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.1" },
     { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.7.1" },
     { name = "mkdocstrings-python", marker = "extra == 'dev'", specifier = ">=2.0.1" },
-    { name = "oa-configurator", specifier = ">=1.2,<2" },
+    { name = "oa-configurator", specifier = ">=1.2.1,<2" },
     { name = "pydantic", specifier = ">=2.7,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
@@ -612,7 +612,7 @@ wheels = [
 
 [[package]]
 name = "oa-configurator"
-version = "1.2.0"
+version = "1.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -622,9 +622,9 @@ dependencies = [
     { name = "tomli-w" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b5/3f/c643124c59c712bf856276b0875eca07f2ddf05ea49ca4c3b810c5963471/oa_configurator-1.2.0.tar.gz", hash = "sha256:c10e76cbf6211b2b29fae48acc1791c6986cb3db76ed58565d04cbdd2d05cad8", size = 182260, upload-time = "2026-08-18T12:54:21.768Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/6f/126bb395080255cca45cd173aec1903aa13f8fc6b153ba5fce760371e1dd/oa_configurator-1.2.1.tar.gz", hash = "sha256:50828dc2490e533ac535d2bf5f008c61a5962095283d2f98d9041f4e40b769e2", size = 182917, upload-time = "2026-08-19T00:12:36.746Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/b6/d2e466aa1070473374e773507744377c356cc2a5fe634ef843b346a366a4/oa_configurator-1.2.0-py3-none-any.whl", hash = "sha256:a4319073173fb2825992c98dc76dbd33419a474ca8562162da50ccc391fcc1dc", size = 64016, upload-time = "2026-08-18T12:54:20.551Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/c0/9246c3948f1f8e62e6e6865d050a961111fb0720f53daceaf77a9a9bb80e/oa_configurator-1.2.1-py3-none-any.whl", hash = "sha256:707a1c321245e2eb6d62e5a9acf81c1145291edb5ace83489d0d726e05291ad0", size = 64178, upload-time = "2026-08-19T00:12:35.357Z" },
 ]
 
 [[package]]

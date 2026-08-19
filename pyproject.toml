@@ -8,7 +8,7 @@ authors = [
   { name = "Georgie Kennedy", email = "georgie.kennedy@unsw.edu.au" },
 ]
 dependencies = [
-    "oa-configurator>=1.2,<2",
+    "oa-configurator>=1.2.1,<2",
     "pydantic>=2.7,<3",
     "textual>=8.2,<9",
 ]
