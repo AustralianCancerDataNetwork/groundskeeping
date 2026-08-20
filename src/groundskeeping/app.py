@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import ClassVar, cast
 
 from rich.text import Text
@@ -146,7 +147,7 @@ class _AppPageContext(PageContext):
 class OperatorApp(App[None]):
     """Reusable application frame: header, tabs, mounted pages, and workbench."""
 
-    CSS_PATH: ClassVar[str] = "themes/groundskeeping.tcss"
+    CSS_PATH: ClassVar[str] = str(Path(__file__).parent / "themes" / "groundskeeping.tcss")
     BINDINGS: ClassVar[list[Binding]] = [
         Binding("q", "quit", "Quit"),
     ]
