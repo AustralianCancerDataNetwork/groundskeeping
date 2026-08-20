@@ -29,6 +29,10 @@ from groundskeeping.contracts.wizards import (
     WizardSnapshot,
 )
 
+_EDIT_IN_PLACE_KINDS = frozenset(
+    {FieldKind.TEXT, FieldKind.EXISTING_PATH, FieldKind.OUTPUT_PATH}
+)
+
 
 class WizardScreen(ModalScreen[WizardResult]):
     """Reusable one-step-at-a-time wizard surface."""
@@ -232,6 +236,7 @@ class WizardScreen(ModalScreen[WizardResult]):
             type=input_type,
             id=widget_id,
             disabled=disabled,
+            select_on_focus=_selects_on_focus(field),
         )
 
     def _collect_values(self, snapshot: WizardSnapshot) -> dict[str, object]:
@@ -277,6 +282,14 @@ class WizardScreen(ModalScreen[WizardResult]):
         if self._snapshot is None:
             raise RuntimeError("Wizard has not started.")
         return self._snapshot
+
+
+def _selects_on_focus(field: FieldSpec) -> bool:
+    """Resolve the field's own choice, falling back to what its kind implies."""
+
+    if field.select_on_focus is not None:
+        return field.select_on_focus
+    return field.kind not in _EDIT_IN_PLACE_KINDS
 
 
 def _widget_value(widget: object) -> object:

@@ -85,6 +85,7 @@ class FieldSpec:
     sensitive: bool = False
     secret_clearable: bool = False
     validator: Validator | None = field(default=None, compare=False, repr=False)
+    select_on_focus: bool | None = None
 
     @property
     def masks_value(self) -> bool:

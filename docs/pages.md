@@ -36,6 +36,21 @@ Translate application objects before they reach the workbench. A page can know a
 
 Use `OperatorAppSpec.workbench_labels` when the shared pane chrome needs application language, such as **Checks** instead of **Rows**. Page-specific titles still belong on navigation and view models.
 
+## Extend the stylesheet
+
+`OperatorApp` loads the packaged theme from an absolute path, so a subclass keeps it wherever the consuming package lives. Add application rules through Textual's `CSS` class variable; it is read separately and layers over the theme.
+
+```python
+class GroundworkersApp(OperatorApp):
+    CSS = """
+    #wizard-body TextArea { height: 12; }
+    """
+```
+
+The same hook covers sizing the packaged theme fixes for one shape of terminal. Wizard buttons keep a uniform 14-cell minimum, which needs about 94 columns for all five to fit; `#wizard-buttons Button { min-width: 10; }` lets the strip shrink to its labels and fits from about 72.
+
+Do not re-declare `CSS_PATH` in a subclass. It replaces the packaged theme rather than adding to it, and a relative path there is resolved against the consuming package.
+
 ## Register routes at startup
 
 `PageRoute` is the stable identity of a page. Its `label` appears in navigation and its `purpose` tells the operator what the page is for.

@@ -10,6 +10,18 @@ Screen {
     scrollbar-color: $primary 50%;
 }
 
+Input {
+    scrollbar-size-horizontal: 0;
+}
+
+Button:disabled {
+    background: $surface;
+    color: $text-disabled;
+    border-top: tall $surface-lighten-1;
+    border-bottom: tall $surface-darken-1;
+    text-style: none;
+}
+
 #body {
     height: 1fr;
 }
@@ -82,9 +94,12 @@ Screen {
 }
 
 #wizard-buttons Button {
-    width: 14;
+    width: auto;
     min-width: 14;
+    max-width: 24;
     margin-left: 1;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
 }
 
 .wizard-field-label {
@@ -100,6 +115,10 @@ Screen {
 
 .wizard-warning {
     color: $text-warning;
+}
+
+#wizard-body TextArea {
+    height: 8;
 }
 
 Select.wizard-choice-list {
