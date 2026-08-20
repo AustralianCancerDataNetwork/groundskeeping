@@ -598,6 +598,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#extend-the-stylesheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extend the stylesheet
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#register-routes-at-startup" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1157,6 +1168,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#extend-the-stylesheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extend the stylesheet
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#register-routes-at-startup" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1363,6 +1385,15 @@
 </tbody>
 </table>
 <p>Use <code>OperatorAppSpec.workbench_labels</code> when the shared pane chrome needs application language, such as <strong>Checks</strong> instead of <strong>Rows</strong>. Page-specific titles still belong on navigation and view models.</p>
+<h2 id="extend-the-stylesheet">Extend the stylesheet<a class="headerlink" href="#extend-the-stylesheet" title="Permanent link">&para;</a></h2>
+<p><code>OperatorApp</code> loads the packaged theme from an absolute path, so a subclass keeps it wherever the consuming package lives. Add application rules through Textual's <code>CSS</code> class variable; it is read separately and layers over the theme.</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GroundworkersApp</span><span class="p">(</span><span class="n">OperatorApp</span><span class="p">):</span>
+    <span class="n">CSS</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    #wizard-body TextArea { height: 12; }</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+</code></pre></div>
+<p>The same hook covers sizing the packaged theme fixes for one shape of terminal. Wizard buttons keep a uniform 14-cell minimum, which needs about 94 columns for all five to fit; <code>#wizard-buttons Button { min-width: 10; }</code> lets the strip shrink to its labels and fits from about 72.</p>
+<p>Do not re-declare <code>CSS_PATH</code> in a subclass. It replaces the packaged theme rather than adding to it, and a relative path there is resolved against the consuming package.</p>
 <h2 id="register-routes-at-startup">Register routes at startup<a class="headerlink" href="#register-routes-at-startup" title="Permanent link">&para;</a></h2>
 <p><code>PageRoute</code> is the stable identity of a page. Its <code>label</code> appears in navigation and its <code>purpose</code> tells the operator what the page is for.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">groundskeeping.contracts</span><span class="w"> </span><span class="kn">import</span> <span class="n">PageRegistration</span><span class="p">,</span> <span class="n">PageRoute</span>

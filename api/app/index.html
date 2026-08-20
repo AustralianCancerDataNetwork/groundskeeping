@@ -2013,7 +2013,9 @@
   </span>
 
 <a href="#groundskeeping.app.OperatorApp.CSS_PATH" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="n">CSS_PATH</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;themes/groundskeeping.tcss&#39;</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">CSS_PATH</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+    <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;themes&quot;</span> <span class="o">/</span> <span class="s2">&quot;groundskeeping.tcss&quot;</span>
+<span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
