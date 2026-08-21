@@ -109,6 +109,11 @@ class _WorkbenchSurface(PageSurfacePort):
         self._workbench.show_surface(view)
         self._lease(page_key, view.title)
 
+    def refresh_view(self, page_key: str, view: SurfaceView) -> None:
+        """Refresh a page surface while retaining Workbench-owned table state."""
+        self._workbench.refresh_view(view)
+        self._lease(page_key, view.title)
+
     def show_detail(self, page_key: str, detail: DetailView) -> None:
         self._workbench.show_detail(detail)
         self._lease(page_key, "detail")

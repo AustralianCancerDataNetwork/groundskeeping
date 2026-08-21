@@ -30,7 +30,7 @@ Run the self-contained demo:
 uv run groundskeeping
 ```
 
-The Configuration page uses a deterministic fake provider, so you can try branching, review, and apply behavior without writing a file.
+The self-contained Setup page demonstrates a database-style results table with highlighted-row detail, while Configuration uses a deterministic fake provider so you can try branching, review, and apply behavior without writing a file.
 
 ## Minimal composition
 

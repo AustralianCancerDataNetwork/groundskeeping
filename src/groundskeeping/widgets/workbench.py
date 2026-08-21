@@ -38,6 +38,7 @@ from groundskeeping.contracts.views import (
     SelectionTableView,
     SemanticStatus,
     SurfaceView,
+    TableRow,
     TableView,
     TextView,
     TreeNode,
@@ -56,6 +57,25 @@ class _SelectionTableList(SelectionList[str]):
         Binding("space", "select", "Toggle row", show=False),
         Binding("enter", "select", "Toggle row", show=False),
     ]
+
+
+class _WorkbenchDataTable(DataTable[Any]):
+    """DataTable adapter used to make silent cursor restoration possible.
+
+    Textual's cursor watcher always posts ``RowHighlighted`` when a row cursor moves;
+    there is no public flag for a data refresh to restore a cursor without notifying the
+    page. The Workbench owns this narrow adapter so user cursor movement keeps the
+    normal event contract while reconciliation can update membership and coordinates
+    silently.
+    """
+
+    suppress_row_highlights = False
+
+    def _highlight_row(self, row_index: int) -> None:
+        if self.suppress_row_highlights:
+            self.refresh_row(row_index)
+            return
+        super()._highlight_row(row_index)
 
 
 class Workbench(Widget):
@@ -115,7 +135,7 @@ class Workbench(Widget):
                     with Horizontal(id="result-actions"):
                         for index in range(MAX_VIEW_ACTIONS):
                             yield Button("", id=f"view-action-{index}")
-                    yield DataTable(id="result-table")
+                    yield _WorkbenchDataTable(id="result-table")
                     yield Static("", id="result-selection-header")
                     yield _SelectionTableList(id="result-selection-table")
                     yield Tree("Result details", id="result-tree")
@@ -161,8 +181,8 @@ class Workbench(Widget):
         return self.query_one("#sections", OptionList)
 
     @property
-    def rows_table(self) -> DataTable[Any]:
-        return self.query_one("#result-table", DataTable)
+    def rows_table(self) -> _WorkbenchDataTable:
+        return self.query_one("#result-table", _WorkbenchDataTable)
 
     @property
     def selection_table(self) -> SelectionList[str]:
@@ -172,18 +192,26 @@ class Workbench(Widget):
         panel = self.query_one("#catalogue-panel")
         panel.border_title = navigation.title
         if isinstance(navigation, SectionNavigation):
+            selected_key = None
+            highlighted = self.sections.highlighted_option
+            if highlighted is not None and highlighted.id is not None:
+                selected_key = highlighted.id
             self.catalogue.styles.display = "none"
             self.sections.styles.display = "block"
             self.sections.clear_options()
             self.sections.add_options(
                 Option(
-                    node_label(item.status, item.label, item.description),
-                    id=item.key,
+                    node_label(item.status, item.label, item.description), id=item.key
                 )
                 for item in navigation.items
             )
             if navigation.items:
-                self.sections.highlighted = 0
+                item_keys = tuple(item.key for item in navigation.items)
+                self.sections.highlighted = (
+                    item_keys.index(selected_key)
+                    if selected_key in item_keys
+                    else 0
+                )
             return
 
         self.sections.styles.display = "none"
@@ -259,21 +287,134 @@ class Workbench(Widget):
         self.query_one("#result-summary", Static).update(summary)
 
     def show_rows(self, view: TableView, *, select_first: bool = True) -> None:
-        self._hide_loading()
-        self._hide_selection_table()
-        self.query_one("#result-tree", Tree).styles.display = "none"
-        self.query_one("#result-empty", EmptyState).hide_empty()
         table = self.rows_table
+        self._prepare_table_surface(view)
         table.clear(columns=True)
         table.add_columns(*view.columns)
         for row in view.rows:
             table.add_row(*row.cells, key=row.key)
-        table.styles.display = "block"
+        if view.rows and select_first:
+            table.move_cursor(row=0, column=0, animate=False)
+
+    def refresh_view(self, view: SurfaceView) -> None:
+        """Refresh a surface, preserving cursor state when it is a table.
+
+        Consumer pages should use this for ordinary data refreshes. Non-table surfaces
+        still use the normal replacement path because they have no row identity to
+        retain.
+        """
+        if isinstance(view, TableView):
+            self.refresh_rows(view)
+            return
+        self.show_surface(view)
+
+    def refresh_rows(self, view: TableView) -> None:
+        """Reconcile table rows in place while preserving the highlighted row by key.
+
+        Existing cells are updated without rebuilding the DataTable. Added and removed
+        rows are reconciled by their stable keys; if the highlighted row disappears, the
+        cursor stays at its previous position where possible. Cursor changes caused by
+        this reconciliation are deliberately silent, so a refresh cannot re-enter a
+        page's ``row_highlighted`` handler.
+        """
+        table = self.rows_table
+        was_visible = table.styles.display != "none"
+        old_index = table.cursor_row
+        old_column = table.cursor_column
+        old_key = self._row_key_at(table, old_index) if was_visible else None
+        old_keys = self._table_row_keys(table) if was_visible else ()
+
+        self._prepare_table_surface(view)
+        table.suppress_row_highlights = True
+        try:
+            new_keys = tuple(row.key for row in view.rows)
+            if not was_visible or self._table_columns(table) != tuple(view.columns):
+                self._replace_table_rows(table, view)
+            elif old_keys != new_keys:
+                self._reconcile_table_rows(table, view, old_keys)
+            else:
+                for row in view.rows:
+                    self._update_table_row(table, row, len(view.columns))
+
+            if view.rows:
+                target_index = (
+                    new_keys.index(old_key)
+                    if old_key in new_keys
+                    else min(old_index, len(view.rows) - 1)
+                )
+                target_column = min(old_column, len(view.columns) - 1)
+                table.move_cursor(
+                    row=target_index,
+                    column=target_column,
+                    animate=False,
+                )
+        finally:
+            table.suppress_row_highlights = False
+
+    def _prepare_table_surface(self, view: TableView) -> None:
+        self._hide_loading()
+        self._hide_selection_table()
+        self.query_one("#result-tree", Tree).styles.display = "none"
+        self.query_one("#result-empty", EmptyState).hide_empty()
+        self.rows_table.styles.display = "block"
         self.set_status(view.status)
         self.set_summary(view.title, view.message)
         self.query_one("#result-panel").border_subtitle = f"{len(view.rows)} rows"
-        if view.rows and select_first:
-            table.move_cursor(row=0, column=0, animate=False)
+
+    def _replace_table_rows(self, table: _WorkbenchDataTable, view: TableView) -> None:
+        table.clear(columns=True)
+        table.add_columns(*view.columns)
+        for row in view.rows:
+            table.add_row(*row.cells, key=row.key)
+
+    def _reconcile_table_rows(
+        self,
+        table: _WorkbenchDataTable,
+        view: TableView,
+        old_keys: tuple[str, ...],
+    ) -> None:
+        new_keys = tuple(row.key for row in view.rows)
+        expected_incremental_order = tuple(
+            key for key in old_keys if key in new_keys
+        ) + tuple(key for key in new_keys if key not in old_keys)
+        if new_keys != expected_incremental_order:
+            self._replace_table_rows(table, view)
+            return
+
+        new_by_key = {row.key: row for row in view.rows}
+        for key in old_keys:
+            if key not in new_by_key:
+                table.remove_row(key)
+        for row in view.rows:
+            if row.key not in old_keys:
+                table.add_row(*row.cells, key=row.key)
+            else:
+                self._update_table_row(table, row, len(view.columns))
+
+    def _update_table_row(
+        self, table: _WorkbenchDataTable, row: TableRow, column_count: int
+    ) -> None:
+        if len(row.cells) > column_count:
+            raise ValueError(
+                f"Table row {row.key!r} has more cells than the view has columns."
+            )
+        cells = tuple(row.cells) + (None,) * (column_count - len(row.cells))
+        for column, cell in zip(table.ordered_columns, cells):
+            table.update_cell(row.key, column.key, cell, update_width=True)
+
+    @staticmethod
+    def _table_columns(table: _WorkbenchDataTable) -> tuple[str, ...]:
+        return tuple(str(column.label) for column in table.ordered_columns)
+
+    @staticmethod
+    def _table_row_keys(table: _WorkbenchDataTable) -> tuple[str, ...]:
+        return tuple(str(row.key.value) for row in table.ordered_rows)
+
+    @staticmethod
+    def _row_key_at(table: _WorkbenchDataTable, index: int) -> str | None:
+        if not 0 <= index < table.row_count:
+            return None
+        return str(table.ordered_rows[index].key.value)
 
     def show_selection_rows(
         self, view: SelectionTableView, *, highlight_first: bool = True

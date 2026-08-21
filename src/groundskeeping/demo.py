@@ -38,6 +38,7 @@ from groundskeeping.contracts import (
     SurfaceView,
     TableRow,
     TableView,
+    TextView,
     TreeNode,
     TreeView,
     ViewAction,
@@ -132,6 +133,11 @@ TELEMETRY_ROUTE = PageRoute(
     key="telemetry",
     label="Telemetry",
     purpose="Normalized metrics rendered without provider-specific branches.",
+)
+SETUP_ROUTE = PageRoute(
+    key="setup",
+    label="Setup",
+    purpose="Configure and verify the services used by an operator tool.",
 )
 
 
@@ -237,6 +243,167 @@ class OverviewPage(_DemoPage):
                     "rxnorm",
                     ("RxNorm", "41%", "available"),
                     selected="rxnorm" in selected,
+                ),
+            ),
+        )
+
+
+class SetupPage(_DemoPage):
+    """Exercise the ordinary table/detail workbench flow used by setup pages."""
+
+    route = SETUP_ROUTE
+
+    _database_section = "setup.database"
+    _graph_section = "setup.graph"
+    _runs_section = "setup.runs"
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._selected_section = self._database_section
+
+    def build_navigation(self, context: PageContext) -> SectionNavigation:
+        return SectionNavigation(
+            title="Setup",
+            items=(
+                SectionItem(
+                    "setup.overview", "Overview", status=SemanticStatus.OK
+                ),
+                SectionItem(
+                    self._database_section,
+                    "Database",
+                    status=SemanticStatus.WARNING,
+                    description="Connection and schema checks",
+                ),
+                SectionItem(
+                    self._graph_section, "Graph", status=SemanticStatus.OK
+                ),
+                SectionItem("setup.chat", "Chat Model", status=SemanticStatus.INFO),
+                SectionItem(
+                    "setup.embeddings", "Embeddings", status=SemanticStatus.OK
+                ),
+                SectionItem("setup.configuration", "View Configuration"),
+                SectionItem(
+                    self._runs_section, "Runs", status=SemanticStatus.ERROR
+                ),
+            ),
+        )
+
+    def landing_view(self, context: PageContext) -> SurfaceView:
+        return self._view_for_section(self._selected_section)
+
+    def navigation_selected(self, item: NavigationItem, context: PageContext) -> None:
+        if not isinstance(item, SectionItem):
+            return
+        self._selected_section = item.key
+        context.surface.show_view(self.route.key, self.landing_view(context))
+        if item.key != self._database_section:
+            context.surface.show_detail(
+                self.route.key,
+                TextView(
+                    title="Setup detail",
+                    body="Select Database to inspect connection and schema checks.",
+                ),
+            )
+
+    def action_selected(self, action_key: str, context: PageContext) -> None:
+        if action_key == "setup.database.refresh":
+            context.surface.refresh_view(self.route.key, self._database_view())
+        elif action_key == "setup.database.test":
+            context.notify("Demo connection checks completed.")
+
+    def row_highlighted(self, row_key: str, context: PageContext) -> None:
+        if self._selected_section != self._database_section:
+            return
+        details = {
+            "metadata": (
+                ("Connection", "postgresql://metadata.local/demo"),
+                ("Schemas", "public / public"),
+                ("Status", "Connected"),
+                ("Detail", "Metadata schema is authoritative."),
+            ),
+            "graph": (
+                ("Connection", "postgresql://metadata.local/demo"),
+                ("Schemas", "public / public"),
+                ("Status", "Connected"),
+                ("Detail", "Graph readiness checks are available."),
+            ),
+            "groundworkers": (
+                ("Connection", "postgresql://metadata.local/demo"),
+                ("Schemas", "public / public"),
+                ("Status", "Warning"),
+                ("Detail", "Groundworkers schema needs attention."),
+            ),
+            "embeddings": (
+                ("Connection", "postgresql://metadata.local/demo"),
+                ("Schemas", "public / public"),
+                ("Status", "Connected"),
+                ("Detail", "Embedding store is ready."),
+            ),
+        }.get(row_key)
+        if details is not None:
+            context.surface.show_detail(
+                self.route.key,
+                KeyValueView(title="Database detail", rows=details),
+            )
+
+    def _view_for_section(self, section_key: str) -> SurfaceView:
+        if section_key == self._database_section:
+            return self._database_view()
+        if section_key == self._graph_section:
+            return TreeView(
+                title="Graph setup",
+                message="The graph service is ready in this demo.",
+                rows=(
+                    TreeNode(
+                        "Graph service", status=SemanticStatus.OK, fields={"status": "ready"}
+                    ),
+                ),
+            )
+        if section_key == self._runs_section:
+            return EmptyView(
+                title="Runs",
+                message="No durable maintenance runs are active in the demo.",
+                status=SemanticStatus.ERROR,
+            )
+        return TreeView(
+            title="Setup overview",
+            message="Choose Database to inspect a selectable results table.",
+            rows=(
+                TreeNode(
+                    "Operator environment",
+                    status=SemanticStatus.INFO,
+                    fields={"configuration": "authoritative"},
+                ),
+            ),
+        )
+
+    def _database_view(self) -> TableView:
+        return TableView(
+            title="Databases",
+            message="/demo/stack.toml  |  authoritative",
+            status=SemanticStatus.WARNING,
+            columns=("Entry", "Connection", "Schemas", "Status", "Latency"),
+            actions=(
+                ViewAction("setup.database.configure", "Configure", variant="primary"),
+                ViewAction("setup.database.test", "Test connections"),
+                ViewAction("setup.database.refresh", "Refresh"),
+            ),
+            rows=(
+                TableRow(
+                    "metadata",
+                    ("CDM / vocabulary", "cdm_main", "public / public", "Connected", "65.6 ms"),
+                ),
+                TableRow(
+                    "graph",
+                    ("Graph readiness", "cdm_main", "public / public", "Connected", "121.6 ms"),
+                ),
+                TableRow(
+                    "groundworkers",
+                    ("Groundworkers", "cdm_main", "public / public", "Warning", "105.4 ms"),
+                ),
+                TableRow(
+                    "embeddings",
+                    ("Embedding store", "cdm_main", "public / public", "Connected", "103.6 ms"),
                 ),
             ),
         )
@@ -392,6 +559,9 @@ def build_demo_spec() -> OperatorAppSpec:
     def telemetry_factory(context: PageContext) -> OperatorPage:
         return TelemetryPage()
 
+    def setup_factory(context: PageContext) -> OperatorPage:
+        return SetupPage()
+
     def demo_runner(
         params: Mapping[str, object], context: ActionContext
     ) -> ActionOutcome:
@@ -431,6 +601,7 @@ def build_demo_spec() -> OperatorAppSpec:
             PageRegistration(route=OVERVIEW_ROUTE, factory=overview_factory),
             PageRegistration(route=CONFIG_ROUTE, factory=config_factory),
             PageRegistration(route=TELEMETRY_ROUTE, factory=telemetry_factory),
+            PageRegistration(route=SETUP_ROUTE, factory=setup_factory),
         ),
     )
 

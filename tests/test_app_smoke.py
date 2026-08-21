@@ -123,7 +123,7 @@ def test_demo_app_enters_textual_startup_context() -> None:
         app = OperatorApp(build_demo_spec())
 
         async with app.run_test() as pilot:
-            assert app.registry.keys() == ("overview", "config", "telemetry")
+            assert app.registry.keys() == ("overview", "config", "telemetry", "setup")
             assert app.query_one("#workspace-title") is not None
             assert app.query_one(".operator-page.-active").region.height == 0
             assert app.query_one("#workbench").region.height > 0
@@ -144,6 +144,34 @@ def test_demo_app_enters_textual_startup_context() -> None:
                 == context_panel.region.x
                 == workbench_right.region.x
             )
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_demo_setup_page_connects_a_table_row_to_lower_detail() -> None:
+    async def run() -> None:
+        app = OperatorApp(build_demo_spec())
+
+        async with app.run_test(size=(120, 40)) as pilot:
+            app.show_page("setup")
+            await pilot.pause()
+
+            table = app.query_one("#result-table", DataTable)
+            detail = app.query_one("#context-table", DataTable)
+            assert table.row_count == 4
+            assert detail.styles.display == "block"
+            assert "Metadata schema" in str(detail.get_cell_at(Coordinate(3, 1)))
+
+            table.move_cursor(row=2, column=0, animate=False)
+            await pilot.pause()
+
+            assert "Groundworkers schema" in str(detail.get_cell_at(Coordinate(3, 1)))
+
+            app._pages["setup"].action_selected("setup.database.refresh", app._page_context)
+            await pilot.pause()
+            assert table.ordered_rows[table.cursor_row].key.value == "groundworkers"
+            assert "Groundworkers schema" in str(detail.get_cell_at(Coordinate(3, 1)))
             await pilot.press("q")
 
     asyncio.run(run())

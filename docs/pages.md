@@ -105,6 +105,20 @@ def row_highlighted(self, row_key: str, context: PageContext) -> None:
     )
 ```
 
+For an ordinary data refresh, use `context.surface.refresh_view()` with a `TableView`.
+Groundskeeping updates existing cells in place, reconciles added and removed rows, and
+keeps the highlighted row by its stable `TableRow.key` without re-entering `row_highlighted()`.
+If that row was removed, the cursor remains at the nearest surviving position. This also
+leaves the current section navigation untouched:
+
+```python
+context.surface.refresh_view(self.route.key, self._current_jobs_view())
+```
+
+Use `show_view()` when changing surfaces or intentionally resetting the table. The shared
+Workbench also exposes the focused `Workbench.refresh_rows(view)` method for consumers that
+compose the widget directly.
+
 If `landing_view()` raises, the shell replaces it with an explanatory `EmptyView` instead of taking down the application. Still catch expected domain failures in the page so you can give the operator specific recovery guidance.
 
 ## Handle selectable tables
