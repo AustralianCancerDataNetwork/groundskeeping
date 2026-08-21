@@ -16,7 +16,7 @@ uv add groundskeeping
 uv run groundskeeping
 ```
 
-The demo has Overview, Configuration, and Telemetry pages and does not depend on Groundworkers or `cava-nlp-shard`. Its configuration page uses the deterministic fake mutation provider, so no file is written. The source in `src/groundskeeping/demo.py` is also a useful composition reference.
+The demo has Overview, Configuration, Telemetry, and Setup pages and does not depend on Groundworkers or `cava-nlp-shard`. Its configuration page uses the deterministic fake mutation provider, so no file is written. The Setup page demonstrates an ordinary results table whose highlighted row fills the lower detail pane; the source in `src/groundskeeping/demo.py` is also a useful composition reference.
 
 ## Build one page
 

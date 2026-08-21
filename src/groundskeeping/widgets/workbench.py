@@ -38,6 +38,7 @@ from groundskeeping.contracts.views import (
     SelectionTableView,
     SemanticStatus,
     SurfaceView,
+    TableRow,
     TableView,
     TextView,
     TreeNode,
