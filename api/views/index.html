@@ -5473,6 +5473,9 @@
 
 
         <p>A table-shaped surface view.</p>
+<p><code>TableRow.key</code> is the stable identity used by the workbench when a consumer calls
+its refresh API. Keep keys stable for rows that remain in the underlying data set so
+the operator's cursor can follow the same row as cells and row membership change.</p>
 
 
 

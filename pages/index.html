@@ -1478,6 +1478,16 @@
         <span class="p">),</span>
     <span class="p">)</span>
 </code></pre></div>
+<p>For an ordinary data refresh, use <code>context.surface.refresh_view()</code> with a <code>TableView</code>.
+Groundskeeping updates existing cells in place, reconciles added and removed rows, and
+keeps the highlighted row by its stable <code>TableRow.key</code> without re-entering <code>row_highlighted()</code>.
+If that row was removed, the cursor remains at the nearest surviving position. This also
+leaves the current section navigation untouched:</p>
+<div class="highlight"><pre><span></span><code><span class="n">context</span><span class="o">.</span><span class="n">surface</span><span class="o">.</span><span class="n">refresh_view</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_jobs_view</span><span class="p">())</span>
+</code></pre></div>
+<p>Use <code>show_view()</code> when changing surfaces or intentionally resetting the table. The shared
+Workbench also exposes the focused <code>Workbench.refresh_rows(view)</code> method for consumers that
+compose the widget directly.</p>
 <p>If <code>landing_view()</code> raises, the shell replaces it with an explanatory <code>EmptyView</code> instead of taking down the application. Still catch expected domain failures in the page so you can give the operator specific recovery guidance.</p>
 <h2 id="handle-selectable-tables">Handle selectable tables<a class="headerlink" href="#handle-selectable-tables" title="Permanent link">&para;</a></h2>
 <p>Use <code>SelectionTableView</code> when row state is itself an input. The workbench owns toggle behavior, disabled rows, and <code>single</code>, <code>multiple</code>, or <code>all_or_specific</code> modes. Stable row keys let the page keep selection state independently of row order.</p>

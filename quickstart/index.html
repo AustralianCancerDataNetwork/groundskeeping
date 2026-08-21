@@ -1255,7 +1255,7 @@
 <h2 id="run-the-demo-first">Run the demo first<a class="headerlink" href="#run-the-demo-first" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>groundskeeping
 </code></pre></div>
-<p>The demo has Overview, Configuration, and Telemetry pages and does not depend on Groundworkers or <code>cava-nlp-shard</code>. Its configuration page uses the deterministic fake mutation provider, so no file is written. The source in <code>src/groundskeeping/demo.py</code> is also a useful composition reference.</p>
+<p>The demo has Overview, Configuration, Telemetry, and Setup pages and does not depend on Groundworkers or <code>cava-nlp-shard</code>. Its configuration page uses the deterministic fake mutation provider, so no file is written. The Setup page demonstrates an ordinary results table whose highlighted row fills the lower detail pane; the source in <code>src/groundskeeping/demo.py</code> is also a useful composition reference.</p>
 <h2 id="build-one-page">Build one page<a class="headerlink" href="#build-one-page" title="Permanent link">&para;</a></h2>
 <p>A page is an ordinary Textual widget that satisfies the <a class="autorefs autorefs-internal" title="OperatorPage" href="../api/pages/#groundskeeping.contracts.pages.OperatorPage"><code>OperatorPage</code></a> protocol. Keep application services on the page; the shell passes a narrow <code>PageContext</code> for navigation, rendering, notifications, and wizards.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">textual.widget</span><span class="w"> </span><span class="kn">import</span> <span class="n">Widget</span>
