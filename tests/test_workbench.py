@@ -17,7 +17,6 @@ from groundskeeping.contracts import (
     TableView,
 )
 
-
 ROUTE = PageRoute("jobs", "Jobs", "Durable jobs")
 
 
