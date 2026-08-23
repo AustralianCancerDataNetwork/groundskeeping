@@ -12,10 +12,12 @@ free are correct.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import cast
 
 import pytest
 
 from groundskeeping.configurator import (
+    ConfigSchemaConflictError,
     ConfigTarget,
     ConfigTargetKind,
     MutationConformanceHooks,
@@ -43,6 +45,7 @@ class _InMemorySchemaAdapter:
         self._store: dict[str, object] = dict(stored or {})
         self._revision_number = 1
         self.available = available
+        self.fail_save = False
 
     def field_specs(self) -> tuple[FieldSpec, ...]:
         return (
@@ -81,7 +84,7 @@ class _InMemorySchemaAdapter:
 
     def validate(self, candidate: Mapping[str, object]) -> tuple[ValidationIssue, ...]:
         issues: list[ValidationIssue] = []
-        minimum = candidate.get("min_databases_default")
+        minimum = cast(int | None, candidate.get("min_databases_default"))
         if minimum is not None and minimum < 1:
             issues.append(
                 ValidationIssue(
@@ -95,7 +98,16 @@ class _InMemorySchemaAdapter:
             )
         return tuple(issues)
 
-    def save(self, candidate: Mapping[str, object]) -> None:
+    def save(
+        self,
+        candidate: Mapping[str, object],
+        *,
+        expected_revision: str,
+    ) -> None:
+        if expected_revision != self.revision():
+            raise ConfigSchemaConflictError("stale revision")
+        if self.fail_save:
+            raise OSError("simulated write failure")
         self._store = dict(candidate)
         self._revision_number += 1
 
@@ -121,6 +133,9 @@ def test_schema_provider_passes_reusable_provider_conformance(
     def make_service() -> SchemaConfigMutationService:
         return SchemaConfigMutationService(_target(), _InMemorySchemaAdapter())
 
+    def schema(service) -> _InMemorySchemaAdapter:
+        return cast(_InMemorySchemaAdapter, service._schema)
+
     assert_mutation_service_conformance(
         make_service,
         _target(),
@@ -134,9 +149,10 @@ def test_schema_provider_passes_reusable_provider_conformance(
                 draft, "limits", {"min_databases_default": -1}
             ),
             expected_invalid_fields=frozenset({"min_databases_default"}),
-            advance_revision=lambda service: service._schema.advance_revision(),
+            advance_revision=lambda service: schema(service).advance_revision(),
+            prepare_failure=lambda service: setattr(schema(service), "fail_save", True),
             make_unavailable=lambda service: setattr(
-                service._schema, "available", False
+                schema(service), "available", False
             ),
         ),
     )

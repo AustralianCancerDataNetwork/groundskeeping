@@ -24,6 +24,14 @@ from typing import Protocol
 from groundskeeping.contracts.actions import FieldSpec, ValidationIssue
 
 
+class ConfigSchemaConflictError(RuntimeError):
+    """The schema changed after the candidate was prepared."""
+
+
+class ConfigSchemaRejectedError(ValueError):
+    """The schema rejected the prepared candidate before attempting a write."""
+
+
 class ConfigSchemaAdapter(Protocol):
     """One configuration target's shape, current state, and persistence."""
 
@@ -59,11 +67,20 @@ class ConfigSchemaAdapter(Protocol):
         """Validate a fully-merged candidate. Empty means it is acceptable."""
         ...
 
-    def save(self, candidate: Mapping[str, object]) -> None:
-        """Persist candidate as the new stored values.
+    def save(
+        self,
+        candidate: Mapping[str, object],
+        *,
+        expected_revision: str,
+    ) -> None:
+        """Compare and persist candidate as the new stored values.
 
-        Called only after the generic provider has itself re-checked the
-        apply token and revision -- a schema adapter does not need its own
-        compare-and-swap logic, only an atomic write.
+        The comparison and write belong in this one adapter operation. Splitting
+        them into ``revision()`` followed by ``save()`` leaves a race in which a
+        second writer can commit between the two calls. Raise
+        :class:`ConfigSchemaConflictError` when the expected revision is stale,
+        and :class:`ConfigSchemaRejectedError` when policy or validation rejects
+        the request before a write is attempted. Other exceptions are treated as
+        attempted-write failures by the generic provider.
         """
         ...

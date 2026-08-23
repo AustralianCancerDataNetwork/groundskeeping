@@ -29,8 +29,12 @@ from groundskeeping.configurator.mutation import (
     UnavailableMutationService,
     build_config_diff,
 )
-from groundskeeping.configurator.providers.schema import ConfigSchemaAdapter
-from groundskeeping.contracts.actions import ValidationIssue
+from groundskeeping.configurator.providers.schema import (
+    ConfigSchemaAdapter,
+    ConfigSchemaConflictError,
+    ConfigSchemaRejectedError,
+)
+from groundskeeping.contracts.actions import FieldSpec, ValidationIssue
 from groundskeeping.contracts.views import SemanticStatus
 
 
@@ -42,6 +46,7 @@ class _Session:
     values: dict[str, object] = field(default_factory=dict)
     changed_fields: frozenset[str] = frozenset()
     apply_token: str | None = None
+    planned_candidate: dict[str, object] | None = None
 
 
 class SchemaConfigMutationService:
@@ -111,7 +116,7 @@ class SchemaConfigMutationService:
             expected_revision=revision,
         )
 
-    def fields(self, draft: ConfigDraft) -> tuple:
+    def fields(self, draft: ConfigDraft) -> tuple[FieldSpec, ...]:
         self._session_for_draft(draft)
         return self._schema.field_specs()
 
@@ -144,6 +149,7 @@ class SchemaConfigMutationService:
         session.values.update(parsed)
         session.changed_fields = frozenset(session.values)
         self._invalidate_apply_token(session)
+        session.planned_candidate = None
         return ConfigStepResult(changed_fields=session.changed_fields)
 
     def plan(self, draft: ConfigDraft) -> ConfigPlan:
@@ -166,10 +172,12 @@ class SchemaConfigMutationService:
         )
         has_error = any(issue.status is SemanticStatus.ERROR for issue in issues)
         self._invalidate_apply_token(session)
+        session.planned_candidate = None
         apply_token: str | None = None
         if not has_error:
             apply_token = f"schema-plan-{next(self._plan_ids)}"
             session.apply_token = apply_token
+            session.planned_candidate = candidate
             self._apply_tokens[apply_token] = draft.session_token
         return ConfigPlan(
             target=session.target,
@@ -203,14 +211,35 @@ class SchemaConfigMutationService:
                 ConfigApplyStatus.REJECTED,
                 "The apply plan was not prepared for that configuration revision.",
             )
-        if intent.expected_revision != self._schema.revision():
+        candidate = session.planned_candidate
+        if candidate is None:
+            return ConfigApplyResult(
+                ConfigApplyStatus.REJECTED,
+                "The apply plan has no prepared configuration candidate.",
+            )
+        try:
+            self._schema.save(
+                candidate,
+                expected_revision=session.expected_revision,
+            )
+        except ConfigSchemaConflictError:
             return ConfigApplyResult(
                 ConfigApplyStatus.CONFLICTED,
                 "Configuration changed before this plan could be applied.",
                 detail="Reload the configuration and review the change again.",
             )
-        candidate = {**self._schema.load(), **session.values}
-        self._schema.save(candidate)
+        except ConfigSchemaRejectedError:
+            return ConfigApplyResult(
+                ConfigApplyStatus.REJECTED,
+                "The configuration change was rejected.",
+                detail="Review the current configuration and prepare a new plan.",
+            )
+        except Exception:  # noqa: BLE001 - translated to a secret-safe provider result
+            return ConfigApplyResult(
+                ConfigApplyStatus.FAILED,
+                "The configuration could not be saved.",
+                detail="The previous configuration remains authoritative.",
+            )
         self._sessions.pop(session_token, None)
         return ConfigApplyResult(
             ConfigApplyStatus.APPLIED, "Configuration applied.",
@@ -234,3 +263,4 @@ class SchemaConfigMutationService:
         if session.apply_token is not None:
             self._apply_tokens.pop(session.apply_token, None)
             session.apply_token = None
+        session.planned_candidate = None

@@ -48,6 +48,8 @@ from groundskeeping.configurator.mutation import (
 )
 from groundskeeping.configurator.providers import (
     ConfigSchemaAdapter,
+    ConfigSchemaConflictError,
+    ConfigSchemaRejectedError,
     FakeConfigMutationService,
     FakeDialectConfigMutationService,
     FakeMutationEvent,
