@@ -6,6 +6,7 @@ from textual.widget import Widget
 
 from groundskeeping.app import OperatorApp, OperatorAppSpec
 from groundskeeping.contracts import (
+    LoadingView,
     NavigationItem,
     PageContext,
     PageRegistration,
@@ -101,6 +102,57 @@ def test_refresh_rows_preserves_cursor_and_handles_membership_changes() -> None:
             assert len(page.highlighted_rows) == baseline_events
             assert table.ordered_rows[table.cursor_row].key.value == "e"
             assert tuple(row.key.value for row in table.ordered_rows) == ("d", "e")
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_refresh_view_patches_loading_surface_in_place() -> None:
+    async def run() -> None:
+        page = _TablePage(_view(("a", "queued")))
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="workbench-loading-refresh-test",
+                title="Workbench loading refresh test",
+                subtitle=None,
+                pages=(PageRegistration(ROUTE, lambda context: page),),
+            )
+        )
+
+        async with app.run_test() as pilot:
+            workbench = app._workbench
+            surface = app._page_context.surface
+
+            surface.show_view(
+                ROUTE.key,
+                LoadingView(title="Migration", message="Starting"),
+            )
+            await pilot.pause()
+
+            # A long-running job may refresh this surface many times a second; none
+            # of those refreshes should re-run the structural entry work (hiding the
+            # tree/empty-state/table, restyling the status chip) again, and only a
+            # changed message should touch the summary widget.
+            entry_calls = 0
+            original_show_loading = workbench.show_loading
+
+            def _counting_show_loading(view: LoadingView) -> None:
+                nonlocal entry_calls
+                entry_calls += 1
+                original_show_loading(view)
+
+            workbench.show_loading = _counting_show_loading  # type: ignore[method-assign]
+
+            summary = workbench.query_one("#result-summary")
+            for step in range(5):
+                surface.refresh_view(
+                    ROUTE.key,
+                    LoadingView(title="Migration", message=f"Step {step}"),
+                )
+                await pilot.pause()
+
+            assert entry_calls == 0
+            assert "Step 4" in str(summary.content)
             await pilot.press("q")
 
     asyncio.run(run())

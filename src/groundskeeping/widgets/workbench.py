@@ -299,12 +299,17 @@ class Workbench(Widget):
     def refresh_view(self, view: SurfaceView) -> None:
         """Refresh a surface, preserving cursor state when it is a table.
 
-        Consumer pages should use this for ordinary data refreshes. Non-table surfaces
-        still use the normal replacement path because they have no row identity to
-        retain.
+        Consumer pages should use this for ordinary data refreshes. Table surfaces
+        reconcile rows in place, and a loading surface already showing another loading
+        view patches its text in place, since a long-running job may refresh this
+        surface many times a second. Every other surface still uses the normal
+        replacement path because it has no in-place identity to retain.
         """
         if isinstance(view, TableView):
             self.refresh_rows(view)
+            return
+        if isinstance(view, LoadingView) and self.is_showing_loading:
+            self.update_loading(view)
             return
         self.show_surface(view)
 
@@ -509,6 +514,27 @@ class Workbench(Widget):
         self._render_loading()
         if self._loading_timer is None:
             self._loading_timer = self.set_interval(0.2, self._tick_loading)
+
+    @property
+    def is_showing_loading(self) -> bool:
+        return self._loading_view is not None
+
+    def update_loading(self, view: LoadingView) -> None:
+        """Patch an already-shown loading surface without re-hiding other widgets.
+
+        A long-running job may call this many times a second through
+        ``refresh_view()``; only the pieces that actually changed are touched so the
+        result panel does not flicker.
+        """
+        previous = self._loading_view
+        self._loading_view = view
+        self._render_loading()
+        if (
+            previous is None
+            or previous.title != view.title
+            or previous.message != view.message
+        ):
+            self.set_summary(view.title, view.message)
 
     def _tick_loading(self) -> None:
         self._loading_frame += 1
