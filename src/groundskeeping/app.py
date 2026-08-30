@@ -45,6 +45,7 @@ from groundskeeping.contracts.pages import (
     PageRoute,
     PageSurfacePort,
 )
+from groundskeeping.contracts.process import read_log_tail
 from groundskeeping.contracts.views import (
     CatalogueItem,
     DetailView,
@@ -155,6 +156,7 @@ class OperatorApp(App[None]):
     CSS_PATH: ClassVar[str] = str(Path(__file__).parent / "themes" / "groundskeeping.tcss")
     BINDINGS: ClassVar[list[Binding]] = [
         Binding("q", "quit", "Quit"),
+        Binding("y", "copy_log", "Copy log"),
     ]
 
     def __init__(self, spec: OperatorAppSpec) -> None:
@@ -164,6 +166,7 @@ class OperatorApp(App[None]):
         self.title = spec.title
         self.sub_title = spec.subtitle or ""
         self.jobs = JobManager(spec.job_policy)
+        self._current_log_path: str | None = None
         self._active_page = spec.default_page or self.registry[0].key
         self._workbench = Workbench(spec.workbench_labels)
         self._surface = _WorkbenchSurface(self._workbench)
@@ -202,6 +205,36 @@ class OperatorApp(App[None]):
         if len(self.registry) == 1:
             self.query_one("#page-tabs", Tabs).styles.display = "none"
         self.show_page(self._active_page)
+
+    def set_current_log(self, log_path: str | Path | None) -> None:
+        """Set the log targeted by the global copy-log binding.
+
+        This is the most recently successfully registered log, independent of any
+        job's lifecycle. Consumers should call it after a logged process starts.
+        """
+
+        self._current_log_path = str(log_path) if log_path is not None else None
+        self.refresh_bindings()
+
+    def check_action(
+        self, action: str, parameters: tuple[object, ...]
+    ) -> bool | None:
+        if action == "copy_log":
+            return self._current_log_path is not None
+        return True
+
+    def action_copy_log(self) -> None:
+        """Copy the current log's recent output to the clipboard."""
+
+        if self._current_log_path is None:
+            return
+        try:
+            text = read_log_tail(self._current_log_path)
+        except OSError:
+            self.notify("Could not read log file.", severity="error")
+            return
+        self.copy_to_clipboard(text)
+        self.notify("Log tail copied to clipboard.")
 
     def on_tabs_tab_activated(self, event: Tabs.TabActivated) -> None:
         if event.tabs.id == "page-tabs" and event.tab.id:
