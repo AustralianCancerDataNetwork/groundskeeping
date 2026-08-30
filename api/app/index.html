@@ -876,6 +876,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#groundskeeping.app.OperatorApp.action_copy_log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        action_copy_log
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.app.OperatorApp.check_action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_action
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#groundskeeping.app.OperatorApp.compose" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -990,6 +1012,17 @@
     <span class="md-ellipsis">
       
         open_wizard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.app.OperatorApp.set_current_log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_current_log
       
     </span>
   </a>
@@ -1555,6 +1588,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#groundskeeping.app.OperatorApp.action_copy_log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        action_copy_log
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.app.OperatorApp.check_action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_action
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#groundskeeping.app.OperatorApp.compose" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1669,6 +1724,17 @@
     <span class="md-ellipsis">
       
         open_wizard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.app.OperatorApp.set_current_log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_current_log
       
     </span>
   </a>
@@ -1991,7 +2057,10 @@
   </span>
 
 <a href="#groundskeeping.app.OperatorApp.BINDINGS" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="n">BINDINGS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Binding</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">Binding</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;quit&#39;</span><span class="p">,</span> <span class="s1">&#39;Quit&#39;</span><span class="p">)]</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">BINDINGS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Binding</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">Binding</span><span class="p">(</span><span class="s2">&quot;q&quot;</span><span class="p">,</span> <span class="s2">&quot;quit&quot;</span><span class="p">,</span> <span class="s2">&quot;Quit&quot;</span><span class="p">),</span>
+    <span class="n">Binding</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;copy_log&quot;</span><span class="p">,</span> <span class="s2">&quot;Copy log&quot;</span><span class="p">),</span>
+<span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2136,6 +2205,46 @@
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.app.OperatorApp.action_copy_log" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">action_copy_log</span>
+
+
+<a href="#groundskeeping.app.OperatorApp.action_copy_log" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">action_copy_log</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Copy the current log's recent output to the clipboard.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.app.OperatorApp.check_action" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_action</span>
+
+
+<a href="#groundskeeping.app.OperatorApp.check_action" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">check_action</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-function">
 
@@ -2339,6 +2448,28 @@
 </code></pre></div>
 
     <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.app.OperatorApp.set_current_log" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">set_current_log</span>
+
+
+<a href="#groundskeeping.app.OperatorApp.set_current_log" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">set_current_log</span><span class="p">(</span><span class="n">log_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Set the log targeted by the global copy-log binding.</p>
+<p>This is the most recently successfully registered log, independent of any
+job's lifecycle. Consumers should call it after a logged process starts.</p>
 
 
     </div>

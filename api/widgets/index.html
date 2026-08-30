@@ -1034,6 +1034,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#groundskeeping.widgets.workbench.Workbench.is_showing_loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_showing_loading
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#groundskeeping.widgets.workbench.Workbench.labels" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1413,6 +1424,17 @@
     <span class="md-ellipsis">
       
         show_tree
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.widgets.workbench.Workbench.update_loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        update_loading
       
     </span>
   </a>
@@ -1667,6 +1689,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#groundskeeping.widgets.workbench.Workbench.is_showing_loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_showing_loading
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#groundskeeping.widgets.workbench.Workbench.labels" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2046,6 +2079,17 @@
     <span class="md-ellipsis">
       
         show_tree
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groundskeeping.widgets.workbench.Workbench.update_loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        update_loading
       
     </span>
   </a>
@@ -2348,6 +2392,28 @@
 
 <a href="#groundskeeping.widgets.workbench.Workbench.catalogue" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="doc-signature highlight"><pre><span></span><code><span class="n">catalogue</span><span class="p">:</span> <span class="n">Tree</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="groundskeeping.widgets.workbench.Workbench.is_showing_loading" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">is_showing_loading</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#groundskeeping.widgets.workbench.Workbench.is_showing_loading" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">is_showing_loading</span><span class="p">:</span> <span class="nb">bool</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2854,9 +2920,11 @@ page's <code>row_highlighted</code> handler.</p>
     <div class="doc doc-contents ">
 
         <p>Refresh a surface, preserving cursor state when it is a table.</p>
-<p>Consumer pages should use this for ordinary data refreshes. Non-table surfaces
-still use the normal replacement path because they have no row identity to
-retain.</p>
+<p>Consumer pages should use this for ordinary data refreshes. Table surfaces
+reconcile rows in place, and a loading surface already showing another loading
+view patches its text in place, since a long-running job may refresh this
+surface many times a second. Every other surface still uses the normal
+replacement path because it has no in-place identity to retain.</p>
 
 
     </div>
@@ -3101,6 +3169,29 @@ retain.</p>
 </code></pre></div>
 
     <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="groundskeeping.widgets.workbench.Workbench.update_loading" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">update_loading</span>
+
+
+<a href="#groundskeeping.widgets.workbench.Workbench.update_loading" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">update_loading</span><span class="p">(</span><span class="n">view</span><span class="p">:</span> <span class="n">LoadingView</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Patch an already-shown loading surface without re-hiding other widgets.</p>
+<p>A long-running job may call this many times a second through
+<code>refresh_view()</code>; only the pieces that actually changed are touched so the
+result panel does not flicker.</p>
 
 
     </div>
