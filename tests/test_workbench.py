@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 
 from textual.widget import Widget
+from textual.widgets import Button
 
 from groundskeeping.app import OperatorApp, OperatorAppSpec
 from groundskeeping.contracts import (
@@ -16,6 +17,7 @@ from groundskeeping.contracts import (
     SurfaceView,
     TableRow,
     TableView,
+    ViewAction,
 )
 
 ROUTE = PageRoute("jobs", "Jobs", "Durable jobs")
@@ -153,6 +155,95 @@ def test_refresh_view_patches_loading_surface_in_place() -> None:
 
             assert entry_calls == 0
             assert "Step 4" in str(summary.content)
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_refresh_rows_resyncs_action_button_state() -> None:
+    async def run() -> None:
+        page = _TablePage(
+            TableView(
+                title="Jobs",
+                columns=("Job", "State"),
+                rows=(TableRow("a", ("a", "queued")),),
+                actions=(ViewAction("copy_log", "Copy log", disabled=True),),
+            )
+        )
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="workbench-refresh-actions-test",
+                title="Workbench refresh actions test",
+                subtitle=None,
+                pages=(PageRegistration(ROUTE, lambda context: page),),
+            )
+        )
+
+        async with app.run_test() as pilot:
+            surface = app._page_context.surface
+            button = app._workbench.query_one("#view-action-0", Button)
+            assert button.disabled is True
+
+            # A page refreshing a table's rows via refresh_view (not show_view, to
+            # avoid the flicker a full surface replacement causes) must still see its
+            # action buttons' disabled/label/variant state kept current: an action's
+            # availability can be exactly as dynamic as its row data (e.g. a "Copy
+            # log" button that becomes enabled once a log path is known).
+            surface.refresh_view(
+                ROUTE.key,
+                TableView(
+                    title="Jobs",
+                    columns=("Job", "State"),
+                    rows=(TableRow("a", ("a", "queued")),),
+                    actions=(ViewAction("copy_log", "Copy log", disabled=False),),
+                ),
+            )
+            await pilot.pause()
+
+            assert button.disabled is False
+            await pilot.press("q")
+
+    asyncio.run(run())
+
+
+def test_refresh_view_resyncs_action_button_state_while_loading() -> None:
+    async def run() -> None:
+        page = _TablePage(_view(("a", "queued")))
+        app = OperatorApp(
+            OperatorAppSpec(
+                app_id="workbench-loading-refresh-actions-test",
+                title="Workbench loading refresh actions test",
+                subtitle=None,
+                pages=(PageRegistration(ROUTE, lambda context: page),),
+            )
+        )
+
+        async with app.run_test() as pilot:
+            surface = app._page_context.surface
+
+            surface.show_view(
+                ROUTE.key,
+                LoadingView(
+                    title="Migration",
+                    message="Starting",
+                    actions=(ViewAction("copy_log", "Copy log", disabled=True),),
+                ),
+            )
+            await pilot.pause()
+            button = app._workbench.query_one("#view-action-0", Button)
+            assert button.disabled is True
+
+            surface.refresh_view(
+                ROUTE.key,
+                LoadingView(
+                    title="Migration",
+                    message="Log ready",
+                    actions=(ViewAction("copy_log", "Copy log", disabled=False),),
+                ),
+            )
+            await pilot.pause()
+
+            assert button.disabled is False
             await pilot.press("q")
 
     asyncio.run(run())

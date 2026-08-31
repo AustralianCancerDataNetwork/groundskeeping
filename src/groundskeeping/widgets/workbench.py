@@ -322,6 +322,7 @@ class Workbench(Widget):
         this reconciliation are deliberately silent, so a refresh cannot re-enter a
         page's ``row_highlighted`` handler.
         """
+        self.show_actions(view.actions)
         table = self.rows_table
         was_visible = table.styles.display != "none"
         old_index = table.cursor_row
@@ -528,6 +529,7 @@ class Workbench(Widget):
         """
         previous = self._loading_view
         self._loading_view = view
+        self.show_actions(view.actions)
         self._render_loading()
         if (
             previous is None
