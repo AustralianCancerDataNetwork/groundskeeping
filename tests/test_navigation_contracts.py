@@ -5,12 +5,14 @@ import pytest
 from groundskeeping.contracts import (
     PageRegistry,
     PageRoute,
+    Pagination,
     SectionItem,
     SectionNavigation,
     SelectionTableRow,
     SelectionTableView,
     TableView,
     ViewAction,
+    pagination_actions,
 )
 
 
@@ -60,6 +62,41 @@ def test_surface_actions_are_commands_not_navigation_items() -> None:
     )
 
     assert view.actions[0].key == "database.verify"
+
+
+def test_pagination_contract_calculates_navigation_state() -> None:
+    pagination = Pagination(page=2, page_size=20, total_items=41)
+
+    assert pagination.page_count == 3
+    assert pagination.has_previous
+    assert pagination.has_next
+    assert pagination.summary == "Page 2 of 3 · 41 items"
+
+    actions = pagination_actions(pagination)
+    assert [(action.key, action.disabled) for action in actions] == [
+        ("pagination.previous", False),
+        ("pagination.next", False),
+    ]
+
+
+def test_pagination_contract_keeps_empty_results_on_a_stable_page() -> None:
+    pagination = Pagination(page=1, page_size=20, total_items=0)
+
+    assert pagination.page_count == 1
+    assert not pagination.has_previous
+    assert not pagination.has_next
+    assert [action.disabled for action in pagination_actions(pagination)] == [True, True]
+
+
+def test_pagination_contract_rejects_invalid_metadata() -> None:
+    with pytest.raises(ValueError, match="page must be positive"):
+        Pagination(page=0, page_size=20, total_items=1)
+
+    with pytest.raises(ValueError, match="page_size must be positive"):
+        Pagination(page=1, page_size=0, total_items=1)
+
+    with pytest.raises(ValueError, match="total_items cannot be negative"):
+        Pagination(page=1, page_size=20, total_items=-1)
 
 
 def test_selection_table_contract_carries_stable_selection_state() -> None:

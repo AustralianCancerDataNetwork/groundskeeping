@@ -365,7 +365,9 @@ class Workbench(Widget):
         self.rows_table.styles.display = "block"
         self.set_status(view.status)
         self.set_summary(view.title, view.message)
-        self.query_one("#result-panel").border_subtitle = f"{len(view.rows)} rows"
+        self.query_one("#result-panel").border_subtitle = (
+            view.pagination.summary if view.pagination is not None else f"{len(view.rows)} rows"
+        )
 
     def _replace_table_rows(self, table: _WorkbenchDataTable, view: TableView) -> None:
         table.clear(columns=True)
