@@ -72,6 +72,7 @@ from groundskeeping.contracts.views import (
     LoadingView,
     NavigationItem,
     PageNavigation,
+    Pagination,
     SectionItem,
     SectionNavigation,
     SelectionMode,
@@ -87,6 +88,7 @@ from groundskeeping.contracts.views import (
     ViewAction,
     ViewActionVariant,
     WorkbenchLabels,
+    pagination_actions,
 )
 from groundskeeping.contracts.wizards import (
     Choice,

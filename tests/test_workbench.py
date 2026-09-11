@@ -12,6 +12,7 @@ from groundskeeping.contracts import (
     PageContext,
     PageRegistration,
     PageRoute,
+    Pagination,
     SectionItem,
     SectionNavigation,
     SurfaceView,
@@ -58,17 +59,27 @@ class _TablePage(Widget):
         return None
 
 
-def _view(*rows: tuple[str, str]) -> TableView:
+def _view(
+    *rows: tuple[str, str], pagination: Pagination | None = None
+) -> TableView:
     return TableView(
         title="Jobs",
         columns=("Job", "State"),
         rows=tuple(TableRow(key, (key, state)) for key, state in rows),
+        pagination=pagination,
     )
 
 
 def test_refresh_rows_preserves_cursor_and_handles_membership_changes() -> None:
     async def run() -> None:
-        page = _TablePage(_view(("a", "queued"), ("b", "running"), ("c", "done")))
+        page = _TablePage(
+            _view(
+                ("a", "queued"),
+                ("b", "running"),
+                ("c", "done"),
+                pagination=Pagination(page=2, page_size=2, total_items=7),
+            )
+        )
         app = OperatorApp(
             OperatorAppSpec(
                 app_id="workbench-refresh-test",
@@ -79,6 +90,9 @@ def test_refresh_rows_preserves_cursor_and_handles_membership_changes() -> None:
         )
 
         async with app.run_test() as pilot:
+            assert app._workbench.query_one("#result-panel").border_subtitle == (
+                "Page 2 of 4 · 7 items"
+            )
             table = app._workbench.rows_table
             table.move_cursor(row=1, column=0, animate=False)
             await pilot.pause()
